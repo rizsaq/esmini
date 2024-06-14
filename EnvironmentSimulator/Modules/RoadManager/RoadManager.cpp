@@ -2723,7 +2723,6 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
             points.emplace_back(std::move(GetPoint(point, cornerType)));      // point_ C
         }
         markingsPoints_.emplace_back(std::move(points));
-
     }
 }
 
@@ -2757,25 +2756,17 @@ void Marking::FillPointsFromScales(Outline& outline, roadmanager::Repeat::Repeat
             for (size_t i = 0; i < cornerReferences.size() - 1; i++)
             {
                 double total_heading = GetAngleSum(repeatScales.hOffset, repeatScales.heading);
-                double x , y , z;
+                double x, y, z;
                 cornerReferences[i]->GetPosLocal(x, y, z);
                 double u2, v2;
-                RotateVec2D(x * repeatScales.scale_x,
-                            y * repeatScales.scale_y,
-                            total_heading,
-                            u2,
-                            v2);
+                RotateVec2D(x * repeatScales.scale_x, y * repeatScales.scale_y, total_heading, u2, v2);
 
                 point1.x = repeatScales.x + u2;
                 point1.y = repeatScales.y + v2;
 
                 double u3, v3;
                 cornerReferences[i + 1]->GetPosLocal(x, y, z);
-                RotateVec2D(x * repeatScales.scale_x,
-                            y * repeatScales.scale_y,
-                            total_heading,
-                            u3,
-                            v3);
+                RotateVec2D(x * repeatScales.scale_x, y * repeatScales.scale_y, total_heading, u3, v3);
 
                 point2.x = repeatScales.x + u3;
                 point2.y = repeatScales.y + v3;
@@ -2831,7 +2822,7 @@ void Marking::FillPointsFromRepeatTransformationInfoDimensions(Repeat& repeat, c
     }
 }
 
-void Marking::FillPointsFromObject(RMObject *object)
+void Marking::FillPointsFromObject(RMObject* object)
 {
     Point2D               point1;
     Point2D               point2;
@@ -3159,7 +3150,7 @@ int RMObject::CreateRepeatDimensions(Repeat& rep)
 bool RMObject::IsMixedCorners()
 {
     bool foundLocalCorner = false;
-    bool foundRoadcorner = false;
+    bool foundRoadcorner  = false;
     for (auto& outlineOriginal : GetOutlines())
     {
         for (const auto& corner : outlineOriginal.corner_)
@@ -3173,7 +3164,7 @@ bool RMObject::IsMixedCorners()
                 foundRoadcorner = true;
             }
 
-            if(foundLocalCorner && foundRoadcorner)
+            if (foundLocalCorner && foundRoadcorner)
             {
                 return true;
             }
@@ -3310,7 +3301,7 @@ int RMObject::CalculateUniqueOutlines(Repeat& repeat)
                                                                         start_t,
                                                                         start_z,
                                                                         start_h,
-                                                                        repeat.GetS() ,
+                                                                        repeat.GetS(),
                                                                         repeat.GetTWithFactor(factor),
                                                                         GetHOffset(),
                                                                         corner_original->GetCornerId()));
@@ -3412,6 +3403,10 @@ void RMObject::CalculateLocalOutlineTransformationInfo(Repeat& repeat)
             {
                 cur_height = repeat.GetHeightWithFactor(factor);
             }
+            if (IsEqualDouble(cur_length, 0.0))  // no length to iterate
+            {
+                break;
+            }
 
             double scale_u = abs(cur_length / lengthOutline);
             double scale_v = abs(cur_width / widthOutline);
@@ -3461,7 +3456,7 @@ std::vector<std::vector<Outline::point>> RMObject::GetPointsFromOutlines()
             if (cornerType == OutlineCorner::CornerType::LOCAL_CORNER)  // check first corner
             {
                 OutlineCornerLocal* localCorner = static_cast<OutlineCornerLocal*>(corner);
-                double x, y, z ;
+                double              x, y, z;
                 localCorner->GetPos(x, y, z);
                 point.x = x;
                 point.y = y;
@@ -3472,10 +3467,10 @@ std::vector<std::vector<Outline::point>> RMObject::GetPointsFromOutlines()
             else
             {
                 OutlineCornerRoad* roadCorner = static_cast<OutlineCornerRoad*>(corner);
-                point.x                       = roadCorner->GetS();  // s and t not transformed to x and y yet. just storing as x and y for future processing
-                point.y                       = roadCorner->GetT();
-                point.z                       = corner->GetZ();
-                point.h                       = corner->GetHeight();
+                point.x = roadCorner->GetS();  // s and t not transformed to x and y yet. just storing as x and y for future processing
+                point.y = roadCorner->GetT();
+                point.z = corner->GetZ();
+                point.h = corner->GetHeight();
                 localPoints.emplace_back(std::move(point));  // this is not transformed to local yet, Shall be tranformed below after finding minX
             }
         }
@@ -3488,7 +3483,7 @@ std::vector<std::vector<Outline::point>> RMObject::GetLocalPointsFromOutlines()
 {
     // transform all the corner as local to find the combined bb
     std::vector<std::vector<Outline::point>> localPointsList;  // store one entry for each outline
-    int k = 0;
+    int                                      k = 0;
     for (auto& outlineOriginal : GetOutlines())
     {
         std::vector<Outline::point> localPoints;  // store corners of one outline
@@ -3509,10 +3504,10 @@ std::vector<std::vector<Outline::point>> RMObject::GetLocalPointsFromOutlines()
             else
             {
                 OutlineCornerRoad* roadCorner = static_cast<OutlineCornerRoad*>(corner);
-                point.x                       = roadCorner->GetS();  // s and t not transformed to x and y yet. just storing as x and y for future processing
-                point.y                       = roadCorner->GetT();
-                point.z                       = corner->GetZ();
-                point.h                       = corner->GetHeight();
+                point.x = roadCorner->GetS();  // s and t not transformed to x and y yet. just storing as x and y for future processing
+                point.y = roadCorner->GetT();
+                point.z = corner->GetZ();
+                point.h = corner->GetHeight();
                 localPoints.emplace_back(std::move(point));  // this is not transformed to local yet, Shall be tranformed below after finding minX
             }
         }
@@ -3559,7 +3554,7 @@ void Outline::TransformRoadCornerToLocal(std::vector<Outline::point>& localPoint
         localPoints.emplace_back(std::move(point));  // this is not transformed to local yet, Shall be tranformed below after finding minX
     }
 
-    if(RemoveMin)
+    if (RemoveMin)
     {
         // find the minimum x value
         double minX = localPoints[0].x;
@@ -3573,7 +3568,6 @@ void Outline::TransformRoadCornerToLocal(std::vector<Outline::point>& localPoint
             localPoint.x = localPoint.x - minX;
         }
     }
-
 }
 
 void RMObject::TransformToLocal(std::vector<std::vector<Outline::point>>& localPoints)
