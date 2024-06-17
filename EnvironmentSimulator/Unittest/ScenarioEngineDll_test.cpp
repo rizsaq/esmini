@@ -333,7 +333,7 @@ TEST(GetOSIRoadLaneTest, lane_no_obj)
     SE_UpdateOSIGroundTruth();
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 83999);  // initial OSI size, including static content
+    EXPECT_EQ(fileStatus.st_size, 83818);  // initial OSI size, including static content
 
     int road_lane_size;
 
@@ -346,13 +346,13 @@ TEST(GetOSIRoadLaneTest, lane_no_obj)
     SE_UpdateOSIGroundTruth();
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 85084);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 84903);  // slight growth due to only dynamic updates
 
     SE_StepDT(0.001f);  // Step for write another frame to osi file
     SE_UpdateOSIGroundTruth();
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 86170);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 85989);  // slight growth due to only dynamic updates
 
     SE_DisableOSIFile();
     SE_Close();
@@ -2609,7 +2609,7 @@ TEST(TestOsiReporter, OutlineWithRepeat)
     int               sv_size = 0;
     osi3::GroundTruth osi_gt;
 
-    std::string scenario_file = "../../../resources/xosc/test_outline_with_repeat.xosc";
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_outline_with_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
@@ -2728,8 +2728,16 @@ TEST(TestOsiReporter, OutlineWithRepeat)
     EXPECT_EQ(osi_gt.stationary_object(7).base().base_polygon(1).y(), -2.5);
     EXPECT_EQ(osi_gt.stationary_object(7).base().base_polygon(2).y(), 2.5);
 
-    const char* args[] =
-        {"--osc", "../../../resources/xosc/test_outline_with_repeat.xosc", "--window", "60", "60", "800", "400", "--aa_mode", "4", "--headless"};
+    const char* args[] = {"--osc",
+                          "../../../EnvironmentSimulator/Unittest/xosc/test_outline_with_repeat.xosc",
+                          "--window",
+                          "60",
+                          "60",
+                          "800",
+                          "400",
+                          "--aa_mode",
+                          "4",
+                          "--headless"};
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
@@ -2852,7 +2860,7 @@ TEST(TestOsiReporter, MultipleOutlineWithRepeat)
     int               sv_size = 0;
     osi3::GroundTruth osi_gt;
 
-    std::string scenario_file = "../../../resources/xosc/test_multiple_outline_with_repeat.xosc";
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_multiple_outline_with_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
@@ -2912,7 +2920,7 @@ TEST(TestOsiReporter, MultipleOutlineWithRepeat)
     EXPECT_EQ(osi_gt.stationary_object(43).base().base_polygon(0).y(), -145.83498153215277);
 
     const char* args[] = {"--osc",
-                          "../../../resources/xosc/test_multiple_outline_with_repeat.xosc",
+                          "../../../EnvironmentSimulator/Unittest/xosc/test_multiple_outline_with_repeat.xosc",
                           "--window",
                           "60",
                           "60",
@@ -2983,7 +2991,7 @@ TEST(TestOsiReporter, MarkingTest)
     int               sv_size = 0;
     osi3::GroundTruth osi_gt;
 
-    std::string scenario_file = "../../../resources/xosc/markings_test.xosc";
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_markings.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
@@ -3154,8 +3162,16 @@ TEST(TestOsiReporter, MarkingTest)
     EXPECT_DOUBLE_EQ(osi_gt.road_marking(25).base().base_polygon(52).x(), 28);
     EXPECT_DOUBLE_EQ(osi_gt.road_marking(25).base().base_polygon(52).y(), 5.2999999999999954);
 
-    const char* args[] =
-        {"--osc", "../../../resources/xosc/markings_test.xosc", "--window", "60", "60", "800", "400", "--aa_mode", "4", "--headless"};
+    const char* args[] = {"--osc",
+                          "../../../EnvironmentSimulator/Unittest/xosc/test_markings.xosc",
+                          "--window",
+                          "60",
+                          "60",
+                          "800",
+                          "400",
+                          "--aa_mode",
+                          "4",
+                          "--headless"};
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
@@ -3330,7 +3346,7 @@ TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
     int               sv_size = 0;
     osi3::GroundTruth osi_gt;
 
-    std::string scenario_file = "../../../resources/xosc/test_stationary_object_repeat.xosc";
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_object_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
@@ -3372,8 +3388,16 @@ TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
     EXPECT_EQ(osi_gt.stationary_object(2).base().position().y(), -12.5);
     EXPECT_EQ(osi_gt.stationary_object(2).base().position().z(), 0.0);
 
-    const char* args[] =
-        {"--osc", "../../../resources/xosc/test_stationary_object_repeat.xosc", "--window", "60", "60", "800", "400", "--aa_mode", "4", "--headless"};
+    const char* args[] = {"--osc",
+                          "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_object_repeat.xosc",
+                          "--window",
+                          "60",
+                          "60",
+                          "800",
+                          "400",
+                          "--aa_mode",
+                          "4",
+                          "--headless"};
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
@@ -3419,8 +3443,16 @@ TEST(TestOsiReporter, CrestCurveRoadObjectTest)
     int               sv_size = 0;
     osi3::GroundTruth osi_gt;
 
-    const char* args[] =
-        {"--osc", "../../../resources/xosc/test_crest-curve.xosc", "--window", "60", "60", "800", "400", "--aa_mode", "4", "--headless"};
+    const char* args[] = {"--osc",
+                          "../../../EnvironmentSimulator/Unittest/xosc/test_crest-curve.xosc",
+                          "--window",
+                          "60",
+                          "60",
+                          "800",
+                          "400",
+                          "--aa_mode",
+                          "4",
+                          "--headless"};
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
@@ -3541,7 +3573,7 @@ TEST(TestOsiReporter, StationaryObjectTest)
     int               sv_size = 0;
     osi3::GroundTruth osi_gt;
 
-    std::string scenario_file = "../../../resources/xosc/stationary_object_test.xosc";
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_objects.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
@@ -3614,8 +3646,16 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_EQ(osi_gt.stationary_object(14).base().position().y(), 5.0);
     EXPECT_EQ(osi_gt.stationary_object(14).base().position().z(), 0.0);
 
-    const char* args[] =
-        {"--osc", "../../../resources/xosc/stationary_object_test.xosc", "--window", "60", "60", "800", "400", "--aa_mode", "4", "--headless"};
+    const char* args[] = {"--osc",
+                          "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_objects.xosc",
+                          "--window",
+                          "60",
+                          "60",
+                          "800",
+                          "400",
+                          "--aa_mode",
+                          "4",
+                          "--headless"};
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
@@ -3680,12 +3720,12 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_EQ(osi_gt.stationary_object(14).base().position().z(), 0.0);
 }
 
-TEST(TestOsiReporter, ObjectAsOutlineRepeat)
+TEST(TestOsiReporter, ObjectAsMixedCornerOutlineRepeat)
 {
     int               sv_size = 0;
     osi3::GroundTruth osi_gt;
 
-    std::string scenario_file = "../../../resources/xosc/repeat_with_outline_test.xosc";
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_outline_with_mixed_corner_and_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
@@ -3729,12 +3769,12 @@ TEST(TestOsiReporter, ObjectAsOutlineRepeat)
     EXPECT_EQ(osi_gt.stationary_object(10).base().base_polygon(3).y(), 9.8682360970185137);
 }
 
-TEST(TestOsiReporter, MoreOutlineWithRepeats)
+TEST(TestOsiReporter, MultipleOutlinesWithMultipleRepeats)
 {
     int               sv_size = 0;
     osi3::GroundTruth osi_gt;
 
-    std::string scenario_file = "../../../resources/xosc/test_two_outline_with_repeat.xosc";
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_multiple_outline_with_multiple_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
@@ -3775,8 +3815,16 @@ TEST(TestOsiReporter, MoreOutlineWithRepeats)
     EXPECT_EQ(osi_gt.stationary_object(102).base().base_polygon(0).x(), -1.5308084989341913e-16);
     EXPECT_EQ(osi_gt.stationary_object(102).base().base_polygon(0).y(), -2.5);
 
-    const char* args[] =
-        {"--osc", "../../../resources/xosc/test_two_outline_with_repeat.xosc", "--window", "60", "60", "800", "400", "--aa_mode", "4", "--headless"};
+    const char* args[] = {"--osc",
+                          "../../../EnvironmentSimulator/Unittest/xosc/test_multiple_outline_with_multiple_repeat.xosc",
+                          "--window",
+                          "60",
+                          "60",
+                          "800",
+                          "400",
+                          "--aa_mode",
+                          "4",
+                          "--headless"};
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);

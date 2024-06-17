@@ -3164,7 +3164,7 @@ Viewer::ViewerObjectDetail Viewer::ViewerObjectDetail::copy(const roadmanager::R
 // create object from given object and repeat dimension
 void Viewer::UpdateModel(const Viewer::ViewerObjectDetail& objectDetails, osg::ref_ptr<osg::PositionAttitudeTransform> clone)
 {
-    clone->getOrCreateStateSet()->setMode(GL_RESCALE_NORMAL, osg::StateAttribute::ON);
+    clone->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
     clone->setScale(osg::Vec3d(objectDetails.scale_x, objectDetails.scale_y, objectDetails.scale_z));
     clone->setPosition(osg::Vec3d(objectDetails.x, objectDetails.y, objectDetails.z));
 
