@@ -3296,15 +3296,15 @@ void Viewer::ValidateDimensionsForViewing(roadmanager::RMObject& object) const
 {
     if (IsEqualDouble(object.GetLength().Get(), 0.0))
     {
-        LOG("Object %s missing length, set to %.2f for viewer purpose", object.GetName(), 0.01);
+        LOG("Object %s missing length, set to %.2f for viewer purpose", object.GetName().c_str(), 0.01);
     }
     if (IsEqualDouble(object.GetWidth().Get(), 0.0))
     {
-        LOG("Object %s missing width, set to %.2f for viewer purpose", object.GetName(), 0.01);
+        LOG("Object %s missing width, set to %.2f for viewer purpose", object.GetName().c_str(), 0.01);
     }
     if (IsEqualDouble(object.GetHeight().Get(), 0.0))
     {
-        LOG("Object %s missing height, set to %.2f for viewer purpose", object.GetName(), 0.01);
+        LOG("Object %s missing height, set to %.2f for viewer purpose", object.GetName().c_str(), 0.01);
     }
 }
 
