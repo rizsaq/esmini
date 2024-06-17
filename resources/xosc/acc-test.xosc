@@ -100,7 +100,7 @@
                         </SpeedActionTarget>
                      </SpeedAction>
                   </LongitudinalAction>
-               </PrivateAction>
+               </PrivateAction>               
             </Private>
          </Actions>
       </Init>
@@ -159,7 +159,7 @@
                            </Condition>
                         </ConditionGroup>
                      </StartTrigger>
-                  </Event>
+                  </Event>                 
                   <Event name="TargetBrakeEvent" priority="overwrite">
                      <Action name="TargetBrakeAction">
                         <PrivateAction>
