@@ -2602,8 +2602,6 @@ TEST(TestOsiReporter, AssignRoleTest)
 }
 #endif
 
-#endif  // _USE_OSI
-
 TEST(TestOsiReporter, OutlineWithRepeat)
 {
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_outline_with_repeat.xosc";
@@ -3841,7 +3839,7 @@ TEST(TestOsiReporter, MultipleOutlinesWithMultipleRepeats)
     EXPECT_EQ(osi_gt.stationary_object(102).base().base_polygon(0).x(), -1.5308084989341913e-16);
     EXPECT_EQ(osi_gt.stationary_object(102).base().base_polygon(0).y(), -2.5);
 }
-
+#endif  // _USE_OSI
 TEST(ParameterTest, GetTypedParameterValues)
 {
     std::string scenario_file = "../../../resources/xosc/lane_change.xosc";
