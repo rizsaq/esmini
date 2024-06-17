@@ -2606,19 +2606,17 @@ TEST(TestOsiReporter, AssignRoleTest)
 
 TEST(TestOsiReporter, OutlineWithRepeat)
 {
-    int               sv_size = 0;
-    osi3::GroundTruth osi_gt;
-
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_outline_with_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
-    const char* gt = SE_GetOSIGroundTruth(&sv_size);
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 8);
@@ -2741,7 +2739,6 @@ TEST(TestOsiReporter, OutlineWithRepeat)
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
     const char* gt1 = SE_GetOSIGroundTruth(&sv_size);
@@ -2857,19 +2854,17 @@ TEST(TestOsiReporter, OutlineWithRepeat)
 
 TEST(TestOsiReporter, MultipleOutlineWithRepeat)
 {
-    int               sv_size = 0;
-    osi3::GroundTruth osi_gt;
-
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_multiple_outline_with_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
-    const char* gt = SE_GetOSIGroundTruth(&sv_size);
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 44);
@@ -2932,7 +2927,6 @@ TEST(TestOsiReporter, MultipleOutlineWithRepeat)
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
     const char* gt1 = SE_GetOSIGroundTruth(&sv_size);
@@ -2988,19 +2982,17 @@ TEST(TestOsiReporter, MultipleOutlineWithRepeat)
 
 TEST(TestOsiReporter, MarkingTest)
 {
-    int               sv_size = 0;
-    osi3::GroundTruth osi_gt;
-
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_markings.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
-    const char* gt = SE_GetOSIGroundTruth(&sv_size);
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 15);
@@ -3175,7 +3167,6 @@ TEST(TestOsiReporter, MarkingTest)
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
     const char* gt1 = SE_GetOSIGroundTruth(&sv_size);
@@ -3343,19 +3334,17 @@ TEST(TestOsiReporter, MarkingTest)
 
 TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
 {
-    int               sv_size = 0;
-    osi3::GroundTruth osi_gt;
-
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_object_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
-    const char* gt = SE_GetOSIGroundTruth(&sv_size);
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 3);
@@ -3401,7 +3390,6 @@ TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
     const char* gt1 = SE_GetOSIGroundTruth(&sv_size);
@@ -3440,9 +3428,6 @@ TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
 
 TEST(TestOsiReporter, CrestCurveRoadObjectTest)
 {
-    int               sv_size = 0;
-    osi3::GroundTruth osi_gt;
-
     const char* args[] = {"--osc",
                           "../../../EnvironmentSimulator/Unittest/xosc/test_crest-curve.xosc",
                           "--window",
@@ -3456,11 +3441,12 @@ TEST(TestOsiReporter, CrestCurveRoadObjectTest)
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
-    const char* gt1 = SE_GetOSIGroundTruth(&sv_size);
-    osi_gt.ParseFromArray(gt1, sv_size);
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
+    osi_gt.ParseFromArray(gt, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 9);
 
@@ -3570,19 +3556,17 @@ TEST(TestOsiReporter, CrestCurveRoadObjectTest)
 
 TEST(TestOsiReporter, StationaryObjectTest)
 {
-    int               sv_size = 0;
-    osi3::GroundTruth osi_gt;
-
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_objects.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
-    const char* gt = SE_GetOSIGroundTruth(&sv_size);
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 17);
@@ -3659,7 +3643,6 @@ TEST(TestOsiReporter, StationaryObjectTest)
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
     const char* gt1 = SE_GetOSIGroundTruth(&sv_size);
@@ -3722,19 +3705,17 @@ TEST(TestOsiReporter, StationaryObjectTest)
 
 TEST(TestOsiReporter, ObjectAsMixedCornerOutlineRepeat)
 {
-    int               sv_size = 0;
-    osi3::GroundTruth osi_gt;
-
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_outline_with_mixed_corner_and_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
-    const char* gt = SE_GetOSIGroundTruth(&sv_size);
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 11);
@@ -3771,19 +3752,17 @@ TEST(TestOsiReporter, ObjectAsMixedCornerOutlineRepeat)
 
 TEST(TestOsiReporter, MultipleOutlinesWithMultipleRepeats)
 {
-    int               sv_size = 0;
-    osi3::GroundTruth osi_gt;
-
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_multiple_outline_with_multiple_repeat.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
-    const char* gt = SE_GetOSIGroundTruth(&sv_size);
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 208);
@@ -3828,7 +3807,6 @@ TEST(TestOsiReporter, MultipleOutlinesWithMultipleRepeats)
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
     SE_StepDT(0.001f);
-
     SE_UpdateOSIGroundTruth();
 
     const char* gt1 = SE_GetOSIGroundTruth(&sv_size);
