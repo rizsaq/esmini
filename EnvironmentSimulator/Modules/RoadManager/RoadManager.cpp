@@ -5539,15 +5539,6 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                     double rradiusStart = (rattr = ReadAttribute(repeat_node, "radiusStart", false)) == "" ? std::nan("") : std::stod(rattr);
                     double rradiusEnd   = (rattr = ReadAttribute(repeat_node, "radiusEnd", false)) == "" ? std::nan("") : std::stod(rattr);
 
-                    // // set obj poisition as repeat position
-                    // pos.SetTrackPos(rid, rs, t);
-                    // obj->SetObjectPos( pos.GetX(),
-                    //                 pos.GetY(),
-                    //                 pos.GetZ(),
-                    //                 pos.GetH(),
-                    //                 pos.GetP(),
-                    //                 pos.GetR());
-
                     // Always add the repeat object, even if treated as outline - in case 3D model should be used in visualization
                     Repeat repeat =
                         Repeat(rs, rlength, rdistance, rtStart, rtEnd, rheightStart, rheightEnd, rzOffsetStart, rzOffsetEnd, r->GetLength());
@@ -5556,14 +5547,6 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                     repeat.SetLengthStart(rlengthStart);
                     repeat.SetLengthEnd(rlengthEnd);
 
-                    // if (fabs(rwidthStart) > SMALL_NUMBER)
-                    //     repeat.SetWidthStart(rwidthStart);
-                    // if (fabs(rwidthEnd) > SMALL_NUMBER)
-                    //     repeat.SetWidthEnd(rwidthEnd);
-                    // if (fabs(rlengthStart) > SMALL_NUMBER)
-                    //     repeat.SetLengthStart(rlengthStart);
-                    // if (fabs(rlengthEnd) > SMALL_NUMBER)
-                    //     repeat.SetLengthEnd(rlengthEnd);
                     if (fabs(rradiusStart) > SMALL_NUMBER)
                         printf("Attribute object/repeat/radiusStart not supported yet\n");
                     if (fabs(rradiusEnd) > SMALL_NUMBER)
