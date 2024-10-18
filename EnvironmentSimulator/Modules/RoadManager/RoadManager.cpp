@@ -2653,12 +2653,31 @@ Marking::Point3D Marking::GetPoint(const Point2D& point, OutlineCorner::CornerTy
 
 void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, OutlineCorner::CornerType cornerType)
 {
+    double lineLength_temp_ = lineLength_;
     double total_length = GetLengthOfVector2D((point2.x - point1.x), (point2.y - point1.y)) + SMALL_NUMBER;  // add small number to round double value
     total_length        = total_length - startOffset_ - stopOffset_;
-    int total_blocks    = static_cast<int>(total_length / (lineLength_ + spaceLength_));
-    if (total_blocks == 0 && total_length >= lineLength_)  // add atleast one block in case one linelength can be added
+    printf("total_length %f\n", total_length);
+    if (IsEqualDouble(total_length, SMALL_NUMBER)) // if total length is zero, no need to add any marking
     {
-        total_blocks = 1;
+        return;
+    }
+    int total_blocks = 1;
+    if ((IsEqualDouble(lineLength_, 0.0) && IsEqualDouble(spaceLength_, 0.0)) || lineLength_ == -1.0)  // if both line and space length is zero or line length is -1, add marking for total length
+    {
+        lineLength_temp_ = total_length;
+        printf("lineLength_temp_ %f\n", lineLength_temp_);
+    }
+    else
+    {
+        total_blocks    = static_cast<int>(total_length / (lineLength_ + spaceLength_));
+        if (total_blocks == 0)
+        {
+            total_blocks = 1; // add atleast one block in case one linelength can be added
+            if(lineLength_ > total_length)
+            {
+                lineLength_temp_ = total_length; // if line length is greater than total length, add marking for total length
+            }
+        }
     }
 
     int nrOfPoints = total_blocks * 4;
@@ -2668,8 +2687,8 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
         double alpha              = atan2(point2.x - point1.x, point2.y - point1.y);
         double deltaP1Gap         = cos(alpha) * spaceLength_;
         double deltaP0Gap         = sin(alpha) * spaceLength_;
-        double deltaP1Line        = cos(alpha) * lineLength_;
-        double deltaP0Line        = sin(alpha) * lineLength_;
+        double deltaP1Line        = cos(alpha) * lineLength_temp_;
+        double deltaP0Line        = sin(alpha) * lineLength_temp_;
         double deltaP1StartOffset = cos(alpha) * startOffset_;
         double deltaP0StartOffset = sin(alpha) * startOffset_;
 
@@ -2677,6 +2696,27 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
         Point2D point;
         point.x = point1.x;
         point.y = point1.y;
+        // if (side_ == RoadSide::RIGHT)
+        // {
+        //     point.x -= width_/2;
+        // }
+        // else
+        // {
+        //     point.x += width_/2;
+        // }
+        printf("side_ %d\n", side_ == RoadSide::RIGHT ? 1 : 0);
+        if (side_ == RoadSide::RIGHT)
+        {
+            point.x -= cos(alpha) * width_ / 2;
+            point.y += sin(alpha) * width_ / 2;
+            printf("point.x offset %f point.y offset %f\n", cos(alpha) * width_ / 2, sin(alpha) * width_ / 2);
+        }
+        else
+        {
+            point.x += cos(alpha) * width_ / 2;
+            point.y -= sin(alpha) * width_ / 2;
+            printf("point.x offset %f point.y offset %f\n", cos(alpha) * width_ / 2, sin(alpha) * width_ / 2);
+        }
 
         double beata = side_ == RoadSide::RIGHT ? M_PI_2 + alpha : -M_PI_2 + alpha;
 
