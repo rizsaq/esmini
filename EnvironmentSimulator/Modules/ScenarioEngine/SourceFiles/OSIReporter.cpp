@@ -506,15 +506,19 @@ int OSIReporter::UpdateOSIHostVehicleData(ObjectState *objectState)
     return 0;
 }
 
-int UpdateOSIStationaryObjectODRMarking(std::vector<roadmanager::Marking::Point3D> points)
+int UpdateOSIStationaryObjectODRMarking(std::vector<std::vector<roadmanager::MarkingSegment::Point3D>>& points)
 {
     obj_osi_internal.rm = obj_osi_internal.gt->add_road_marking();
     obj_osi_internal.rm->mutable_classification()->set_type(osi3::RoadMarking_Classification_Type::RoadMarking_Classification_Type_TYPE_OTHER);
-    for (size_t i = 0; i < points.size(); i++)
+    for(const auto& allPoints : points)
     {
-        osi3::Vector2d *vec = obj_osi_internal.rm->mutable_base()->add_base_polygon();
-        vec->set_x(points[i].x);
-        vec->set_y(points[i].y);
+        for (const auto& point : allPoints)
+        {
+            osi3::Vector2d *vec = obj_osi_internal.rm->mutable_base()->add_base_polygon();
+            vec->set_x(point.x);
+            vec->set_y(point.y);
+            // printf("marking points osi %.2f %.2f %.2f\n", point.x, point.y, point.z);
+        }
     }
     return 0;
 }
@@ -641,7 +645,7 @@ void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline, const 
     {
         double x, y, z;
         corner->GetPosLocal(x, y, z);
-        // printf("outline corner %d, %d: %.2f %.2f\n", (int)k, (int)l, x, y);
+        // printf("outline corner %.2f %.2f %.2f\n", x, y, z);
         osi3::Vector2d *vec = obj_osi_internal.sobj->mutable_base()->add_base_polygon();
         vec->set_x(x * repeatScale.scale_x);
         vec->set_y(y * repeatScale.scale_y);
@@ -734,11 +738,11 @@ int OSIReporter::UpdateOSIStationaryObjectODR(id_t road_id, roadmanager::RMObjec
         }
     }
 
-    for (auto &marking : object->GetMarkings())
+    for (auto& marking : object->GetMarkingsWithPoints())  // marking
     {
-        for (const auto &markingsPoints_ : marking.GetMarkingsPoints(object))
+        for (auto& segment : marking.MarkingSegments_)  // marking points
         {
-            UpdateOSIStationaryObjectODRMarking(markingsPoints_);
+            UpdateOSIStationaryObjectODRMarking(segment.GetAllPoints());
         }
     }
 
