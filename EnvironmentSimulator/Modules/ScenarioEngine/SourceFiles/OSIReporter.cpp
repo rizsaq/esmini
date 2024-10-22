@@ -731,9 +731,9 @@ int OSIReporter::UpdateOSIStationaryObjectODR(id_t road_id, roadmanager::RMObjec
         }
     }
 
-    for (auto &marking : object->GetMarkings())
+    for (auto &marking : object->GetMarkingsWithPoints())
     {
-        for (const auto &markingsPoints_ : marking.GetMarkingsPoints(object))
+        for (const auto &markingsPoints_ : marking.markingsPoints_)
         {
             UpdateOSIStationaryObjectODRMarking(markingsPoints_);
         }

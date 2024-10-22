@@ -2696,14 +2696,6 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
         Point2D point;
         point.x = point1.x;
         point.y = point1.y;
-        // if (side_ == RoadSide::RIGHT)
-        // {
-        //     point.x -= width_/2;
-        // }
-        // else
-        // {
-        //     point.x += width_/2;
-        // }
         printf("side_ %d\n", side_ == RoadSide::RIGHT ? 1 : 0);
         if (side_ == RoadSide::RIGHT)
         {
@@ -2723,34 +2715,22 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
         double deltaP1Far = cos(beata) * width_;
         double deltaP0Far = sin(beata) * width_;
 
-        std::vector<Point3D> points;
-        points.reserve(nrOfPoints);
-
-        // add first block immediate after start offset for line length
         Point2D pointTemp;
-        if (nrOfPoints >= 4)
+        for (int i = 0; i < nrOfPoints; i += 4)  // loop from second block
         {
-            point.x += deltaP0StartOffset;
-            point.y += deltaP1StartOffset;
+            std::vector<Point3D> points;
+            points.reserve(3);
 
-            points.emplace_back(std::move(GetPoint(point, cornerType)));  // point_ A
-            pointTemp.x = point.x + deltaP0Far;
-            pointTemp.y = point.y + deltaP1Far;
-            points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ B
-
-            point.x += deltaP0Line;
-            point.y += deltaP1Line;
-
-            pointTemp.x = point.x + deltaP0Far;
-            pointTemp.y = point.y + deltaP1Far;
-            points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ C
-            points.emplace_back(std::move(GetPoint(point, cornerType)));      // point_ D
-        }
-
-        for (int i = 4; i < nrOfPoints; i += 4)  // loop from second block
-        {
-            point.x += deltaP0Gap;
-            point.y += deltaP1Gap;
+            if (i <= 3) // if first block, add start offset
+            {
+                point.x += deltaP0StartOffset;
+                point.y += deltaP1StartOffset;
+            }
+            else
+            {
+                point.x += deltaP0Gap;
+                point.y += deltaP1Gap;
+            }
 
             points.emplace_back(std::move(GetPoint(point, cornerType)));  // point_ A
             pointTemp.x = point.x + deltaP0Far;
@@ -2764,10 +2744,128 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
             pointTemp.y = point.y + deltaP1Far;
             points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ D
             points.emplace_back(std::move(GetPoint(point, cornerType)));      // point_ C
+            markingsPoints_.emplace_back(std::move(points));
         }
-        markingsPoints_.emplace_back(std::move(points));
     }
 }
+
+// void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, OutlineCorner::CornerType cornerType)
+// {
+//     double lineLength_temp_ = lineLength_;
+//     double total_length = GetLengthOfVector2D((point2.x - point1.x), (point2.y - point1.y)) + SMALL_NUMBER;  // add small number to round double value
+//     total_length        = total_length - startOffset_ - stopOffset_;
+//     printf("total_length %f\n", total_length);
+//     if (IsEqualDouble(total_length, SMALL_NUMBER)) // if total length is zero, no need to add any marking
+//     {
+//         return;
+//     }
+//     int total_blocks = 1;
+//     if ((IsEqualDouble(lineLength_, 0.0) && IsEqualDouble(spaceLength_, 0.0)) || lineLength_ == -1.0)  // if both line and space length is zero or line length is -1, add marking for total length
+//     {
+//         lineLength_temp_ = total_length;
+//         printf("lineLength_temp_ %f\n", lineLength_temp_);
+//     }
+//     else
+//     {
+//         total_blocks    = static_cast<int>(total_length / (lineLength_ + spaceLength_));
+//         if (total_blocks == 0)
+//         {
+//             total_blocks = 1; // add atleast one block in case one linelength can be added
+//             if(lineLength_ > total_length)
+//             {
+//                 lineLength_temp_ = total_length; // if line length is greater than total length, add marking for total length
+//             }
+//         }
+//     }
+
+//     int nrOfPoints = total_blocks * 4;
+
+//     if (nrOfPoints != 0)
+//     {
+//         double alpha              = atan2(point2.x - point1.x, point2.y - point1.y);
+//         double deltaP1Gap         = cos(alpha) * spaceLength_;
+//         double deltaP0Gap         = sin(alpha) * spaceLength_;
+//         double deltaP1Line        = cos(alpha) * lineLength_temp_;
+//         double deltaP0Line        = sin(alpha) * lineLength_temp_;
+//         double deltaP1StartOffset = cos(alpha) * startOffset_;
+//         double deltaP0StartOffset = sin(alpha) * startOffset_;
+
+//         double  x, y, z;
+//         Point2D point;
+//         point.x = point1.x;
+//         point.y = point1.y;
+//         // if (side_ == RoadSide::RIGHT)
+//         // {
+//         //     point.x -= width_/2;
+//         // }
+//         // else
+//         // {
+//         //     point.x += width_/2;
+//         // }
+//         printf("side_ %d\n", side_ == RoadSide::RIGHT ? 1 : 0);
+//         if (side_ == RoadSide::RIGHT)
+//         {
+//             point.x -= cos(alpha) * width_ / 2;
+//             point.y += sin(alpha) * width_ / 2;
+//             printf("point.x offset %f point.y offset %f\n", cos(alpha) * width_ / 2, sin(alpha) * width_ / 2);
+//         }
+//         else
+//         {
+//             point.x += cos(alpha) * width_ / 2;
+//             point.y -= sin(alpha) * width_ / 2;
+//             printf("point.x offset %f point.y offset %f\n", cos(alpha) * width_ / 2, sin(alpha) * width_ / 2);
+//         }
+
+//         double beata = side_ == RoadSide::RIGHT ? M_PI_2 + alpha : -M_PI_2 + alpha;
+
+//         double deltaP1Far = cos(beata) * width_;
+//         double deltaP0Far = sin(beata) * width_;
+
+//         std::vector<Point3D> points;
+//         points.reserve(nrOfPoints);
+
+//         // add first block immediate after start offset for line length
+//         Point2D pointTemp;
+//         if (nrOfPoints >= 4)
+//         {
+//             point.x += deltaP0StartOffset;
+//             point.y += deltaP1StartOffset;
+
+//             points.emplace_back(std::move(GetPoint(point, cornerType)));  // point_ A
+//             pointTemp.x = point.x + deltaP0Far;
+//             pointTemp.y = point.y + deltaP1Far;
+//             points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ B
+
+//             point.x += deltaP0Line;
+//             point.y += deltaP1Line;
+
+//             pointTemp.x = point.x + deltaP0Far;
+//             pointTemp.y = point.y + deltaP1Far;
+//             points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ C
+//             points.emplace_back(std::move(GetPoint(point, cornerType)));      // point_ D
+//         }
+
+//         for (int i = 4; i < nrOfPoints; i += 4)  // loop from second block
+//         {
+//             point.x += deltaP0Gap;
+//             point.y += deltaP1Gap;
+
+//             points.emplace_back(std::move(GetPoint(point, cornerType)));  // point_ A
+//             pointTemp.x = point.x + deltaP0Far;
+//             pointTemp.y = point.y + deltaP1Far;
+//             points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ B
+
+//             point.x += deltaP0Line;
+//             point.y += deltaP1Line;
+
+//             pointTemp.x = point.x + deltaP0Far;
+//             pointTemp.y = point.y + deltaP1Far;
+//             points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ D
+//             points.emplace_back(std::move(GetPoint(point, cornerType)));      // point_ C
+//         }
+//         markingsPoints_.emplace_back(std::move(points));
+//     }
+// }
 
 void Marking::GetCorners(std::vector<int> cornerReferenceIds, const Outline& outline, std::vector<OutlineCorner*>& cornerReferences)
 {
@@ -2865,39 +2963,39 @@ void Marking::FillPointsFromRepeatTransformationInfoDimensions(Repeat& repeat, c
     }
 }
 
-void Marking::FillPointsFromObject(RMObject* object)
+void RMObject::FillPointsFromObject(Marking& marking)
 {
-    Point2D               point1;
-    Point2D               point2;
+    Marking::Point2D               point1;
+    Marking::Point2D               point2;
     roadmanager::Position pos;
-    pos.SetTrackPosMode(roadId_,
-                        object->GetS(),
-                        object->GetT(),
+    pos.SetTrackPosMode(GetRoadId(),
+                        GetS(),
+                        GetT(),
                         roadmanager::Position::PosMode::H_REL | roadmanager::Position::PosMode::Z_REL | roadmanager::Position::PosMode::P_REL |
                             roadmanager::Position::PosMode::R_REL);
-    if (GetSide() == RoadSide::LEFT)
+    if (marking.GetSide() == Marking::RoadSide::LEFT)
     {
         // find local lower left corner
-        RotateVec2D(-object->GetLength().Get() / 2, -object->GetWidth().Get() / 2, pos.GetH() + object->GetHOffset(), point1.x, point1.y);
+        RotateVec2D(-GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), point1.x, point1.y);
         // find local upper left corner
-        RotateVec2D(-object->GetLength().Get() / 2, object->GetWidth().Get() / 2, pos.GetH() + object->GetHOffset(), point2.x, point2.y);
+        RotateVec2D(-GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), point2.x, point2.y);
         point1.x = pos.GetX() + point1.x;
         point1.y = pos.GetY() + point1.y;
         point2.x = pos.GetX() + point2.x;
         point2.y = pos.GetY() + point2.y;
-        FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
+        marking.FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
     }
     else
     {
         // find local lower right corner
-        RotateVec2D(object->GetLength().Get() / 2, -object->GetWidth().Get() / 2, pos.GetH() + object->GetHOffset(), point1.x, point1.y);
+        RotateVec2D(GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), point1.x, point1.y);
         // find local upper right corner
-        RotateVec2D(object->GetLength().Get() / 2, object->GetWidth().Get() / 2, pos.GetH() + object->GetHOffset(), point2.x, point2.y);
+        RotateVec2D(GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), point2.x, point2.y);
         point1.x = pos.GetX() + point1.x;
         point1.y = pos.GetY() + point1.y;
         point2.x = pos.GetX() + point2.x;
         point2.y = pos.GetY() + point2.y;
-        FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
+        marking.FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
     }
 }
 
@@ -2975,47 +3073,106 @@ void Marking::FillPointsFromLocalOutlineTransformationInfo(std::vector<Outline>&
     }
 }
 
-void Marking::CreateMarkingsPoints(RMObject* object)
+void RMObject::CreateMarkingsPoints(Marking& marking)
 {
-    if (object->GetNumberOfRepeats() > 0)
+    if (GetNumberOfRepeats() > 0)
     {
-        for (auto& repeat : object->GetRepeats())
+        for (auto& repeat : GetRepeats())
         {
-            if (object->GetNumberOfUniqueOutlines(repeat) > 0)  // road corner outline with repeat
+            if (GetNumberOfUniqueOutlines(repeat) > 0)  // road corner outline with repeat
             {
-                FillPointsFromUniqueOutlines(object->GetUniqueOutlines(repeat));
+                marking.FillPointsFromUniqueOutlines(GetUniqueOutlines(repeat));
             }
-            else if (object->GetNumberOfOutlines() > 0)  // local corner outline with repeat
+            else if (GetNumberOfOutlines() > 0)  // local corner outline with repeat
             {
-                FillPointsFromLocalOutlineTransformationInfo(object->GetOutlines(), repeat);
+                marking.FillPointsFromLocalOutlineTransformationInfo(GetOutlines(), repeat);
             }
-            else if (object->GetNumberOfUniqueOutlinesZeroDistance(repeat))  // non outline object with repeat distance 0 with no model
+            else if (GetNumberOfUniqueOutlinesZeroDistance(repeat))  // non outline object with repeat distance 0 with no model
             {
-                FillPointsFromOutlines(object->GetUniqueOutlinesZeroDistance(repeat));
+                marking.FillPointsFromOutlines(GetUniqueOutlinesZeroDistance(repeat));
             }
             else  // non outline object with repeat distance greater than 0
             {
-                FillPointsFromRepeatTransformationInfoDimensions(repeat, object->GetLength().Get(), object->GetWidth().Get());
+                marking.FillPointsFromRepeatTransformationInfoDimensions(repeat, GetLength().Get(),GetWidth().Get());
             }
         }
     }
-    else if (object->GetNumberOfOutlines() > 0)  // non repeat outline
+    else if (GetNumberOfOutlines() > 0)  // non repeat outline
     {
-        FillPointsFromOutlines(object->GetOutlines());
+        marking.FillPointsFromOutlines(GetOutlines());
     }
     else  // no outline, no repeat
     {
-        FillPointsFromObject(object);
+        FillPointsFromObject(marking);
     }
 }
 
-std::vector<std::vector<Marking::Point3D>> Marking::GetMarkingsPoints(RMObject* object)
+void RMObject::ResolveTwoMarkings(Marking& marking1, Marking& marking2)
 {
-    if (markingsPoints_.empty())
+    double x3, y3;
+    if (GetIntersectionOfTwoLineSegments(
+        marking1.markingsPoints_[0][1].x, marking1.markingsPoints_[0][1].y,
+        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x, marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y,
+        marking2.markingsPoints_[0][1].x, marking2.markingsPoints_[0][1].y,
+        marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].x, marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].y,
+        x3, y3) == 0)
+        {
+            printf("x3 %f y3 %f\n", x3, y3);
+            printf("intersection found\n");
+            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x = x3;
+            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y = y3;
+            marking2.markingsPoints_[0][1].x = x3;
+            marking2.markingsPoints_[0][1].y = y3;
+        }
+    if (GetIntersectionOfTwoLineSegments(
+        marking1.markingsPoints_[0][0].x, marking1.markingsPoints_[0][0].y,
+        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].x, marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].y,
+        marking2.markingsPoints_[0][0].x, marking2.markingsPoints_[0][0].y,
+        marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][3].x, marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][3].y,
+        x3, y3) == 0)
+        {
+            printf("x3 %f y3 %f\n", x3, y3);
+            printf("intersection found\n");
+            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].x = x3;
+            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].y = y3;
+            marking2.markingsPoints_[0][0].x = x3;
+            marking2.markingsPoints_[0][0].y = y3;
+        }
+}
+
+void RMObject::ResolveMarkings()
+{
+    if (GetNumberOfMarkings() <= 1) // one marking , no need to resolve
     {
-        CreateMarkingsPoints(object);
+        return;
     }
-    return markingsPoints_;
+    for(size_t i = 0; i < markings_.size(); i++)
+    {
+        for(size_t j = i + 1; j < markings_.size(); j++)
+        {
+            if (GetNumberOfMarkings() == 2 && j == 2) // only two markings, no need to resolve last marking
+            {
+                return;
+            }
+            else
+            {
+                ResolveTwoMarkings(markings_[i], markings_[j]);
+            }
+        }
+    }
+}
+
+std::vector<Marking> RMObject::GetMarkingsWithPoints()
+{
+    for (auto& marking : GetMarkings())
+    {
+        if (marking.markingsPoints_.empty())
+        {
+            CreateMarkingsPoints(marking);
+        }
+    } //resolve all marking points here
+    ResolveMarkings();
+    return GetMarkings();
 }
 
 void GetBoundingBoxFromCorners(const std::vector<std::vector<Outline::point>>& cornerPointsVector,

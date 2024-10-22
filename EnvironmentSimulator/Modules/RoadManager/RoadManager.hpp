@@ -2288,7 +2288,7 @@ namespace roadmanager
         {
             return side_;
         }
-        RoadMarkColor GetColor()
+        const RoadMarkColor GetColor() const
         {
             return color_;
         }
@@ -2308,10 +2308,6 @@ namespace roadmanager
             double z = 0.0;
         };
         std::vector<std::vector<Point3D>> markingsPoints_;
-        // Get or create markings points for the given object. This points shall be used to draw markings
-        std::vector<std::vector<Point3D>> GetMarkingsPoints(RMObject *object);
-        // create and fill markings points in itself for the given object.
-        void CreateMarkingsPoints(RMObject *object);
         // create and fill markings points in itself for the given outlines. e.g for non repeat outline object
         void FillPointsFromOutlines(const std::vector<Outline> &outlines);
         // create and fill markings points in itself for the given Unique outlines. e.g repeat with atleast one road corner in any of outlines
@@ -2322,8 +2318,6 @@ namespace roadmanager
         void FillPointsFromScales(Outline &outline, Repeat::RepeatTransformationInfoScale repeatScales);
         // create and fill markings points in itself for the given repeat and dimension. e.g for non outline repeat object
         void FillPointsFromRepeatTransformationInfoDimensions(Repeat &repeat, const double length, const double width);
-        // create and fill markings points in itself for the given outlines. e.g for non outline repeat object
-        void FillPointsFromObject(RMObject *object);
         // create and fill markings points in itself for the given two points
         void FillMarkingPoints(const Point2D &point1, const Point2D &point2, OutlineCorner::CornerType cornerType);
         // get points in world coordinates
@@ -2614,6 +2608,18 @@ namespace roadmanager
         // Get height from repeat given factor. Priority 1.repeat start - end height, 2.Object height, 3.Zero
         double GetRepeatHeightWithFactor(Repeat &rep, double factor);
         void   TransformToLocal(std::vector<std::vector<Outline::point>> &localPoints);
+
+        // Get or create markings with filled points for the given object. This points shall be used to draw markings
+        std::vector<Marking> GetMarkingsWithPoints();
+        // create and fill markings points in itself for the given object.
+        void CreateMarkingsPoints(Marking& marking);
+        // create and fill markings points in itself
+        void FillPointsFromObject(Marking& marking);
+
+        // Resolve markings for the given object. This shall be used to draw markings
+        void ResolveMarkings();
+        // Resolve markings of the two given markings.
+        void ResolveTwoMarkings(Marking &marking1, Marking &marking2);
 
     private:
         std::string                name_;

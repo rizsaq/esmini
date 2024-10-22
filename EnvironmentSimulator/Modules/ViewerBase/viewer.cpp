@@ -2742,9 +2742,9 @@ bool Viewer::CreateRoadLines(Viewer* viewer, roadmanager::OpenDrive* od)
 
 int Viewer::DrawMarking(roadmanager::RMObject* object)
 {
-    for (auto& marking : object->GetMarkings())  // marking
+    for (const auto& marking : object->GetMarkingsWithPoints())  // marking
     {
-        for (const auto& points : marking.GetMarkingsPoints(object))
+        for (const auto& points : marking.markingsPoints_)  // marking points
         {
             osg::ref_ptr<osg::Group>      group        = new osg::Group();
             osg::ref_ptr<osg::Vec3dArray> vertices_top = new osg::Vec3dArray(points.size());  // one set at bottom and one at top
