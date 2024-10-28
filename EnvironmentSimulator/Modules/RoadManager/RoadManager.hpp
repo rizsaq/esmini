@@ -1711,9 +1711,12 @@ namespace roadmanager
         virtual void       GetPosLocal(double &x, double &y, double &z) = 0;
         virtual double     GetHeight()                                  = 0;
         virtual int        GetCornerId()                                = 0;
+        virtual int        GetOriginalCornerId()                        = 0;
         virtual CornerType GetCornerType()                              = 0;
         virtual double     GetZ()                                       = 0;
         virtual bool       IsCalculated()                               = 0;
+        virtual void       SetOriginalCornerId()                        = 0;
+        virtual void       SetCornerId(int cornerId)                    = 0;
 
         virtual ~OutlineCorner()
         {
@@ -1737,15 +1740,19 @@ namespace roadmanager
                           double z);
         void   GetPos(double &x, double &y, double &z) override;
         void   GetPosLocal(double &x, double &y, double &z) override;
-        double GetHeight()
+        double GetHeight() override
         {
             return height_;
         }
-        int GetCornerId()
+        int GetCornerId() override
         {
             return cornerId_;
         }
-        CornerType GetCornerType()
+        int        GetOriginalCornerId() override
+        {
+            return originalCornerId_;
+        }
+        CornerType GetCornerType() override
         {
             return type_;
         }
@@ -1761,13 +1768,21 @@ namespace roadmanager
         {
             return dz_;
         }
-        bool IsCalculated()
+        bool IsCalculated() override
         {
             return !(std::isnan(x_) && std::isnan(y_) && std::isnan(z_));
         }
+        void      SetOriginalCornerId() override
+        {
+            originalCornerId_ = cornerId_; // Set original corner id, useful when resolving corner id conflicts in markings
+        }
+        void      SetCornerId(int cornerId) override
+        {
+            cornerId_ = cornerId;
+        }
 
     private:
-        int                       roadId_, cornerId_;
+        int                       roadId_, cornerId_, originalCornerId_;
         double                    s_, t_, dz_, height_, center_s_, center_t_, center_heading_;
         OutlineCorner::CornerType type_ = OutlineCorner::CornerType::ROAD_CORNER;
         double                    x_    = std::nan("");
@@ -1793,15 +1808,19 @@ namespace roadmanager
         // OutlineCornerLocal operator=(const OutlineCornerLocal&);
         void   GetPos(double &x, double &y, double &z) override;
         void   GetPosLocal(double &x, double &y, double &z) override;
-        double GetHeight()
+        double GetHeight() override
         {
             return height_;
         }
-        int GetCornerId()
+        int GetCornerId() override
         {
             return cornerId_;
         }
-        CornerType GetCornerType()
+        int        GetOriginalCornerId() override
+        {
+            return originalCornerId_;
+        }
+        CornerType GetCornerType() override
         {
             return type_;
         }
@@ -1817,13 +1836,20 @@ namespace roadmanager
         {
             return zLocal_;
         }
-        bool IsCalculated()
+        bool IsCalculated() override
         {
             return !(std::isnan(x_) && std::isnan(y_) && std::isnan(z_));
         }
-
+        void      SetOriginalCornerId() override
+        {
+            originalCornerId_ = cornerId_; // Set original corner id, useful when resolving corner id conflicts in markings
+        }
+        void      SetCornerId(int cornerId) override
+        {
+            cornerId_ = cornerId;
+        }
     private:
-        int                       roadId_, cornerId_;
+        int                       roadId_, cornerId_, originalCornerId_;
         double                    s_, t_, u_, v_, zLocal_, height_, heading_;
         OutlineCorner::CornerType type_ = OutlineCorner::CornerType::LOCAL_CORNER;
         double                    x_, y_, z_;
@@ -1881,6 +1907,11 @@ namespace roadmanager
             double h;
         };
         void TransformRoadCornerToLocal(std::vector<Outline::point> &localPointsList, bool RemoveMin);
+
+        bool IsAllCornerIdUnique();
+        int const GetCornerIdFromOriginalCornerID(int originalCornerId) const;
+        // Resolve provided outline corner reference ids. Make id Start from 0 to n-1
+        void ResolveOutlineCornerReferenceIds();
     };
 
     class ParkingSpace
@@ -2263,6 +2294,13 @@ namespace roadmanager
             LEFT,
             RIGHT
         };
+        enum class MergeType
+        {
+            MERGE_NONE,
+            MERGE_START,
+            MERGE_END,
+            MERGE_BOTH
+        };
         Marking(){};
         Marking(int           roadId,
                 RoadMarkColor color_str,
@@ -2323,17 +2361,38 @@ namespace roadmanager
         // get points in world coordinates
         Point3D GetPoint(const Point2D &point, OutlineCorner::CornerType cornerType);
         // get reference to the corners for given corner reference id and outlines.
-        void GetCorners(std::vector<int> cornerReferenceIds, const Outline &outline, std::vector<OutlineCorner *> &cornerReferences);
+        void GetCorners(const Outline &outline, std::vector<OutlineCorner *> &cornerReferences);
+
 
         ~Marking()
         {
+        }
+        void SetMergeType(MergeType mergeType)
+        {
+            if (mergeType_ == MergeType::MERGE_START && mergeType == MergeType::MERGE_END) // if already start merge and new merge is end then set both and vice versa
+            {
+                mergeType_ = MergeType::MERGE_BOTH;
+            }
+            else
+            {
+                mergeType_ = mergeType;
+            }
+        }
+        bool IsMergeStart()
+        {
+            return mergeType_ == MergeType::MERGE_START || mergeType_ == MergeType::MERGE_BOTH;
+        }
+        bool IsMergeEnd()
+        {
+            return mergeType_ == MergeType::MERGE_END || mergeType_ == MergeType::MERGE_BOTH;
         }
 
     private:
         RoadMarkColor color_ = RoadMarkColor::WHITE;
         double        width_, z_offset_, spaceLength_, lineLength_, startOffset_, stopOffset_;
         int           roadId_;
-        RoadSide      side_ = RoadSide::RIGHT;  // 0 left , 1 right
+        RoadSide      side_ = RoadSide::RIGHT;
+        MergeType     mergeType_ = MergeType::MERGE_NONE;
     };
 
     class RMObject : public RoadObject
@@ -2620,6 +2679,9 @@ namespace roadmanager
         void ResolveMarkings();
         // Resolve markings of the two given markings.
         void ResolveTwoMarkings(Marking &marking1, Marking &marking2);
+        //check weather given id is present in corner reference ids in atleast one outline
+        bool CheckCornerReferenceId(int id);
+        void CreateConsecutiveMarkings();
 
     private:
         std::string                name_;
