@@ -1913,8 +1913,8 @@ namespace roadmanager
         int const GetOriginalCornerIdFromCornerId(int CornerId) const;
         // Resolve provided outline corner reference ids. Make id Start from 0 to n-1, Store the user provided corner id in originalCornerId
         void ResolveOutlineCornerReferenceIds();
-        // Get consecutive corner ids for given marking corner reference ids based on the outline, return false if not possible
-        bool GetConsecutiveCornerIds(std::vector<int> cornerReferenceIds,std::vector<int> &cornerIds);
+        // Get consecutive corner ids for given marking corner reference ids based on the outline
+        void GetConsecutiveCornerIds(std::vector<int> cornerReferenceIds,std::vector<int> &cornerIds);
     };
 
     class ParkingSpace
@@ -2373,6 +2373,7 @@ namespace roadmanager
         void SetMergeType(MergeType mergeType);
         bool IsMergeStart();
         bool IsMergeEnd();
+        int outlineId_ = -1;
 
     private:
         RoadMarkColor color_ = RoadMarkColor::WHITE;
@@ -2380,6 +2381,7 @@ namespace roadmanager
         int           roadId_;
         RoadSide      side_ = RoadSide::RIGHT;
         MergeType     mergeType_ = MergeType::MERGE_NONE;
+
     };
 
     class RMObject : public RoadObject
@@ -2668,8 +2670,6 @@ namespace roadmanager
         void ResolveTwoMarkings(Marking &marking1, Marking &marking2);
         //check weather given id is present in corner reference ids in atleast one outline
         bool CheckCornerReferenceId(int id);
-        // Compare two markings and return true if they are same. Check reference ids are same. So same marking for different outline.
-        bool IsSameMarking(Marking &marking1, Marking &marking2);
 
     private:
         std::string                name_;

@@ -2849,9 +2849,7 @@ bool roadmanager::Marking::IsMergeEnd()
 
 void Outline::ResolveOutlineCornerReferenceIds()
 {
-    std::vector<int> originalCornerIds;
     int currentId = 0;
-
     for (auto& corner : corner_)
     {
         corner->SetOriginalCornerId();
@@ -2860,7 +2858,7 @@ void Outline::ResolveOutlineCornerReferenceIds()
     }
 }
 
-bool roadmanager::Outline::GetConsecutiveCornerIds(std::vector<int> cornerReferenceIds, std::vector<int>& Ids)
+void roadmanager::Outline::GetConsecutiveCornerIds(std::vector<int> cornerReferenceIds, std::vector<int>& Ids)
 {
     std::vector<int> resolvedCornerReferenceIds;
     int min_id = std::numeric_limits<int>::max();
@@ -2882,6 +2880,10 @@ bool roadmanager::Outline::GetConsecutiveCornerIds(std::vector<int> cornerRefere
         {
             resolvedCornerReferenceIds.push_back(id);
         }
+    }
+    if (resolvedCornerReferenceIds.size() == 0)
+    {
+        return;
     }
 
     // Switch values as small to large for each marking, but skip switch if it contains only max_id as start and min_id as end eg 3,0
@@ -2938,12 +2940,6 @@ bool roadmanager::Outline::GetConsecutiveCornerIds(std::vector<int> cornerRefere
         }
     }
 
-    if (cornerReferenceIds.size() != Ids.size())
-    {
-        return true;
-    }
-    return false
-
 }
 
 bool roadmanager::RMObject::CheckCornerReferenceId(int id)
@@ -2959,24 +2955,6 @@ bool roadmanager::RMObject::CheckCornerReferenceId(int id)
         }
     }
     return false;
-}
-
-bool roadmanager::RMObject::IsSameMarking(Marking& marking1, Marking& marking2)
-{
-    if (marking1.cornerReferenceIds.size() != marking2.cornerReferenceIds.size())
-    {
-        return false;
-    }
-
-    for (size_t i = 0; i < marking1.cornerReferenceIds.size(); ++i)
-    {
-        if (marking1.cornerReferenceIds[i] != marking2.cornerReferenceIds[i])
-        {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 void Marking::FillPointsFromScales(Outline& outline, roadmanager::Repeat::RepeatTransformationInfoScale repeatScales)
@@ -3102,7 +3080,10 @@ void Marking::FillPointsFromOutlines(const std::vector<Outline>& outlines)
     {
         Point2D point1;
         Point2D point2;
-
+        if(outlineId_ != outline.id_)
+        {
+            continue;
+        }
         if (cornerReferenceIds.size() > 0)  // no corner ids
         {
             std::vector<OutlineCorner*> cornerReferences;
@@ -3259,7 +3240,7 @@ void RMObject::ResolveMarkings()
     {
         for(size_t j = i + 1; j < markings_.size(); j++)
         {
-            if (!IsSameMarking(markings_[i], markings_[j])) // if marking1 and marking2 are not same, resolve
+            if (markings_[i].outlineId_ == markings_[j].outlineId_) // if marking1 and marking2 are not same, resolve
             {
                 printf("marking1 ->%d\n", static_cast<int>(i));
                 printf("marking2 ->%d\n", static_cast<int>(j));
@@ -5921,12 +5902,14 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                 pugi::xml_node outlines_node = object.child("outlines");
                 if (outlines_node != NULL)
                 {
+                    int id = 0;
                     for (pugi::xml_node outline_node = outlines_node.child("outline"); outline_node; outline_node = outline_node.next_sibling())
                     {
-                        int               id = atoi(outline_node.attribute("id").value());
+                        // int               id = atoi(outline_node.attribute("id").value());
                         Outline::AreaType areaType =
                             !strcmp(outline_node.attribute("closed").value(), "true") ? Outline::AreaType::CLOSED : Outline::AreaType::OPEN;
                         Outline outline(id, Outline::FillType::FILL_TYPE_UNDEFINED, areaType);
+                        id++; // increment id for each outline, internal outline id
 
                         for (pugi::xml_node corner_node = outline_node.first_child(); corner_node; corner_node = corner_node.next_sibling())
                         {
@@ -6061,21 +6044,17 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                                 for (auto& outline : obj->GetOutlines())
                                 {
                                     std::vector<int> cornerIds;
-
-                                    if(outline.GetConsecutiveCornerIds(cornerReferenceIds, cornerIds))
+                                    outline.GetConsecutiveCornerIds(cornerReferenceIds, cornerIds);
+                                    if(cornerIds.size() > 1) // atleast two corner ids are required to create marking
                                     {
                                         for (size_t i = 0; i < cornerIds.size() - 1; i++)
                                         {
                                             Marking markingCopy = marking;
+                                            markingCopy.outlineId_ = outline.id_;
                                             markingCopy.cornerReferenceIds.push_back(cornerIds[i]);
                                             markingCopy.cornerReferenceIds.push_back(cornerIds[i + 1]);
                                             obj->AddMarking(std::move(markingCopy));
                                         }
-                                    }
-                                    else
-                                    {
-                                        marking.cornerReferenceIds = cornerReferenceIds;
-                                        obj->AddMarking(std::move(marking));
                                     }
                                 }
                             }
