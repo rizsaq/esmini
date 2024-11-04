@@ -376,17 +376,18 @@ double GetDotProduct2D(double x1, double y1, double x2, double y2);
         returns 0 if intersection exists, else -1
         Note: does not (yet) calculate whether point is within one of the line segments or not
 */
-int GetIntersectionOfTwoLineSegments(double  ax1,
-                                     double  ay1,
-                                     double  ax2,
-                                     double  ay2,
-                                     double  bx1,
-                                     double  by1,
-                                     double  bx2,
-                                     double  by2,
-                                     double& x3,
-                                     double& y3);
-bool IsCounterclockwise(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double  bx2, double by2);
+int  GetIntersectionOfTwoLineSegments(double  ax1,
+                                      double  ay1,
+                                      double  ax2,
+                                      double  ay2,
+                                      double  bx1,
+                                      double  by1,
+                                      double  bx2,
+                                      double  by2,
+                                      double& x3,
+                                      double& y3);
+bool IsCounterclockwise(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double bx2, double by2);
+bool IsCounterclockwiseAndWithinSegment(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double bx2, double by2);
 
 /**
         Calculate distance between two 2D points

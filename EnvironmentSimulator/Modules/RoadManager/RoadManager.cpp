@@ -2535,6 +2535,29 @@ bool Outline::IsAllCornerIdUnique()
     return true;
 }
 
+bool roadmanager::Outline::IsAllSameCorners()
+{
+    bool foundLocalCorner = false;
+    bool foundRoadcorner  = false;
+    for (const auto& corner : corner_)
+    {
+        if (corner->GetCornerType() == OutlineCorner::CornerType::LOCAL_CORNER)
+        {
+            foundLocalCorner = true;
+        }
+        else
+        {
+            foundRoadcorner = true;
+        }
+
+        if (foundLocalCorner && foundRoadcorner)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 int const roadmanager::Outline::GetCornerIdFromOriginalCornerId(int originalCornerId) const
 {
     for (const auto& corner : corner_)
@@ -2559,7 +2582,7 @@ int const roadmanager::Outline::GetOriginalCornerIdFromCornerId(int cornerId) co
     return -1;
 }
 
-OutlineCornerLocal::OutlineCornerLocal(id_t    roadId,
+OutlineCornerLocal::OutlineCornerLocal(id_t   roadId,
                                        double s,
                                        double t,
                                        double u,
@@ -2694,37 +2717,37 @@ Marking::Point3D Marking::GetPoint(const Point2D& point, OutlineCorner::CornerTy
 }
 void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, OutlineCorner::CornerType cornerType)
 {
-
-    if(startOffset_ == 0.0) // no startoffset add start merge
+    if (startOffset_ == 0.0)  // no startoffset add start merge
     {
         SetMergeType(MergeType::MERGE_START);
     }
 
     double lineLength_temp_ = lineLength_;
-    double total_length = GetLengthOfVector2D((point2.x - point1.x), (point2.y - point1.y));
-    total_length        = total_length - startOffset_ - stopOffset_;
-    if (IsEqualDouble(total_length, 0.0)) // if total length is zero, no need to add any marking
+    double total_length     = GetLengthOfVector2D((point2.x - point1.x), (point2.y - point1.y));
+    total_length            = total_length - startOffset_ - stopOffset_;
+    if (IsEqualDouble(total_length, 0.0))  // if total length is zero, no need to add any marking
     {
         return;
     }
 
-    if ((lineLength_ == 0.0 && spaceLength_ == 0.0) || lineLength_ == -1.0)  // if both line and space length is zero or line length is -1, add marking for total length
+    if ((lineLength_ == 0.0 && spaceLength_ == 0.0) ||
+        lineLength_ == -1.0)  // if both line and space length is zero or line length is -1, add marking for total length
     {
         lineLength_temp_ = total_length;
     }
     else
     {
-        if (static_cast<int>(total_length / (lineLength_ + spaceLength_)) == 0) // no space for complete lineLength_ + spaceLength_
+        if (static_cast<int>(total_length / (lineLength_ + spaceLength_)) == 0)  // no space for complete lineLength_ + spaceLength_
         {
             // add atleast linelength
-            if(lineLength_ > total_length)
+            if (lineLength_ > total_length)
             {
-                lineLength_temp_ = total_length; // if line length is greater than total length, add marking for total length
+                lineLength_temp_ = total_length;  // if line length is greater than total length, add marking for total length
             }
         }
     }
 
-    double alpha              = atan2(point2.x - point1.x, point2.y - point1.y); // find the angle between two points
+    double alpha = atan2(point2.x - point1.x, point2.y - point1.y);  // find the angle between two points
     // find the actual distance of below parameters based on angle
     double deltaP1Gap         = cos(alpha) * spaceLength_;
     double deltaP0Gap         = sin(alpha) * spaceLength_;
@@ -2737,7 +2760,7 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
     Point2D point;
     point.x = point1.x;
     point.y = point1.y;
-    if (side_ == RoadSide::RIGHT)// center allign the marking
+    if (side_ == RoadSide::RIGHT)  // center allign the marking
     {
         point.x -= cos(alpha) * width_ / 2;
         point.y += sin(alpha) * width_ / 2;
@@ -2749,23 +2772,23 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
     }
     Point2D start_point;
     start_point.x = point.x;
-    start_point.y = point.y; // shall be used later in the loop
+    start_point.y = point.y;  // shall be used later in the loop
 
     // find the far points of the marking
-    double beata = side_ == RoadSide::RIGHT ? M_PI_2 + alpha : -M_PI_2 + alpha;
+    double beata      = side_ == RoadSide::RIGHT ? M_PI_2 + alpha : -M_PI_2 + alpha;
     double deltaP1Far = cos(beata) * width_;
     double deltaP0Far = sin(beata) * width_;
 
-    double cur_s = 0.0;
-    int counter = 1;
-    Point2D pointTemp;
-
-    while(total_length - cur_s >= 0.0) // loop till total length is covered
+    double                            cur_s   = 0.0;
+    int                               counter = 1;
+    Point2D                           pointTemp;
+    std::vector<std::vector<Point3D>> markingsPointsTemp_;
+    while (total_length - cur_s >= 0.0)  // loop till total length is covered
     {
         std::vector<Point3D> points;
         points.reserve(3);
 
-        if (cur_s == 0.0) // if first block, add start offset
+        if (cur_s == 0.0)  // if first block, add start offset
         {
             point.x += deltaP0StartOffset;
             point.y += deltaP1StartOffset;
@@ -2775,15 +2798,15 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
             point.x += deltaP0Gap;
             point.y += deltaP1Gap;
         }
-        cur_s = GetLengthOfVector2D((point.x - start_point.x), (point.y  - start_point.y));
-        if(abs(total_length - cur_s) < SMALL_NUMBER) // total_length and cur_s are approximately equal
+        cur_s = GetLengthOfVector2D((point.x - start_point.x), (point.y - start_point.y));
+        if (abs(total_length - cur_s) < SMALL_NUMBER)  // total_length and cur_s are approximately equal
         {
             break;
         }
 
         pointTemp.x = point.x + deltaP0Far;
         pointTemp.y = point.y + deltaP1Far;
-        points.emplace_back(std::move(GetPoint(point, cornerType)));  // point_ A
+        points.emplace_back(std::move(GetPoint(point, cornerType)));      // point_ A
         points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ B
 
         point.x += deltaP0Line;
@@ -2792,27 +2815,30 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
         pointTemp.x = point.x + deltaP0Far;
         pointTemp.y = point.y + deltaP1Far;
 
-        cur_s = GetLengthOfVector2D((point.x - start_point.x), (point.y  - start_point.y));
+        cur_s = GetLengthOfVector2D((point.x - start_point.x), (point.y - start_point.y));
         points.emplace_back(std::move(GetPoint(pointTemp, cornerType)));  // point_ D
         points.emplace_back(std::move(GetPoint(point, cornerType)));      // point_ C
-        if (cur_s  <= total_length + SMALL_NUMBER)
+        if (cur_s <= total_length + SMALL_NUMBER)
         // cur_s is less than or equal to total_length + SMALL_NUMBER, add the points
         {
+            markingsPointsTemp_.emplace_back(points);
             markingsPoints_.emplace_back(std::move(points));
         }
-        if(abs(total_length - cur_s) < SMALL_NUMBER) // total_length and cur_s are approximately equal
+        if (abs(total_length - cur_s) < SMALL_NUMBER)  // total_length and cur_s are approximately equal
         {
-            SetMergeType(MergeType::MERGE_END); // line length reached last s value
+            SetMergeType(MergeType::MERGE_END);  // line length reached last s value
             break;
         }
     }
-
+    markingsPointsDetails_.emplace_back(std::pair(markingsPointsTemp_, mergeType_));
 }
 
-void Marking::GetCorners(const Outline& outline, std::vector<OutlineCorner*>& cornerReferences)
+void Marking::GetCorners(Outline& outline, std::vector<OutlineCorner*>& cornerReferences)
 {
+    std::vector<int> ids;
+    outline.GetConsecutiveCornerIds(cornerReferenceIds, ids);
     // fetch the corner reference from corner id
-    for (const auto cornerReferenceId : cornerReferenceIds)
+    for (const auto cornerReferenceId : ids)
     {
         for (const auto& corner : outline.corner_)
         {
@@ -2827,7 +2853,8 @@ void Marking::GetCorners(const Outline& outline, std::vector<OutlineCorner*>& co
 
 void roadmanager::Marking::SetMergeType(MergeType mergeType)
 {
-    if (mergeType_ == MergeType::MERGE_START && mergeType == MergeType::MERGE_END) // if already start merge and new merge is end then set both and vice versa
+    if (mergeType_ == MergeType::MERGE_START &&
+        mergeType == MergeType::MERGE_END)  // if already start merge and new merge is end then set both and vice versa
     {
         mergeType_ = MergeType::MERGE_BOTH;
     }
@@ -2847,6 +2874,16 @@ bool roadmanager::Marking::IsMergeEnd()
     return mergeType_ == MergeType::MERGE_END || mergeType_ == MergeType::MERGE_BOTH;
 }
 
+bool roadmanager::Marking::IsMergeStart(MergeType mergeType)
+{
+    return mergeType == MergeType::MERGE_START || mergeType == MergeType::MERGE_BOTH;
+}
+
+bool roadmanager::Marking::IsMergeEnd(MergeType mergeType)
+{
+    return mergeType_ == MergeType::MERGE_END || mergeType_ == MergeType::MERGE_BOTH;
+}
+
 void Outline::ResolveOutlineCornerReferenceIds()
 {
     int currentId = 0;
@@ -2861,15 +2898,17 @@ void Outline::ResolveOutlineCornerReferenceIds()
 void roadmanager::Outline::GetConsecutiveCornerIds(std::vector<int> cornerReferenceIds, std::vector<int>& Ids)
 {
     std::vector<int> resolvedCornerReferenceIds;
-    int min_id = std::numeric_limits<int>::max();
-    int max_id = std::numeric_limits<int>::min();
+    int              min_id = std::numeric_limits<int>::max();
+    int              max_id = std::numeric_limits<int>::min();
 
     // Find the minimum and maximum IDs across all outlines
     for (const auto& corner : corner_)
     {
         int id = corner->GetCornerId();
-        if (id < min_id) min_id = id;
-        if (id > max_id) max_id = id;
+        if (id < min_id)
+            min_id = id;
+        if (id > max_id)
+            max_id = id;
     }
 
     // find the corner reference id from original corner id
@@ -2889,35 +2928,45 @@ void roadmanager::Outline::GetConsecutiveCornerIds(std::vector<int> cornerRefere
     // Switch values as small to large for each marking, but skip switch if it contains only max_id as start and min_id as end eg 3,0
     if (resolvedCornerReferenceIds.size() == 2)
     {
-        if((resolvedCornerReferenceIds[0] != max_id || resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] != min_id)
-            && resolvedCornerReferenceIds[0] > resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1])
+        if ((resolvedCornerReferenceIds[0] != max_id || resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] != min_id) &&
+            resolvedCornerReferenceIds[0] > resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1])
         {
             std::swap(resolvedCornerReferenceIds[0], resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1]);
         }
     }
     else
     {
-        std::sort(resolvedCornerReferenceIds.begin(), resolvedCornerReferenceIds.end());
+        if (!(resolvedCornerReferenceIds[0] == 0 && resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] == 0)) // not (0,1,2,3,0)
+        {
+            std::sort(resolvedCornerReferenceIds.begin(), resolvedCornerReferenceIds.end());
+        }
+        else
+        {
+            std::sort(resolvedCornerReferenceIds.begin(), resolvedCornerReferenceIds.end() - 1);// dont inclusive last element
+        }
+
     }
 
     // Create new cornerReferenceIds between consecutive cornerReferenceIds
-    if (resolvedCornerReferenceIds.size() == 2  && resolvedCornerReferenceIds[0] == 0 && resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] == 0)
+    if (resolvedCornerReferenceIds.size() == 2 && resolvedCornerReferenceIds[0] == 0 &&
+        resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] == 0)
     {
         std::vector<int> consecutive_cornerReferenceIds;
         for (size_t i = 0; i < corner_.size(); i++)
         {
             consecutive_cornerReferenceIds.push_back(i);
         }
-        consecutive_cornerReferenceIds.push_back(0); // arrange as 0,1,2,3,0
+        consecutive_cornerReferenceIds.push_back(0);  // arrange as 0,1,2,3,0
         resolvedCornerReferenceIds = std::move(consecutive_cornerReferenceIds);
     }
-    else if (!(resolvedCornerReferenceIds.size() == 2 && resolvedCornerReferenceIds[0] == max_id && resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] == min_id))
+    else if (!(resolvedCornerReferenceIds.size() == 2 && resolvedCornerReferenceIds[0] == max_id &&
+               resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] == min_id))
     {
         std::vector<int> consecutive_cornerReferenceIds;
         for (size_t i = 0; i < resolvedCornerReferenceIds.size() - 1; ++i)
         {
             int start_id = resolvedCornerReferenceIds[i];
-            int end_id = resolvedCornerReferenceIds[i + 1];
+            int end_id   = resolvedCornerReferenceIds[i + 1];
             consecutive_cornerReferenceIds.push_back(start_id);
 
             // Add intermediate IDs
@@ -2939,7 +2988,6 @@ void roadmanager::Outline::GetConsecutiveCornerIds(std::vector<int> cornerRefere
             Ids.push_back(id);
         }
     }
-
 }
 
 bool roadmanager::RMObject::CheckCornerReferenceId(int id)
@@ -3040,8 +3088,8 @@ void Marking::FillPointsFromRepeatTransformationInfoDimensions(Repeat& repeat, c
 
 void RMObject::FillPointsFromObject(Marking& marking)
 {
-    Marking::Point2D               point1;
-    Marking::Point2D               point2;
+    Marking::Point2D      point1;
+    Marking::Point2D      point2;
     roadmanager::Position pos;
     pos.SetTrackPosMode(GetRoadId(),
                         GetS(),
@@ -3074,16 +3122,12 @@ void RMObject::FillPointsFromObject(Marking& marking)
     }
 }
 
-void Marking::FillPointsFromOutlines(const std::vector<Outline>& outlines)
+void Marking::FillPointsFromOutlines(std::vector<Outline>& outlines)
 {
     for (auto& outline : outlines)
     {
         Point2D point1;
         Point2D point2;
-        if(outlineId_ != outline.id_)
-        {
-            continue;
-        }
         if (cornerReferenceIds.size() > 0)  // no corner ids
         {
             std::vector<OutlineCorner*> cornerReferences;
@@ -3171,7 +3215,7 @@ void RMObject::CreateMarkingsPoints(Marking& marking)
             }
             else  // non outline object with repeat distance greater than 0
             {
-                marking.FillPointsFromRepeatTransformationInfoDimensions(repeat, GetLength().Get(),GetWidth().Get());
+                marking.FillPointsFromRepeatTransformationInfoDimensions(repeat, GetLength().Get(), GetWidth().Get());
             }
         }
     }
@@ -3188,7 +3232,7 @@ void RMObject::CreateMarkingsPoints(Marking& marking)
 void RMObject::ResolveTwoMarkings(Marking& marking1, Marking& marking2)
 {
     // check marking1 and marking2 are in same direction(counterclockwise)
-    if(!IsCounterclockwise(marking1.markingsPoints_[0][1].x,
+    if (!IsCounterclockwise(marking1.markingsPoints_[0][1].x,
                             marking1.markingsPoints_[0][1].y,
                             marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x,
                             marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y,
@@ -3200,59 +3244,179 @@ void RMObject::ResolveTwoMarkings(Marking& marking1, Marking& marking2)
         return;
     }
     double x3, y3;
-    if (GetIntersectionOfTwoLineSegments(
-        marking1.markingsPoints_[0][1].x, marking1.markingsPoints_[0][1].y,
-        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x, marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y,
-        marking2.markingsPoints_[0][1].x, marking2.markingsPoints_[0][1].y,
-        marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].x, marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].y,
-        x3, y3) == 0)
-        {
-            printf("x3 %f y3 %f\n", x3, y3);
-            printf("intersection found\n");
-            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x = x3;
-            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y = y3;
-            marking2.markingsPoints_[0][1].x = x3;
-            marking2.markingsPoints_[0][1].y = y3;
-        }
-    if (GetIntersectionOfTwoLineSegments(
-        marking1.markingsPoints_[0][0].x, marking1.markingsPoints_[0][0].y,
-        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].x, marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].y,
-        marking2.markingsPoints_[0][0].x, marking2.markingsPoints_[0][0].y,
-        marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][3].x, marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][3].y,
-        x3, y3) == 0)
-        {
-            printf("x3 %f y3 %f\n", x3, y3);
-            printf("intersection found\n");
-            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].x = x3;
-            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].y = y3;
-            marking2.markingsPoints_[0][0].x = x3;
-            marking2.markingsPoints_[0][0].y = y3;
-        }
+    if (GetIntersectionOfTwoLineSegments(marking1.markingsPoints_[0][1].x,
+                                         marking1.markingsPoints_[0][1].y,
+                                         marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x,
+                                         marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y,
+                                         marking2.markingsPoints_[0][1].x,
+                                         marking2.markingsPoints_[0][1].y,
+                                         marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].x,
+                                         marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].y,
+                                         x3,
+                                         y3) == 0)
+    {
+        printf("x3 %f y3 %f\n", x3, y3);
+        printf("intersection found\n");
+        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x = x3;
+        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y = y3;
+        marking2.markingsPoints_[0][1].x                                   = x3;
+        marking2.markingsPoints_[0][1].y                                   = y3;
+    }
+    if (GetIntersectionOfTwoLineSegments(marking1.markingsPoints_[0][0].x,
+                                         marking1.markingsPoints_[0][0].y,
+                                         marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].x,
+                                         marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].y,
+                                         marking2.markingsPoints_[0][0].x,
+                                         marking2.markingsPoints_[0][0].y,
+                                         marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][3].x,
+                                         marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][3].y,
+                                         x3,
+                                         y3) == 0)
+    {
+        printf("x3 %f y3 %f\n", x3, y3);
+        printf("intersection found\n");
+        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].x = x3;
+        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].y = y3;
+        marking2.markingsPoints_[0][0].x                                   = x3;
+        marking2.markingsPoints_[0][0].y                                   = y3;
+    }
 }
 
 void RMObject::ResolveMarkings()
 {
-    if (GetNumberOfMarkings() == 1) // one marking , no need to resolve
+    if (GetNumberOfMarkings() == 1)  // one marking , no need to resolve
     {
         return;
     }
-    for(size_t i = 0; i < markings_.size(); i++)
+    for (size_t i = 0; i < markings_.size(); i++)
     {
-        for(size_t j = i + 1; j < markings_.size(); j++)
+        for (size_t j = i + 1; j < markings_.size(); j++)
         {
-            if (markings_[i].outlineId_ == markings_[j].outlineId_) // if marking1 and marking2 are not same, resolve
+            if (markings_[i].outlineId_ == markings_[j].outlineId_)  // if marking1 and marking2 are not same, resolve
             {
                 printf("marking1 ->%d\n", static_cast<int>(i));
                 printf("marking2 ->%d\n", static_cast<int>(j));
-                if(markings_[i].IsMergeEnd() && markings_[j].IsMergeStart()) // if one marking is end and other is start, resolve
+                if (markings_[i].IsMergeEnd() && markings_[j].IsMergeStart())  // if one marking is end and other is start, resolve
                 {
                     printf("end and start\n");
                     ResolveTwoMarkings(markings_[i], markings_[j]);
                 }
-                if(markings_[i].IsMergeStart() && markings_[j].IsMergeEnd()) // if one marking is start and other is end, resolve
+                if (markings_[i].IsMergeStart() && markings_[j].IsMergeEnd())  // if one marking is start and other is end, resolve
                 {
                     printf("start and end\n");
                     ResolveTwoMarkings(markings_[j], markings_[i]);
+                }
+            }
+        }
+    }
+}
+
+void RMObject::ResolveTwoLinesWithWidth(std::vector<std::vector<Marking::Point3D>>& line1, std::vector<std::vector<Marking::Point3D>>& line2)
+{
+    if (IsCounterclockwiseAndWithinSegment(
+            line1[0][1].x,
+            line1[0][1].y,
+            line1[line1.size() - 1][2].x,
+            line1[line1.size() - 1][2].y,
+            line2[0][1].x,
+            line2[0][1].y,
+            line2[line2.size() - 1][2].x,
+            line2[line2.size() - 1][2].y) ||
+        IsCounterclockwiseAndWithinSegment(
+            line1[0][0].x,
+            line1[0][0].y,
+            line1[line1.size() - 1][3].x,
+            line1[line1.size() - 1][3].y,
+            line2[0][0].x,
+            line2[0][0].y,
+            line2[line2.size() - 1][3].x,
+            line2[line2.size() - 1][3].y))
+    {
+        printf("intersection found\n");
+        double x3, y3;
+        if (GetIntersectionOfTwoLineSegments(line1[0][1].x,
+                                            line1[0][1].y,
+                                            line1[line1.size() - 1][2].x,
+                                            line1[line1.size() - 1][2].y,
+                                            line2[0][1].x,
+                                            line2[0][1].y,
+                                            line2[line2.size() - 1][2].x,
+                                            line2[line2.size() - 1][2].y,
+                                            x3,
+                                            y3) == 0)
+        {
+            printf("x3 %f y3 %f\n", x3, y3);
+            printf("intersection found\n");
+            line1[line1.size() - 1][2].x = x3;
+            line1[line1.size() - 1][2].y = y3;
+            line2[0][1].x = x3;
+            line2[0][1].y = y3;
+        }
+        if (GetIntersectionOfTwoLineSegments(line1[0][0].x,
+                                            line1[0][0].y,
+                                            line1[line1.size() - 1][3].x,
+                                            line1[line1.size() - 1][3].y,
+                                            line2[0][0].x,
+                                            line2[0][0].y,
+                                            line2[line2.size() - 1][3].x,
+                                            line2[line2.size() - 1][3].y,
+                                            x3,
+                                            y3) == 0)
+        {
+            printf("x3 %f y3 %f\n", x3, y3);
+            printf("intersection found\n");
+            line1[line1.size() - 1][3].x = x3;
+            line1[line1.size() - 1][3].y = y3;
+            line2[0][0].x = x3;
+            line2[0][0].y = y3;
+        }
+    }
+    printf("------------------end----------------------\n");
+
+}
+
+void RMObject::ResolveMarkingsAdvanced()
+{
+    for (size_t i = 0; i < markings_.size(); i++)
+    {
+        for (size_t j = 0; j < markings_[i].markingsPointsDetails_.size(); j++)
+        {
+            if (markings_[i].markingsPointsDetails_.size() > 1)
+            {
+                for (size_t k = j + 1; k < markings_[i].markingsPointsDetails_.size(); k++)
+                {
+                    if (markings_[i].IsMergeEnd(markings_[i].markingsPointsDetails_[j].second ) && markings_[i].IsMergeStart(markings_[i].markingsPointsDetails_[k].second))
+                    {
+                        printf("i ->%d\n", static_cast<int>(i));
+                        printf("j ->%d k ->%d\n", static_cast<int>(j), static_cast<int>(k));
+                        ResolveTwoLinesWithWidth(markings_[i].markingsPointsDetails_[j].first, markings_[i].markingsPointsDetails_[k].first);
+                    }
+                    if (markings_[i].IsMergeStart(markings_[i].markingsPointsDetails_[j].second ) && markings_[i].IsMergeEnd(markings_[i].markingsPointsDetails_[k].second))
+                    {
+                        printf("i ->%d\n", static_cast<int>(i));
+                        printf("j ->%d k ->%d\n", static_cast<int>(j), static_cast<int>(k));
+                        ResolveTwoLinesWithWidth(markings_[i].markingsPointsDetails_[k].first, markings_[i].markingsPointsDetails_[j].first);
+                    }
+                }
+            }
+            for (size_t l = i + 1; l < markings_.size(); l++)
+            {
+                for (size_t m = 0; m < markings_[l].markingsPointsDetails_.size(); m++)
+                {
+                    if (markings_[i].IsMergeEnd(markings_[l].markingsPointsDetails_[j].second ) && markings_[i].IsMergeStart(markings_[l].markingsPointsDetails_[m].second))
+                    {
+                        printf("i ->%d\n", static_cast<int>(i));
+                        printf("l ->%d\n", static_cast<int>(l));
+                        printf("j ->%d m ->%d\n", static_cast<int>(j), static_cast<int>(m));
+                        ResolveTwoLinesWithWidth(markings_[i].markingsPointsDetails_[j].first, markings_[l].markingsPointsDetails_[m].first);
+                    }
+                    if (markings_[i].IsMergeStart(markings_[i].markingsPointsDetails_[j].second ) && markings_[i].IsMergeEnd(markings_[l].markingsPointsDetails_[m].second))
+                    {
+                        printf("i ->%d\n", static_cast<int>(i));
+                        printf("l ->%d\n", static_cast<int>(i));
+                        printf("j ->%d m ->%d\n", static_cast<int>(j), static_cast<int>(m));
+                        ResolveTwoLinesWithWidth(markings_[l].markingsPointsDetails_[m].first, markings_[i].markingsPointsDetails_[j].first);
+                    }
                 }
             }
         }
@@ -3267,8 +3431,9 @@ std::vector<Marking> RMObject::GetMarkingsWithPoints()
         {
             CreateMarkingsPoints(marking);
         }
-    } //resolve all marking points here
-    ResolveMarkings();
+    }  // resolve all marking points here
+    // ResolveMarkings();
+    ResolveMarkingsAdvanced();
     return GetMarkings();
 }
 
@@ -3382,7 +3547,7 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
     return 0;
 }
 
-const std::vector<Outline>& RMObject::GetUniqueOutlinesZeroDistance(Repeat& repeat)
+std::vector<Outline>& RMObject::GetUniqueOutlinesZeroDistance(Repeat& repeat)
 {
     if (GetNumberOfUniqueOutlinesZeroDistance(repeat) == 0)
     {
@@ -5909,19 +6074,19 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                         Outline::AreaType areaType =
                             !strcmp(outline_node.attribute("closed").value(), "true") ? Outline::AreaType::CLOSED : Outline::AreaType::OPEN;
                         Outline outline(id, Outline::FillType::FILL_TYPE_UNDEFINED, areaType);
-                        id++; // increment id for each outline, internal outline id
+                        id++;  // increment id for each outline, internal outline id
 
                         for (pugi::xml_node corner_node = outline_node.first_child(); corner_node; corner_node = corner_node.next_sibling())
                         {
-                            OutlineCorner* corner = 0;
-                            int               cornerId = -1; // defualt value
+                            OutlineCorner* corner   = 0;
+                            int            cornerId = -1;  // defualt value
 
                             if (!strcmp(corner_node.name(), "cornerRoad"))
                             {
-                                double sc       = atof(corner_node.attribute("s").value());
-                                double tc       = atof(corner_node.attribute("t").value());
-                                double dz       = atof(corner_node.attribute("dz").value());
-                                double heightc  = atof(corner_node.attribute("height").value());
+                                double sc      = atof(corner_node.attribute("s").value());
+                                double tc      = atof(corner_node.attribute("t").value());
+                                double dz      = atof(corner_node.attribute("dz").value());
+                                double heightc = atof(corner_node.attribute("height").value());
                                 if (const auto& val = corner_node.attribute("id"); !val.empty())
                                 {
                                     cornerId = atoi(val.value());
@@ -5931,10 +6096,10 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                             }
                             else if (!strcmp(corner_node.name(), "cornerLocal"))
                             {
-                                double u        = atof(corner_node.attribute("u").value());
-                                double v        = atof(corner_node.attribute("v").value());
-                                double zLocal   = atof(corner_node.attribute("z").value());
-                                double heightc  = atof(corner_node.attribute("height").value());
+                                double u       = atof(corner_node.attribute("u").value());
+                                double v       = atof(corner_node.attribute("v").value());
+                                double zLocal  = atof(corner_node.attribute("z").value());
+                                double heightc = atof(corner_node.attribute("height").value());
                                 if (const auto& val = corner_node.attribute("id"); !val.empty())
                                 {
                                     cornerId = atoi(val.value());
@@ -5952,14 +6117,15 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                             }
                             outline.AddCorner(corner);
                         }
-                        if(outline.IsAllCornerIdUnique())
+                        if (outline.IsAllCornerIdUnique() && outline.IsAllSameCorners())
                         {
-                            outline.ResolveOutlineCornerReferenceIds(); // resolve corner reference ids, sort corners reference ids always start from 0
+                            outline
+                                .ResolveOutlineCornerReferenceIds();  // resolve corner reference ids, sort corners reference ids always start from 0
                             obj->AddOutline(std::move(outline));
                         }
                         else
                         {
-                            LOG("skiping outline, Outline corner ids is not unique for outline id %d", outline.id_);
+                            LOG("skiping outline, Outline corner ids is not unique or mixed corners found in outline id %d", outline.id_);
                             break;
                         }
                     }
@@ -5977,7 +6143,7 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                 {
                     for (pugi::xml_node marking_node = markings_node.child("marking"); marking_node; marking_node = marking_node.next_sibling())
                     {
-                        bool isValidMarking = true;
+                        bool    isValidMarking = true;
                         Marking marking;
                         if (!strcmp(marking_node.name(), "marking"))
                         {
@@ -5999,13 +6165,13 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
 
                             marking = Marking(r->GetId(), color, width, z_offset, spaceLength, lineLength, startOffset, stopOffset, side);
                         }
-                        if (obj->GetNumberOfOutlines() > 0) // check corner reference id only when outline is present
+                        if (obj->GetNumberOfOutlines() > 0)  // check corner reference id only when outline is present
                         {
                             std::vector<int> cornerReferenceIds;
                             for (pugi::xml_node cornerReference_node = marking_node.child("cornerReference"); cornerReference_node;
-                                cornerReference_node                = cornerReference_node.next_sibling())
+                                 cornerReference_node                = cornerReference_node.next_sibling())
                             {
-                                int id  = -1; // defualt value
+                                int id = -1;  // defualt value
                                 // check if id is present
                                 if (const auto& val = cornerReference_node.attribute("id"); !val.empty())
                                 {
@@ -6020,7 +6186,7 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                                 // check if id is present in any of the outline
                                 if (obj->CheckCornerReferenceId(id))
                                 {
-                                    cornerReferenceIds.push_back(id);
+                                    marking.cornerReferenceIds.push_back(id);
                                 }
                                 else
                                 {
@@ -6029,37 +6195,13 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                                     break;
                                 }
                             }
-                            if (!isValidMarking)
-                            {
-                                break;
-                            }
-                            if (cornerReferenceIds.size() < 2)
+                            if (marking.cornerReferenceIds.size() < 2)
                             {
                                 LOG("Skiping marking, Atleast two <cornerReference> elements are mandatory, Skiping");
                                 break;
                             }
-                            else
-                            {
-                                // AddConsectiveMarkings()
-                                for (auto& outline : obj->GetOutlines())
-                                {
-                                    std::vector<int> cornerIds;
-                                    outline.GetConsecutiveCornerIds(cornerReferenceIds, cornerIds);
-                                    if(cornerIds.size() > 1) // atleast two corner ids are required to create marking
-                                    {
-                                        for (size_t i = 0; i < cornerIds.size() - 1; i++)
-                                        {
-                                            Marking markingCopy = marking;
-                                            markingCopy.outlineId_ = outline.id_;
-                                            markingCopy.cornerReferenceIds.push_back(cornerIds[i]);
-                                            markingCopy.cornerReferenceIds.push_back(cornerIds[i + 1]);
-                                            obj->AddMarking(std::move(markingCopy));
-                                        }
-                                    }
-                                }
-                            }
                         }
-                        else
+                        if (isValidMarking)
                         {
                             obj->AddMarking(std::move(marking));
                         }
