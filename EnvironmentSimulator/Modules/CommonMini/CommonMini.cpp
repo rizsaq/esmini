@@ -338,40 +338,6 @@ int GetIntersectionOfTwoLineSegments(double  ax1,
     return 0;
 }
 
-bool IsCounterclockwiseAndWithinSegment(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double bx2, double by2)
-{
-    printf("ax1: %f, ay1: %f, ax2: %f, ay2: %f, bx1: %f, by1: %f, bx2: %f, by2: %f\n", ax1, ay1, ax2, ay2, bx1, by1, bx2, by2);
-    // Calculate the cross product of vectors (ax2 - ax1, ay2 - ay1) and (bx1 - ax1, by1 - ay1)
-    double crossProduct = (ax1 - ax2) * (by1 - by2) - (ay1 - ay2) * (bx1 - bx2);
-    // If the cross product is positive, bx1 -> by1 -> bx2 ->by2 is counterclockwise from ax1 -> ay1 -> ax2 -> ay2
-    if (crossProduct < SMALL_NUMBER)
-    {
-
-        return false;
-    }
-    printf("counterclockwise\n");
-    // Calculate the parameters t and u
-    double t = ((ax1 - bx1) * (by1 - by2) - (ay1 - by1) * (bx1 - bx2)) / crossProduct;
-    double u = ((ax1 - bx1) * (ay1 - ay2) - (ay1 - by1) * (ax1 - ax2)) / crossProduct;
-
-    // Check if the intersection point lies within both segments
-    if (0 <= t && t <= 1 && 0 <= u && u <= 1) {
-        std::cout << "Intersection point is within both segments" << std::endl;
-        return true;
-    } else {
-        std::cout << "Intersection point is outside one or both segments" << std::endl;
-        return false;
-    }
-}
-
-bool IsCounterclockwise(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double bx2, double by2)
-{
-    // Calculate the cross product of vectors (ax2 - ax1, ay2 - ay1) and (bx1 - ax1, by1 - ay1)
-    double crossProduct = (ax1 - ax2) * (by1 - by2) - (ay1 - ay2) * (bx1 - bx2);
-
-    // If the cross product is positive, bx1 -> by1 -> bx2 ->by2 is counterclockwise from ax1 -> ay1 -> ax2 -> ay2
-    return crossProduct > 0;
-}
 
 bool PointInBetweenVectorEndpoints(double x3, double y3, double x1, double y1, double x2, double y2, double& sNorm)
 {

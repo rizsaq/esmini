@@ -2297,14 +2297,26 @@ namespace roadmanager
         std::vector<Outline>              uniqueOutlinesZeroDistance_;
     };
 
-    class RMObject;  // forward declaration
-    class Marking
+    class MarkingSegment
     {
     public:
-        enum class RoadSide
+        MarkingSegment(){};
+        MarkingSegment(int startCornerId, int endCornerId_, int outlineId)
+            : startCornerId_(startCornerId), endCornerId_(endCornerId_), outlineId_(outlineId)
         {
-            LEFT,
-            RIGHT
+        }
+         ~MarkingSegment()
+        {
+        }
+        struct Point2D
+        {
+            double x = 0.0;
+            double y = 0.0;
+        };
+
+        struct Point3D : public Point2D
+        {
+            double z = 0.0;
         };
         enum class MergeType
         {
@@ -2312,6 +2324,51 @@ namespace roadmanager
             MERGE_START,
             MERGE_END,
             MERGE_BOTH
+        };
+        void AddPoint(const std::vector<Point3D> &points)
+        {
+            allPoints_.emplace_back(points);
+        }
+        std::vector<std::vector<Point3D>> &GetAllPoints()
+        {
+            return allPoints_;
+        }
+        int GetNumberOfPoints() const
+        {
+            return allPoints_.size();
+        }
+        std::vector<std::vector<Point3D>> allPoints_;
+        MergeType mergeType_;
+
+        void SetMergeType(MergeType mergeType);
+        bool IsMergeStart();
+        bool IsMergeEnd();
+        int GetStartCornerId()
+        {
+            return startCornerId_;
+        }
+        int GetEndCornerId()
+        {
+            return endCornerId_;
+        }
+        int GetOutlineId()
+        {
+            return outlineId_;
+        }
+
+    private:
+        int startCornerId_, endCornerId_;
+        int outlineId_;
+
+    };
+
+    class Marking
+    {
+    public:
+        enum class RoadSide
+        {
+            LEFT,
+            RIGHT
         };
         Marking(){};
         Marking(int           roadId,
@@ -2346,19 +2403,7 @@ namespace roadmanager
         void GetPos(double s, double t, double dz, double &x, double &y, double &z);
 
         std::vector<int> cornerReferenceIds;
-
-        struct Point2D
-        {
-            double x = 0.0;
-            double y = 0.0;
-        };
-
-        struct Point3D : public Point2D
-        {
-            double z = 0.0;
-        };
-        std::vector<std::vector<Point3D>>                                    markingsPoints_;
-        std::vector<std::pair<std::vector<std::vector<Point3D>>, MergeType>> markingsPointsDetails_;
+        std::vector<std::vector<MarkingSegment>> segments;
         // create and fill markings points in itself for the given outlines. e.g for non repeat outline object
         void FillPointsFromOutlines(std::vector<Outline> &outlines);
         // create and fill markings points in itself for the given Unique outlines. e.g repeat with atleast one road corner in any of outlines
@@ -2370,29 +2415,21 @@ namespace roadmanager
         // create and fill markings points in itself for the given repeat and dimension. e.g for non outline repeat object
         void FillPointsFromRepeatTransformationInfoDimensions(Repeat &repeat, const double length, const double width);
         // create and fill markings points in itself for the given two points
-        void FillMarkingPoints(const Point2D &point1, const Point2D &point2, OutlineCorner::CornerType cornerType);
+        void FillMarkingPoints(const MarkingSegment::Point2D &point1, const MarkingSegment::Point2D &point2, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
         // get points in world coordinates
-        Point3D GetPoint(const Point2D &point, OutlineCorner::CornerType cornerType);
+        MarkingSegment::Point3D GetPoint(const MarkingSegment::Point2D &point, OutlineCorner::CornerType cornerType);
         // get reference to the corners for given corner reference id and outlines.
         void GetCorners(Outline &outline, std::vector<OutlineCorner *> &cornerReferences);
-        int  outlineid_;
 
         ~Marking()
         {
         }
-        void SetMergeType(MergeType mergeType);
-        bool IsMergeStart();
-        bool IsMergeEnd();
-        bool IsMergeStart(MergeType mergeType);
-        bool IsMergeEnd(MergeType mergeType);
-        int  outlineId_ = -1;
 
     private:
         RoadMarkColor color_ = RoadMarkColor::WHITE;
         double        width_, z_offset_, spaceLength_, lineLength_, startOffset_, stopOffset_;
         int           roadId_;
         RoadSide      side_      = RoadSide::RIGHT;
-        MergeType     mergeType_ = MergeType::MERGE_NONE;
     };
 
     class RMObject : public RoadObject
@@ -2678,9 +2715,8 @@ namespace roadmanager
         // Resolve markings for the given object. This shall be used to draw markings
         void ResolveMarkings();
         void ResolveMarkingsAdvanced();
-        // Resolve markings of the two given markings.
-        void ResolveTwoMarkings(Marking &marking1, Marking &marking2);
-        void ResolveTwoLinesWithWidth(std::vector<std::vector<Marking::Point3D>> &line1, std::vector<std::vector<Marking::Point3D>> &line2);
+
+        void ResolveTwoLinesWithWidth(std::vector<std::vector<MarkingSegment::Point3D>> &line1, std::vector<std::vector<MarkingSegment::Point3D>> &line2);
         // check weather given id is present in corner reference ids in atleast one outline
         bool CheckCornerReferenceId(int id);
 

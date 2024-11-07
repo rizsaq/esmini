@@ -2694,9 +2694,9 @@ void Marking::GetPos(double s, double t, double dz, double& x, double& y, double
     z = pos.GetZ() + dz;
 }
 
-Marking::Point3D Marking::GetPoint(const Point2D& point, OutlineCorner::CornerType cornerType)
+MarkingSegment::Point3D Marking::GetPoint(const MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType)
 {
-    roadmanager::Marking::Point3D pointTemp;
+    roadmanager::MarkingSegment::Point3D pointTemp;
     double                        z;
     roadmanager::Position         tmp_pos;
     tmp_pos.SetMode(Position::PosModeType::UPDATE,
@@ -2715,11 +2715,11 @@ Marking::Point3D Marking::GetPoint(const Point2D& point, OutlineCorner::CornerTy
     pointTemp.z = tmp_pos.GetZ() + z_offset_;
     return pointTemp;
 }
-void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, OutlineCorner::CornerType cornerType)
+void Marking::FillMarkingPoints(const MarkingSegment::Point2D& point1, const MarkingSegment::Point2D& point2, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment)
 {
     if (startOffset_ == 0.0)  // no startoffset add start merge
     {
-        SetMergeType(MergeType::MERGE_START);
+        markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_START);
     }
 
     double lineLength_temp_ = lineLength_;
@@ -2730,8 +2730,7 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
         return;
     }
 
-    if ((lineLength_ == 0.0 && spaceLength_ == 0.0) ||
-        lineLength_ == -1.0)  // if both line and space length is zero or line length is -1, add marking for total length
+    if (spaceLength_ == 0.0 || lineLength_ == -1.0)  // if space length is zero or line length is -1, add marking for total length
     {
         lineLength_temp_ = total_length;
     }
@@ -2757,7 +2756,7 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
     double deltaP0StartOffset = sin(alpha) * startOffset_;
 
     double  x, y, z;
-    Point2D point;
+    MarkingSegment::Point2D point;
     point.x = point1.x;
     point.y = point1.y;
     if (side_ == RoadSide::RIGHT)  // center allign the marking
@@ -2770,7 +2769,7 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
         point.x += cos(alpha) * width_ / 2;
         point.y -= sin(alpha) * width_ / 2;
     }
-    Point2D start_point;
+    MarkingSegment::Point2D start_point;
     start_point.x = point.x;
     start_point.y = point.y;  // shall be used later in the loop
 
@@ -2781,11 +2780,10 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
 
     double                            cur_s   = 0.0;
     int                               counter = 1;
-    Point2D                           pointTemp;
-    std::vector<std::vector<Point3D>> markingsPointsTemp_;
+    MarkingSegment::Point2D                           pointTemp;
     while (total_length - cur_s >= 0.0)  // loop till total length is covered
     {
-        std::vector<Point3D> points;
+        std::vector<MarkingSegment::Point3D> points;
         points.reserve(3);
 
         if (cur_s == 0.0)  // if first block, add start offset
@@ -2821,16 +2819,14 @@ void Marking::FillMarkingPoints(const Point2D& point1, const Point2D& point2, Ou
         if (cur_s <= total_length + SMALL_NUMBER)
         // cur_s is less than or equal to total_length + SMALL_NUMBER, add the points
         {
-            markingsPointsTemp_.emplace_back(points);
-            markingsPoints_.emplace_back(std::move(points));
+            markingSegment.AddPoint(points);
         }
         if (abs(total_length - cur_s) < SMALL_NUMBER)  // total_length and cur_s are approximately equal
         {
-            SetMergeType(MergeType::MERGE_END);  // line length reached last s value
+            markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_END);  // line length reached last s value
             break;
         }
     }
-    markingsPointsDetails_.emplace_back(std::pair(markingsPointsTemp_, mergeType_));
 }
 
 void Marking::GetCorners(Outline& outline, std::vector<OutlineCorner*>& cornerReferences)
@@ -2851,7 +2847,7 @@ void Marking::GetCorners(Outline& outline, std::vector<OutlineCorner*>& cornerRe
     }
 }
 
-void roadmanager::Marking::SetMergeType(MergeType mergeType)
+void roadmanager::MarkingSegment::SetMergeType(MergeType mergeType)
 {
     if (mergeType_ == MergeType::MERGE_START &&
         mergeType == MergeType::MERGE_END)  // if already start merge and new merge is end then set both and vice versa
@@ -2864,22 +2860,12 @@ void roadmanager::Marking::SetMergeType(MergeType mergeType)
     }
 }
 
-bool roadmanager::Marking::IsMergeStart()
+bool roadmanager::MarkingSegment::IsMergeStart()
 {
     return mergeType_ == MergeType::MERGE_START || mergeType_ == MergeType::MERGE_BOTH;
 }
 
-bool roadmanager::Marking::IsMergeEnd()
-{
-    return mergeType_ == MergeType::MERGE_END || mergeType_ == MergeType::MERGE_BOTH;
-}
-
-bool roadmanager::Marking::IsMergeStart(MergeType mergeType)
-{
-    return mergeType == MergeType::MERGE_START || mergeType == MergeType::MERGE_BOTH;
-}
-
-bool roadmanager::Marking::IsMergeEnd(MergeType mergeType)
+bool roadmanager::MarkingSegment::IsMergeEnd()
 {
     return mergeType_ == MergeType::MERGE_END || mergeType_ == MergeType::MERGE_BOTH;
 }
@@ -2948,15 +2934,23 @@ void roadmanager::Outline::GetConsecutiveCornerIds(std::vector<int> cornerRefere
     }
 
     // Create new cornerReferenceIds between consecutive cornerReferenceIds
-    if (resolvedCornerReferenceIds.size() == 2 && resolvedCornerReferenceIds[0] == 0 &&
-        resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] == 0)
+    if (resolvedCornerReferenceIds.size() == 2 && resolvedCornerReferenceIds[0] ==
+        resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1])
     {
+
         std::vector<int> consecutive_cornerReferenceIds;
-        for (size_t i = 0; i < corner_.size(); i++)
+        int id = resolvedCornerReferenceIds[0];
+        do
         {
-            consecutive_cornerReferenceIds.push_back(i);
+           consecutive_cornerReferenceIds.push_back(id);
+           if(++id == corner_.size())
+           {
+               id = 0;
+           }
         }
-        consecutive_cornerReferenceIds.push_back(0);  // arrange as 0,1,2,3,0
+        while (id != resolvedCornerReferenceIds[0]);
+
+        consecutive_cornerReferenceIds.push_back(resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1]);  // arrange as 0,1,2,3,0
         resolvedCornerReferenceIds = std::move(consecutive_cornerReferenceIds);
     }
     else if (!(resolvedCornerReferenceIds.size() == 2 && resolvedCornerReferenceIds[0] == max_id &&
@@ -3007,9 +3001,11 @@ bool roadmanager::RMObject::CheckCornerReferenceId(int id)
 
 void Marking::FillPointsFromScales(Outline& outline, roadmanager::Repeat::RepeatTransformationInfoScale repeatScales)
 {
-    Point2D               point1;
-    Point2D               point2;
+    MarkingSegment::Point2D               point1;
+    MarkingSegment::Point2D               point2;
     roadmanager::Position pref;
+    std::vector<MarkingSegment> segmentGroup;
+    MarkingSegment segment;
 
     if (cornerReferenceIds.size() > 0)  // no corner ids
     {
@@ -3019,6 +3015,7 @@ void Marking::FillPointsFromScales(Outline& outline, roadmanager::Repeat::Repeat
         {
             for (size_t i = 0; i < cornerReferences.size() - 1; i++)
             {
+                segment = MarkingSegment(cornerReferences[i]->GetCornerId(), cornerReferences[i + 1]->GetCornerId(), outline.id_);
                 double total_heading = GetAngleSum(repeatScales.hOffset, repeatScales.heading);
                 double x, y, z;
                 cornerReferences[i]->GetPosLocal(x, y, z);
@@ -3035,7 +3032,15 @@ void Marking::FillPointsFromScales(Outline& outline, roadmanager::Repeat::Repeat
                 point2.x = repeatScales.x + u3;
                 point2.y = repeatScales.y + v3;
 
-                FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
+                FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+                if(segment.GetNumberOfPoints() > 0)
+                {
+                    segmentGroup.emplace_back(std::move(segment));
+                }
+            }
+            if (!segmentGroup.empty())
+            {
+                segments.emplace_back(std::move(segmentGroup));
             }
         }
     }
@@ -3043,10 +3048,13 @@ void Marking::FillPointsFromScales(Outline& outline, roadmanager::Repeat::Repeat
 
 void Marking::FillPointsFromRepeatTransformationInfoDimensions(Repeat& repeat, const double length, const double width)
 {
+
     for (const auto& repeatDimension : repeat.GetRepeatDimensions())
     {
-        Point2D point1;
-        Point2D point2;
+        std::vector<MarkingSegment> segmentGroup;
+        MarkingSegment segment(-1, -1, -1);// no corner ids
+        MarkingSegment::Point2D point1;
+        MarkingSegment::Point2D point2;
         if (GetSide() == RoadSide::LEFT)
         {
             // find local lower left corner
@@ -3065,7 +3073,7 @@ void Marking::FillPointsFromRepeatTransformationInfoDimensions(Repeat& repeat, c
             point1.y = repeatDimension.y + point1.y;
             point2.x = repeatDimension.x + point2.x;
             point2.y = repeatDimension.y + point2.y;
-            FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
+            FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
         }
         else
         {
@@ -3081,15 +3089,25 @@ void Marking::FillPointsFromRepeatTransformationInfoDimensions(Repeat& repeat, c
             point1.y = repeatDimension.y + point1.y;
             point2.x = repeatDimension.x + point2.x;
             point2.y = repeatDimension.y + point2.y;
-            FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
+            FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+        }
+        if(segment.GetNumberOfPoints() > 0)
+        {
+            segmentGroup.emplace_back(std::move(segment));
+        }
+        if (!segmentGroup.empty())
+        {
+            segments.emplace_back(std::move(segmentGroup));
         }
     }
 }
 
 void RMObject::FillPointsFromObject(Marking& marking)
 {
-    Marking::Point2D      point1;
-    Marking::Point2D      point2;
+    std::vector<MarkingSegment> segmentGroup;
+    MarkingSegment segment(-1, -1, -1);// no corner ids
+    MarkingSegment::Point2D      point1;
+    MarkingSegment::Point2D      point2;
     roadmanager::Position pos;
     pos.SetTrackPosMode(GetRoadId(),
                         GetS(),
@@ -3106,7 +3124,7 @@ void RMObject::FillPointsFromObject(Marking& marking)
         point1.y = pos.GetY() + point1.y;
         point2.x = pos.GetX() + point2.x;
         point2.y = pos.GetY() + point2.y;
-        marking.FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
+        marking.FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
     }
     else
     {
@@ -3118,7 +3136,15 @@ void RMObject::FillPointsFromObject(Marking& marking)
         point1.y = pos.GetY() + point1.y;
         point2.x = pos.GetX() + point2.x;
         point2.y = pos.GetY() + point2.y;
-        marking.FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
+        marking.FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+    }
+    if(segment.GetNumberOfPoints() > 0)
+    {
+        segmentGroup.emplace_back(std::move(segment));
+    }
+    if (!segmentGroup.empty())
+    {
+        marking.segments.emplace_back(std::move(segmentGroup));
     }
 }
 
@@ -3126,8 +3152,10 @@ void Marking::FillPointsFromOutlines(std::vector<Outline>& outlines)
 {
     for (auto& outline : outlines)
     {
-        Point2D point1;
-        Point2D point2;
+        std::vector<MarkingSegment> segmentGroup;
+        MarkingSegment segment;
+        MarkingSegment::Point2D point1;
+        MarkingSegment::Point2D point2;
         if (cornerReferenceIds.size() > 0)  // no corner ids
         {
             std::vector<OutlineCorner*> cornerReferences;
@@ -3136,20 +3164,25 @@ void Marking::FillPointsFromOutlines(std::vector<Outline>& outlines)
             {
                 for (size_t i = 0; i < cornerReferences.size() - 1; i++)  // dont loop last corner, eg marking between 1 and 2 corner
                 {
+                    segment = MarkingSegment(cornerReferences[i]->GetCornerId(), cornerReferences[i + 1]->GetCornerId(), outline.id_);
                     if (cornerReferences[i]->GetCornerType() == OutlineCorner::CornerType::ROAD_CORNER)  // road corner
                     {
                         point1.x = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i])->GetS();
                         point2.x = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i + 1])->GetS();
                         point1.y = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i])->GetT();
                         point2.y = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i + 1])->GetT();
-                        FillMarkingPoints(point1, point2, OutlineCorner::CornerType::ROAD_CORNER);
+                        FillMarkingPoints(point1, point2, OutlineCorner::CornerType::ROAD_CORNER, segment);
                     }
                     else
                     {
                         double z1, z2;
                         (cornerReferences[i])->GetPos(point1.x, point1.y, z1);
                         (cornerReferences[i + 1])->GetPos(point2.x, point2.y, z2);
-                        FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER);
+                        FillMarkingPoints(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+                    }
+                    if(segment.GetNumberOfPoints() > 0)
+                    {
+                        segmentGroup.emplace_back(std::move(segment));
                     }
                 }
             }
@@ -3159,19 +3192,28 @@ void Marking::FillPointsFromOutlines(std::vector<Outline>& outlines)
             // no corner referrence in marking, check corner from repeat without distance
             for (size_t k = 0; k < outline.corner_.size() / 2; k++)
             {
+                segment = MarkingSegment(outline.corner_[k]->GetCornerId(), outline.corner_[outline.corner_.size() - k - 1]->GetCornerId(),outline.id_);
                 point1.x = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[k])->GetS();                               // 1st corner
                 point2.x = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[outline.corner_.size() - k - 1])->GetS();  // last corner
                 point1.y = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[k])->GetT();
                 point2.y = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[outline.corner_.size() - k - 1])->GetT();
                 if (GetSide() == RoadSide::LEFT)
                 {
-                    FillMarkingPoints(point1, point2, OutlineCorner::CornerType::ROAD_CORNER);
+                    FillMarkingPoints(point1, point2, OutlineCorner::CornerType::ROAD_CORNER, segment);
                 }
                 else
                 {
-                    FillMarkingPoints(point1, point2, OutlineCorner::CornerType::ROAD_CORNER);
+                    FillMarkingPoints(point1, point2, OutlineCorner::CornerType::ROAD_CORNER, segment);
+                }
+                if(segment.GetNumberOfPoints() > 0)
+                {
+                    segmentGroup.emplace_back(std::move(segment));
                 }
             }
+        }
+        if (!segmentGroup.empty())
+        {
+            segments.emplace_back(std::move(segmentGroup));
         }
     }
 }
@@ -3229,149 +3271,75 @@ void RMObject::CreateMarkingsPoints(Marking& marking)
     }
 }
 
-void RMObject::ResolveTwoMarkings(Marking& marking1, Marking& marking2)
-{
-    // check marking1 and marking2 are in same direction(counterclockwise)
-    if (!IsCounterclockwise(marking1.markingsPoints_[0][1].x,
-                            marking1.markingsPoints_[0][1].y,
-                            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x,
-                            marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y,
-                            marking2.markingsPoints_[0][1].x,
-                            marking2.markingsPoints_[0][1].y,
-                            marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].x,
-                            marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].y))
-    {
-        return;
-    }
-    double x3, y3;
-    if (GetIntersectionOfTwoLineSegments(marking1.markingsPoints_[0][1].x,
-                                         marking1.markingsPoints_[0][1].y,
-                                         marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x,
-                                         marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y,
-                                         marking2.markingsPoints_[0][1].x,
-                                         marking2.markingsPoints_[0][1].y,
-                                         marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].x,
-                                         marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][2].y,
-                                         x3,
-                                         y3) == 0)
-    {
-        printf("x3 %f y3 %f\n", x3, y3);
-        printf("intersection found\n");
-        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].x = x3;
-        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][2].y = y3;
-        marking2.markingsPoints_[0][1].x                                   = x3;
-        marking2.markingsPoints_[0][1].y                                   = y3;
-    }
-    if (GetIntersectionOfTwoLineSegments(marking1.markingsPoints_[0][0].x,
-                                         marking1.markingsPoints_[0][0].y,
-                                         marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].x,
-                                         marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].y,
-                                         marking2.markingsPoints_[0][0].x,
-                                         marking2.markingsPoints_[0][0].y,
-                                         marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][3].x,
-                                         marking2.markingsPoints_[marking2.markingsPoints_.size() - 1][3].y,
-                                         x3,
-                                         y3) == 0)
-    {
-        printf("x3 %f y3 %f\n", x3, y3);
-        printf("intersection found\n");
-        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].x = x3;
-        marking1.markingsPoints_[marking1.markingsPoints_.size() - 1][3].y = y3;
-        marking2.markingsPoints_[0][0].x                                   = x3;
-        marking2.markingsPoints_[0][0].y                                   = y3;
-    }
-}
-
 void RMObject::ResolveMarkings()
 {
-    if (GetNumberOfMarkings() == 1)  // one marking , no need to resolve
-    {
-        return;
-    }
-    for (size_t i = 0; i < markings_.size(); i++)
-    {
-        for (size_t j = i + 1; j < markings_.size(); j++)
-        {
-            if (markings_[i].outlineId_ == markings_[j].outlineId_)  // if marking1 and marking2 are not same, resolve
-            {
-                printf("marking1 ->%d\n", static_cast<int>(i));
-                printf("marking2 ->%d\n", static_cast<int>(j));
-                if (markings_[i].IsMergeEnd() && markings_[j].IsMergeStart())  // if one marking is end and other is start, resolve
-                {
-                    printf("end and start\n");
-                    ResolveTwoMarkings(markings_[i], markings_[j]);
-                }
-                if (markings_[i].IsMergeStart() && markings_[j].IsMergeEnd())  // if one marking is start and other is end, resolve
-                {
-                    printf("start and end\n");
-                    ResolveTwoMarkings(markings_[j], markings_[i]);
-                }
-            }
-        }
-    }
+    // if (GetNumberOfMarkings() == 1)  // one marking , no need to resolve
+    // {
+    //     return;
+    // }
+    // for (size_t i = 0; i < markings_.size(); i++)
+    // {
+    //     for (size_t j = i + 1; j < markings_.size(); j++)
+    //     {
+    //         if (markings_[i].outlineId_ == markings_[j].outlineId_)  // if marking1 and marking2 are not same, resolve
+    //         {
+    //             printf("marking1 ->%d\n", static_cast<int>(i));
+    //             printf("marking2 ->%d\n", static_cast<int>(j));
+    //             if (markings_[i].IsMergeEnd() && markings_[j].IsMergeStart())  // if one marking is end and other is start, resolve
+    //             {
+    //                 printf("end and start\n");
+    //                 ResolveTwoMarkings(markings_[i], markings_[j]);
+    //             }
+    //             if (markings_[i].IsMergeStart() && markings_[j].IsMergeEnd())  // if one marking is start and other is end, resolve
+    //             {
+    //                 printf("start and end\n");
+    //                 ResolveTwoMarkings(markings_[j], markings_[i]);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
-void RMObject::ResolveTwoLinesWithWidth(std::vector<std::vector<Marking::Point3D>>& line1, std::vector<std::vector<Marking::Point3D>>& line2)
+void RMObject::ResolveTwoLinesWithWidth(std::vector<std::vector<MarkingSegment::Point3D>>& line1, std::vector<std::vector<MarkingSegment::Point3D>>& line2)
 {
-    if (IsCounterclockwiseAndWithinSegment(
-            line1[0][1].x,
-            line1[0][1].y,
-            line1[line1.size() - 1][2].x,
-            line1[line1.size() - 1][2].y,
-            line2[0][1].x,
-            line2[0][1].y,
-            line2[line2.size() - 1][2].x,
-            line2[line2.size() - 1][2].y) ||
-        IsCounterclockwiseAndWithinSegment(
-            line1[0][0].x,
-            line1[0][0].y,
-            line1[line1.size() - 1][3].x,
-            line1[line1.size() - 1][3].y,
-            line2[0][0].x,
-            line2[0][0].y,
-            line2[line2.size() - 1][3].x,
-            line2[line2.size() - 1][3].y))
+
+    double x3, y3;
+    if (GetIntersectionOfTwoLineSegments(line1[0][1].x,
+                                        line1[0][1].y,
+                                        line1[line1.size() - 1][2].x,
+                                        line1[line1.size() - 1][2].y,
+                                        line2[0][1].x,
+                                        line2[0][1].y,
+                                        line2[line2.size() - 1][2].x,
+                                        line2[line2.size() - 1][2].y,
+                                        x3,
+                                        y3) == 0)
     {
+        printf("x3 %f y3 %f\n", x3, y3);
         printf("intersection found\n");
-        double x3, y3;
-        if (GetIntersectionOfTwoLineSegments(line1[0][1].x,
-                                            line1[0][1].y,
-                                            line1[line1.size() - 1][2].x,
-                                            line1[line1.size() - 1][2].y,
-                                            line2[0][1].x,
-                                            line2[0][1].y,
-                                            line2[line2.size() - 1][2].x,
-                                            line2[line2.size() - 1][2].y,
-                                            x3,
-                                            y3) == 0)
-        {
-            printf("x3 %f y3 %f\n", x3, y3);
-            printf("intersection found\n");
-            line1[line1.size() - 1][2].x = x3;
-            line1[line1.size() - 1][2].y = y3;
-            line2[0][1].x = x3;
-            line2[0][1].y = y3;
-        }
-        if (GetIntersectionOfTwoLineSegments(line1[0][0].x,
-                                            line1[0][0].y,
-                                            line1[line1.size() - 1][3].x,
-                                            line1[line1.size() - 1][3].y,
-                                            line2[0][0].x,
-                                            line2[0][0].y,
-                                            line2[line2.size() - 1][3].x,
-                                            line2[line2.size() - 1][3].y,
-                                            x3,
-                                            y3) == 0)
-        {
-            printf("x3 %f y3 %f\n", x3, y3);
-            printf("intersection found\n");
-            line1[line1.size() - 1][3].x = x3;
-            line1[line1.size() - 1][3].y = y3;
-            line2[0][0].x = x3;
-            line2[0][0].y = y3;
-        }
+        line1[line1.size() - 1][2].x = x3;
+        line1[line1.size() - 1][2].y = y3;
+        line2[0][1].x = x3;
+        line2[0][1].y = y3;
     }
-    printf("------------------end----------------------\n");
+    if (GetIntersectionOfTwoLineSegments(line1[0][0].x,
+                                        line1[0][0].y,
+                                        line1[line1.size() - 1][3].x,
+                                        line1[line1.size() - 1][3].y,
+                                        line2[0][0].x,
+                                        line2[0][0].y,
+                                        line2[line2.size() - 1][3].x,
+                                        line2[line2.size() - 1][3].y,
+                                        x3,
+                                        y3) == 0)
+    {
+        printf("x3 %f y3 %f\n", x3, y3);
+        printf("intersection found\n");
+        line1[line1.size() - 1][3].x = x3;
+        line1[line1.size() - 1][3].y = y3;
+        line2[0][0].x = x3;
+        line2[0][0].y = y3;
+    }
 
 }
 
@@ -3379,43 +3347,50 @@ void RMObject::ResolveMarkingsAdvanced()
 {
     for (size_t i = 0; i < markings_.size(); i++)
     {
-        for (size_t j = 0; j < markings_[i].markingsPointsDetails_.size(); j++)
+        for (size_t j = 0; j < markings_[i].segments.size(); j++)
         {
-            if (markings_[i].markingsPointsDetails_.size() > 1)
+            if (markings_[i].segments[j].size() > 1)
             {
-                for (size_t k = j + 1; k < markings_[i].markingsPointsDetails_.size(); k++)
+                for (size_t k = 0; k < markings_[i].segments[j].size(); k++)
                 {
-                    if (markings_[i].IsMergeEnd(markings_[i].markingsPointsDetails_[j].second ) && markings_[i].IsMergeStart(markings_[i].markingsPointsDetails_[k].second))
+                    for (size_t l = k + 1; l < markings_[i].segments[j].size(); l++)
                     {
-                        printf("i ->%d\n", static_cast<int>(i));
-                        printf("j ->%d k ->%d\n", static_cast<int>(j), static_cast<int>(k));
-                        ResolveTwoLinesWithWidth(markings_[i].markingsPointsDetails_[j].first, markings_[i].markingsPointsDetails_[k].first);
+                        if (markings_[i].segments[j][k].GetEndCornerId() == markings_[i].segments[j][l].GetStartCornerId() ) // check is consective corner idsI
+                        {
+                            if (markings_[i].segments[j][k].IsMergeEnd() && markings_[i].segments[j][l].IsMergeStart()) // check if one marking is end and other is start, resolve
+                            {
+                                ResolveTwoLinesWithWidth(markings_[i].segments[j][k].GetAllPoints(), markings_[i].segments[j][l].GetAllPoints());
+                            }
+                        }
                     }
-                    if (markings_[i].IsMergeStart(markings_[i].markingsPointsDetails_[j].second ) && markings_[i].IsMergeEnd(markings_[i].markingsPointsDetails_[k].second))
+                    if (k == markings_[i].segments[j].size() - 1)
                     {
-                        printf("i ->%d\n", static_cast<int>(i));
-                        printf("j ->%d k ->%d\n", static_cast<int>(j), static_cast<int>(k));
-                        ResolveTwoLinesWithWidth(markings_[i].markingsPointsDetails_[k].first, markings_[i].markingsPointsDetails_[j].first);
+                        if (markings_[i].segments[j][markings_[i].segments[j].size() - 1].GetEndCornerId() == markings_[i].segments[j][0].GetStartCornerId() ) // check is consective corner idsI
+                        {
+                            if (markings_[i].segments[j][markings_[i].segments[j].size() - 1].IsMergeEnd() && markings_[i].segments[j][0].IsMergeStart()) // check if one marking is end and other is start, resolve
+                            {
+                                ResolveTwoLinesWithWidth(markings_[i].segments[j][markings_[i].segments[j].size() - 1].GetAllPoints(), markings_[i].segments[j][0].GetAllPoints());
+                            }
+                        }
                     }
                 }
             }
-            for (size_t l = i + 1; l < markings_.size(); l++)
+            for (size_t mm = i + 1; mm < markings_.size(); mm++)
             {
-                for (size_t m = 0; m < markings_[l].markingsPointsDetails_.size(); m++)
+                for (size_t n = 0; n < markings_[mm].segments.size(); n++)
                 {
-                    if (markings_[i].IsMergeEnd(markings_[l].markingsPointsDetails_[j].second ) && markings_[i].IsMergeStart(markings_[l].markingsPointsDetails_[m].second))
+                    for (size_t o = 0; o < markings_[mm].segments[n].size(); o++)
                     {
-                        printf("i ->%d\n", static_cast<int>(i));
-                        printf("l ->%d\n", static_cast<int>(l));
-                        printf("j ->%d m ->%d\n", static_cast<int>(j), static_cast<int>(m));
-                        ResolveTwoLinesWithWidth(markings_[i].markingsPointsDetails_[j].first, markings_[l].markingsPointsDetails_[m].first);
-                    }
-                    if (markings_[i].IsMergeStart(markings_[i].markingsPointsDetails_[j].second ) && markings_[i].IsMergeEnd(markings_[l].markingsPointsDetails_[m].second))
-                    {
-                        printf("i ->%d\n", static_cast<int>(i));
-                        printf("l ->%d\n", static_cast<int>(i));
-                        printf("j ->%d m ->%d\n", static_cast<int>(j), static_cast<int>(m));
-                        ResolveTwoLinesWithWidth(markings_[l].markingsPointsDetails_[m].first, markings_[i].markingsPointsDetails_[j].first);
+                        if (markings_[i].segments[j][markings_[i].segments[j].size() - 1].GetOutlineId() == markings_[mm].segments[n][o].GetOutlineId()) // check its from same outline
+                        {
+                            if (markings_[i].segments[j][markings_[i].segments[j].size() - 1].GetEndCornerId() == markings_[mm].segments[n][o].GetStartCornerId() ) // check is consective corner idsI
+                            {
+                                if (markings_[i].segments[j][markings_[i].segments[j].size() - 1].IsMergeEnd() && markings_[mm].segments[n][o].IsMergeStart()) // check if one marking is end and other is start, resolve
+                                {
+                                    ResolveTwoLinesWithWidth(markings_[i].segments[j][markings_[i].segments[j].size() - 1].GetAllPoints(), markings_[mm].segments[n][o].GetAllPoints());
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3427,7 +3402,7 @@ std::vector<Marking> RMObject::GetMarkingsWithPoints()
 {
     for (auto& marking : GetMarkings())
     {
-        if (marking.markingsPoints_.empty())
+        if (marking.segments.empty())
         {
             CreateMarkingsPoints(marking);
         }

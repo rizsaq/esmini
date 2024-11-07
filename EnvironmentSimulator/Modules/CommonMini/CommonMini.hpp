@@ -386,8 +386,6 @@ int  GetIntersectionOfTwoLineSegments(double  ax1,
                                       double  by2,
                                       double& x3,
                                       double& y3);
-bool IsCounterclockwise(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double bx2, double by2);
-bool IsCounterclockwiseAndWithinSegment(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double bx2, double by2);
 
 /**
         Calculate distance between two 2D points
