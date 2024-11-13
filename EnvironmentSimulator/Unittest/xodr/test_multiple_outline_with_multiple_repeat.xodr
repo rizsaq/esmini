@@ -75,8 +75,8 @@
                 <outlines>
                     <outline id="0" closed="true">
                         <cornerLocal u="0" v="-2.5" z="0.0" height="4.0" id="0"/>
-                        <cornerLocal u="5" v="2.5" z="0.0" height="4.0" id="2"/>
-                        <cornerLocal u="0" v="2.5" z="0.0" height="4.0" id="1"/>
+                        <cornerLocal u="5" v="2.5" z="0.0" height="4.0" id="1"/>
+                        <cornerLocal u="0" v="2.5" z="0.0" height="4.0" id="2"/>
                     </outline>
                     <outline id="1" closed="true">
                         <cornerLocal u="6" v="-2.5" z="0.0" height="4.0" id="0"/>
@@ -94,8 +94,8 @@
                 <outlines>
                     <outline id="0" closed="true">
                         <cornerRoad s="0" t="-2.5" dz="0.0" height="4.0" id="0"/>
-                        <cornerRoad s="5" t="2.5" dz="0.0" height="4.0" id="2"/>
-                        <cornerRoad s="0" t="2.5" dz="0.0" height="4.0" id="1"/>
+                        <cornerRoad s="5" t="2.5" dz="0.0" height="4.0" id="1"/>
+                        <cornerRoad s="0" t="2.5" dz="0.0" height="4.0" id="2"/>
                     </outline>
                     <outline id="1" closed="true">
                         <cornerRoad s="6" t="-2.5" dz="0.0" height="4.0" id="0"/>

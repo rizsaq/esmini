@@ -2744,7 +2744,7 @@ int Viewer::DrawMarking(roadmanager::RMObject* object)
 {
     for (auto& marking : object->GetMarkingsWithPoints())  // marking
     {
-        for (auto& segments : marking.segments)  // marking points
+        for (auto& segments : marking.MarkingSegments_)  // marking points
         {
             for (auto& segment : segments)  // marking points
             {

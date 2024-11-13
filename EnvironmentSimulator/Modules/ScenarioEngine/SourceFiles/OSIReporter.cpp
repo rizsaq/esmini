@@ -503,15 +503,18 @@ int OSIReporter::UpdateOSIHostVehicleData(ObjectState *objectState)
     return 0;
 }
 
-int UpdateOSIStationaryObjectODRMarking(std::vector<roadmanager::MarkingSegment::Point3D> points)
+int UpdateOSIStationaryObjectODRMarking(std::vector<std::vector<roadmanager::MarkingSegment::Point3D>>& points)
 {
     obj_osi_internal.rm = obj_osi_internal.gt->add_road_marking();
     obj_osi_internal.rm->mutable_classification()->set_type(osi3::RoadMarking_Classification_Type::RoadMarking_Classification_Type_TYPE_OTHER);
-    for (size_t i = 0; i < points.size(); i++)
+    for(const auto& allPoints : points)
     {
-        osi3::Vector2d *vec = obj_osi_internal.rm->mutable_base()->add_base_polygon();
-        vec->set_x(points[i].x);
-        vec->set_y(points[i].y);
+        for (const auto& point : allPoints)
+        {
+            osi3::Vector2d *vec = obj_osi_internal.rm->mutable_base()->add_base_polygon();
+            vec->set_x(point.x);
+            vec->set_y(point.y);
+        }
     }
     return 0;
 }
@@ -733,14 +736,11 @@ int OSIReporter::UpdateOSIStationaryObjectODR(id_t road_id, roadmanager::RMObjec
 
     for (auto& marking : object->GetMarkingsWithPoints())  // marking
     {
-        for (auto& segments : marking.segments)  // marking points
+        for (auto& segments : marking.MarkingSegments_)  // marking points
         {
             for (auto& segment : segments)  // marking points
             {
-                for (auto& points : segment.GetAllPoints())  // marking point
-                {
-                    UpdateOSIStationaryObjectODRMarking(points);
-                }
+                UpdateOSIStationaryObjectODRMarking(segment.GetAllPoints());
             }
         }
     }

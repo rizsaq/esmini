@@ -4,7 +4,6 @@
 #include <vector>
 #include <stdexcept>
 #include <array>
-#include <filesystem>
 
 #include "CommonMini.hpp"
 #include "ScenarioEngine.hpp"
@@ -640,7 +639,7 @@ TEST(DistanceTest, TestTrajectoryDistance)
 
 TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
 {
-    Position::GetOpenDrive()->LoadOpenDriveFile("../EnvironmentSimulator/Unittest/xodr/test_markings_corner_reference.xodr");
+    Position::GetOpenDrive()->LoadOpenDriveFile("../../../EnvironmentSimulator/Unittest/xodr/test_markings_corner_reference.xodr");
     OpenDrive* odr = Position::GetOpenDrive();
     ASSERT_NE(odr, nullptr);
     Road* road = odr->GetRoadById(0);
@@ -658,12 +657,12 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     ASSERT_EQ(outline.corner_[3]->GetOriginalCornerId(), 1);
 
     Marking& marking = obj->GetMarkings()[0];
-    ASSERT_EQ(marking.cornerReferenceIds.size(), 2);
-    ASSERT_EQ(marking.cornerReferenceIds[0], 10);
-    ASSERT_EQ(marking.cornerReferenceIds[1], 12);
+    ASSERT_EQ(marking.GetCornerReferenceIdsSize(), 2);
+    ASSERT_EQ(marking.GetCornerReferenceIds()[0], 10);
+    ASSERT_EQ(marking.GetCornerReferenceIds()[1], 12);
 
     std::vector<OutlineCorner*> cornerReferences;
-    marking.GetCorners(outline, cornerReferences);
+    outline.GetCornersByIdx(marking.GetCornerReferenceIds(), cornerReferences);
     ASSERT_EQ(cornerReferences.size(), 3);  // shall find 3 corners, consecutive corners
     ASSERT_EQ(cornerReferences[0]->GetCornerId(), 0);
     ASSERT_EQ(cornerReferences[0]->GetOriginalCornerId(), 10);
@@ -685,12 +684,12 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     ASSERT_EQ(outline1.corner_[3]->GetOriginalCornerId(), 3);
 
     Marking& marking1 = obj1->GetMarkings()[0];
-    ASSERT_EQ(marking1.cornerReferenceIds.size(), 2);
-    ASSERT_EQ(marking1.cornerReferenceIds[0], 1);
-    ASSERT_EQ(marking1.cornerReferenceIds[1], 1);
+    ASSERT_EQ(marking1.GetCornerReferenceIdsSize(), 2);
+    ASSERT_EQ(marking1.GetCornerReferenceIds()[0], 1);
+    ASSERT_EQ(marking1.GetCornerReferenceIds()[1], 1);
 
     std::vector<OutlineCorner*> cornerReferences1;
-    marking1.GetCorners(outline1, cornerReferences1);
+    outline1.GetCornersByIdx(marking1.GetCornerReferenceIds(), cornerReferences1);
     ASSERT_EQ(cornerReferences1.size(), 5);  // shall find 3 corners, consecutive corners
     ASSERT_EQ(cornerReferences1[0]->GetCornerId(), 1);
     ASSERT_EQ(cornerReferences1[0]->GetOriginalCornerId(), 1);
@@ -741,12 +740,12 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     ASSERT_EQ(outline01.corner_[3]->GetOriginalCornerId(), 3);
 
     Marking& marking01 = obj4->GetMarkings()[0];
-    ASSERT_EQ(marking01.cornerReferenceIds.size(), 2);
-    ASSERT_EQ(marking01.cornerReferenceIds[0], 3);
-    ASSERT_EQ(marking01.cornerReferenceIds[1], 0);
+    ASSERT_EQ(marking01.GetCornerReferenceIds().size(), 2);
+    ASSERT_EQ(marking01.GetCornerReferenceIds()[0], 3);
+    ASSERT_EQ(marking01.GetCornerReferenceIds()[1], 0);
 
     std::vector<OutlineCorner*> cornerReferences00;
-    marking01.GetCorners(outline00, cornerReferences00);
+    outline00.GetCornersByIdx(marking01.GetCornerReferenceIds(), cornerReferences00);
     ASSERT_EQ(cornerReferences00.size(), 2);
     ASSERT_EQ(cornerReferences00[0]->GetCornerId(), 3);
     ASSERT_EQ(cornerReferences00[0]->GetOriginalCornerId(), 3);
@@ -754,7 +753,7 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     ASSERT_EQ(cornerReferences00[1]->GetOriginalCornerId(), 0);
 
     std::vector<OutlineCorner*> cornerReferences01;
-    marking01.GetCorners(outline01, cornerReferences01);
+    outline01.GetCornersByIdx(marking01.GetCornerReferenceIds(), cornerReferences01);
     ASSERT_EQ(cornerReferences01.size(), 2);
     ASSERT_EQ(cornerReferences01[0]->GetCornerId(), 3);
     ASSERT_EQ(cornerReferences01[0]->GetOriginalCornerId(), 3);
@@ -787,12 +786,12 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     ASSERT_EQ(outline11.corner_[3]->GetOriginalCornerId(), 7);
 
     Marking& marking11 = obj5->GetMarkings()[0];
-    ASSERT_EQ(marking11.cornerReferenceIds.size(), 2);
-    ASSERT_EQ(marking11.cornerReferenceIds[0], 1);
-    ASSERT_EQ(marking11.cornerReferenceIds[1], 2);
+    ASSERT_EQ(marking11.GetCornerReferenceIdsSize(), 2);
+    ASSERT_EQ(marking11.GetCornerReferenceIds()[0], 1);
+    ASSERT_EQ(marking11.GetCornerReferenceIds()[1], 2);
 
     std::vector<OutlineCorner*> cornerReferences10;
-    marking11.GetCorners(outline10, cornerReferences10);
+    outline10.GetCornersByIdx(marking11.GetCornerReferenceIds(), cornerReferences10);
     ASSERT_EQ(cornerReferences10.size(), 2);
     ASSERT_EQ(cornerReferences10[0]->GetCornerId(), 1);
     ASSERT_EQ(cornerReferences10[0]->GetOriginalCornerId(), 1);
@@ -800,7 +799,7 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     ASSERT_EQ(cornerReferences10[1]->GetOriginalCornerId(), 2);
 
     std::vector<OutlineCorner*> cornerReferences11;
-    marking11.GetCorners(outline11, cornerReferences11);
+    outline11.GetCornersByIdx(marking11.GetCornerReferenceIds(), cornerReferences11);
     ASSERT_EQ(cornerReferences11.size(), 0);
 
     // cornerReference ids ordered in counterclosewise instead of 2 to 1. it is processed as 1 to 2
@@ -809,12 +808,12 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     Outline& outline111 = obj6->GetOutline(0);
     ASSERT_EQ(obj6->GetMarkings().size(), 1);
     Marking& marking111 = obj6->GetMarkings()[0];
-    ASSERT_EQ(marking111.cornerReferenceIds.size(), 2);
-    ASSERT_EQ(marking111.cornerReferenceIds[0], 2);
-    ASSERT_EQ(marking111.cornerReferenceIds[1], 1);
+    ASSERT_EQ(marking111.GetCornerReferenceIdsSize(), 2);
+    ASSERT_EQ(marking111.GetCornerReferenceIds()[0], 2);
+    ASSERT_EQ(marking111.GetCornerReferenceIds()[1], 1);
 
     std::vector<OutlineCorner*> cornerReferences000;
-    marking111.GetCorners(outline111, cornerReferences000);
+    outline111.GetCornersByIdx(marking111.GetCornerReferenceIds(), cornerReferences000);
     ASSERT_EQ(cornerReferences000.size(), 2);
     ASSERT_EQ(cornerReferences000[0]->GetCornerId(), 1);
     ASSERT_EQ(cornerReferences000[0]->GetOriginalCornerId(), 1);
