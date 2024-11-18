@@ -2180,7 +2180,7 @@ namespace roadmanager
         // calculate and return total length of repeat
         double GetTotalLength() const
         {
-            return GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart())) + SMALL_NUMBER;
+            return GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart()));
         }
         // calculate and return heading offset of repeat
         double GetHOffset() const
@@ -2384,8 +2384,6 @@ namespace roadmanager
         void FillPointsFromUniqueOutlines(const std::vector<std::vector<Outline>> &outlines);
         // create and fill markings points in itself for the given Unique outlines. e.g repeat with all outline as local corner
         void FillPointsFromLocalOutlineTransformationInfo(const std::vector<Outline> &outlines, const Repeat &repeats);
-        // create and fill markings points in itself for the given outlines and scales. e.g repeat with all outline as local corner
-        void FillPointsFromScales(const Outline &outline, const Repeat::RepeatTransformationInfoScale repeatScales);
         // create and fill markings points in itself for the given repeat and dimension. e.g for non outline repeat object
         void FillPointsFromRepeatTransformationInfoDimensions(const Repeat &repeat, const double length, const double width);
         // create and fill markings points in itself for the given two points
@@ -2398,7 +2396,7 @@ namespace roadmanager
 
         ~Marking() = default;
 
-        std::vector<std::vector<MarkingSegment>> MarkingSegments_;
+        std::vector<MarkingSegment> MarkingSegments_;
     private:
         RoadMarkColor color_ = RoadMarkColor::WHITE;
         double        width_, z_offset_, spaceLength_, lineLength_, startOffset_, stopOffset_;
@@ -2689,7 +2687,7 @@ namespace roadmanager
         // Resolve markings for the given object. This shall be used to draw markings
         void ResolveMarkings();
 
-        void ResolveTwoLinesWithWidth(std::vector<std::vector<MarkingSegment::Point3D>> &line1, std::vector<std::vector<MarkingSegment::Point3D>> &line2);
+        void ResolveTwoLinesWithWidth(std::vector<std::vector<MarkingSegment::Point3D>>& line1, std::vector<std::vector<MarkingSegment::Point3D>>& line2);
         // check weather given id is present in corner reference ids in atleast one outline
         bool CheckCornerReferenceId(int id);
 

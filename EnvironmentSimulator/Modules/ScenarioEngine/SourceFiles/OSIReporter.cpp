@@ -514,6 +514,7 @@ int UpdateOSIStationaryObjectODRMarking(std::vector<std::vector<roadmanager::Mar
             osi3::Vector2d *vec = obj_osi_internal.rm->mutable_base()->add_base_polygon();
             vec->set_x(point.x);
             vec->set_y(point.y);
+            // printf("marking points osi %.2f %.2f %.2f\n", point.x, point.y, point.z);
         }
     }
     return 0;
@@ -641,7 +642,7 @@ void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline, const 
     {
         double x, y, z;
         corner->GetPosLocal(x, y, z);
-        // printf("outline corner %d, %d: %.2f %.2f\n", (int)k, (int)l, x, y);
+        // printf("outline corner %.2f %.2f %.2f\n", x, y, z);
         osi3::Vector2d *vec = obj_osi_internal.sobj->mutable_base()->add_base_polygon();
         vec->set_x(x * repeatScale.scale_x);
         vec->set_y(y * repeatScale.scale_y);
@@ -736,12 +737,9 @@ int OSIReporter::UpdateOSIStationaryObjectODR(id_t road_id, roadmanager::RMObjec
 
     for (auto& marking : object->GetMarkingsWithPoints())  // marking
     {
-        for (auto& segments : marking.MarkingSegments_)  // marking points
+        for (auto& segment : marking.MarkingSegments_)  // marking points
         {
-            for (auto& segment : segments)  // marking points
-            {
-                UpdateOSIStationaryObjectODRMarking(segment.GetAllPoints());
-            }
+            UpdateOSIStationaryObjectODRMarking(segment.GetAllPoints());
         }
     }
 
