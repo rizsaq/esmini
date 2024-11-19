@@ -2378,21 +2378,15 @@ namespace roadmanager
         const RoadSide GetSide() const;
         const RoadMarkColor GetColor() const;
         void GetPos(double s, double t, double dz, double &x, double &y, double &z);
-        // create and fill markings points in itself for the given outlines. e.g for non repeat outline object
-        void FillPointsFromOutlines(const std::vector<Outline> &outlines);
-        // create and fill markings points in itself for the given Unique outlines. e.g repeat with atleast one road corner in any of outlines
-        void FillPointsFromUniqueOutlines(const std::vector<std::vector<Outline>> &outlines);
-        // create and fill markings points in itself for the given Unique outlines. e.g repeat with all outline as local corner
-        void FillPointsFromLocalOutlineTransformationInfo(const std::vector<Outline> &outlines, const Repeat &repeats);
-        // create and fill markings points in itself for the given repeat and dimension. e.g for non outline repeat object
-        void FillPointsFromRepeatTransformationInfoDimensions(const Repeat &repeat, const double length, const double width);
-        // create and fill markings points in itself for the given two points
-        void FillMarkingPoints(const MarkingSegment::Point2D &point1, const MarkingSegment::Point2D &point2, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
-        // get points in world coordinates
-        MarkingSegment::Point3D GetPoint(const MarkingSegment::Point2D &point, OutlineCorner::CornerType cornerType);
         const std::vector<int>& GetCornerReferenceIds() const;
         void AddCornerReferenceIds(const int cornerReferenceIds);
         int GetCornerReferenceIdsSize() const;
+        double GetStartOffset();
+        double GetStopOffset();
+        double GetZOffset();
+        double GetResolvedLineLength(double segmentLength);
+        double GetSpaceLength();
+        double GetWidth();
 
         ~Marking() = default;
 
@@ -2403,6 +2397,36 @@ namespace roadmanager
         int           roadId_;
         RoadSide      side_      = RoadSide::RIGHT;
         std::vector<int> cornerReferenceIds_;
+    };
+
+    class MarkingGenerator
+    {
+    public:
+        MarkingGenerator(Marking& marking) : marking_(marking) {}
+        void SetStartEnd(MarkingSegment::Point2D start, MarkingSegment::Point2D end);
+        // create and fill markings points in itself for the given outlines. e.g for non repeat outline object
+        void FillPointsFromOutlines(const std::vector<Outline> &outlines);
+        // create and fill markings points in itself for the given Unique outlines. e.g repeat with atleast one road corner in any of outlines
+        void FillPointsFromUniqueOutlines(const std::vector<std::vector<Outline>> &outlines);
+        // create and fill markings points in itself for the given Unique outlines. e.g repeat with all outline as local corner
+        void FillPointsFromLocalOutlineTransformationInfo(const std::vector<Outline> &outlines, const Repeat &repeats);
+        // create and fill markings points in itself for the given repeat and dimension. e.g for non outline repeat object
+        void FillPointsFromRepeatTransformationInfoDimensions(const Repeat &repeat, const double length, const double width);
+        // create and fill markings points in itself for the given two points
+        // void FillMarkingPoints(const MarkingSegment::Point2D &point1, const MarkingSegment::Point2D &point2, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
+        void GenerateMarkingSegment(MarkingSegment::Point2D start, MarkingSegment::Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
+        // get resolved points in 3D
+        MarkingSegment::Point3D GetPoint3D(const MarkingSegment::Point2D &point);
+
+        MarkingSegment::Point2D getStartTransformPoint(OutlineCorner::CornerType cornerType);
+        MarkingSegment::Point2D getEndTransformPoint(OutlineCorner::CornerType cornerType);
+        // get points in local coordinates and center aligned to the start and end points
+        MarkingSegment::Point2D transformPoint(const MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType);
+        double getAlpha();
+
+    private:
+        Marking& marking_;
+        MarkingSegment::Point2D start_, end_;
     };
 
     class RMObject : public RoadObject

@@ -3061,27 +3061,27 @@ TEST(TestOsiReporter, MarkingTest)
     // road corner outline with repeat, markings also repeated
     EXPECT_EQ(osi_gt.road_marking(6).base().base_polygon_size(), 24);
 
-    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(2).x(), 205.873, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(2).y(), 8.783, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(2).x(), 205.860, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(2).y(), 8.788, 1e-3);
 
-    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(18).x(), 207.053, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(18).y(), 12.184, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(18).x(), 207.038, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(18).y(), 12.189, 1e-3);
 
     EXPECT_EQ(osi_gt.road_marking(9).base().base_polygon_size(), 24);
 
-    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(4).x(), 212.538, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(4).y(), 10.176, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(4).x(), 212.522, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(4).y(), 10.182, 1e-3);
 
-    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(11).x(), 212.034, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(11).y(), 8.870, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(11).x(), 212.019, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(11).y(), 8.876, 1e-3);
 
     EXPECT_EQ(osi_gt.road_marking(11).base().base_polygon_size(), 24);
 
-    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(7).x(), 227.440, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(7).y(), 2.982, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(7).x(), 227.422, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(7).y(), 2.990, 1e-3);
 
-    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(19).x(), 226.210, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(19).y(), 0.578, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(19).x(), 226.195, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(19).y(), 0.586, 1e-3);
 
     // local corner outline with repeat
     EXPECT_EQ(osi_gt.road_marking(12).base().base_polygon_size(), 24);
@@ -3234,27 +3234,27 @@ TEST(TestOsiReporter, MarkingTest)
     // road corner outline with repeat, markings also repeated
     EXPECT_EQ(osi_gt.road_marking(6).base().base_polygon_size(), 24);
 
-    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(2).x(), 205.873, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(2).y(), 8.783, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(2).x(), 205.860, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(2).y(), 8.788, 1e-3);
 
-    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(18).x(), 207.053, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(18).y(), 12.184, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(18).x(), 207.038, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(6).base().base_polygon(18).y(), 12.189, 1e-3);
 
     EXPECT_EQ(osi_gt.road_marking(9).base().base_polygon_size(), 24);
 
-    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(4).x(), 212.538, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(4).y(), 10.176, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(4).x(), 212.522, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(4).y(), 10.182, 1e-3);
 
-    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(11).x(), 212.034, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(11).y(), 8.870, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(11).x(), 212.019, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(9).base().base_polygon(11).y(), 8.876, 1e-3);
 
     EXPECT_EQ(osi_gt.road_marking(11).base().base_polygon_size(), 24);
 
-    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(7).x(), 227.440, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(7).y(), 2.982, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(7).x(), 227.422, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(7).y(), 2.990, 1e-3);
 
-    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(19).x(), 226.210, 1e-3);
-    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(19).y(), 0.578, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(19).x(), 226.195, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(11).base().base_polygon(19).y(), 0.586, 1e-3);
 
     // local corner outline with repeat
     EXPECT_EQ(osi_gt.road_marking(12).base().base_polygon_size(), 24);
