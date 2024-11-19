@@ -2718,39 +2718,26 @@ MarkingSegment::Point3D MarkingGenerator::GetPoint3D(const MarkingSegment::Point
     pointTemp.y = point.y;
     tmp_pos.SetInertiaPos(pointTemp.x, pointTemp.y, 0.0);
     pointTemp.z = tmp_pos.GetZ() + marking_.GetZOffset();
-    printf("GetPoint3D x %f y %f z %f\n", pointTemp.x, pointTemp.y, pointTemp.z);
     return pointTemp;
-}
-
-MarkingSegment::Point2D roadmanager::MarkingGenerator::getStartTransformPoint(OutlineCorner::CornerType cornerType)
-{
-    return transformPoint(start_, cornerType);
-}
-
-MarkingSegment::Point2D roadmanager::MarkingGenerator::getEndTransformPoint(OutlineCorner::CornerType cornerType)
-{
-    return transformPoint(end_, cornerType);
 }
 
 void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, MarkingSegment::Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment)
 {
-    printf("Before start.x %f start.y %f end.x %f end.y %f\n", start.x, start.y, end.x, end.y);
     // Transform points to world coordinates if needed
-    MarkingSegment::Point2D transformedStart = transformPoint(start, cornerType);
-    MarkingSegment::Point2D transformedEnd = transformPoint(end, cornerType);
-    printf("After start.x %f start.y %f end.x %f end.y %f\n", transformedStart.x, transformedStart.y, transformedEnd.x, transformedEnd.y);
+    transformPoint(start, cornerType);
+    transformPoint(end, cornerType);
     if (marking_.GetStartOffset() == 0.0)  // no startoffset add start merge
     {
         markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_START);
     }
-    double segmentlength     = GetLengthOfVector2D((transformedEnd.x - transformedStart.x), (transformedEnd.y - transformedStart.y));
+    double segmentlength     = GetLengthOfVector2D((end.x - start.x), (end.y - start.y));
     if (IsEqualDouble(segmentlength, 0.0))  // if total length is zero, no need to add any marking
     {
         return;
     }
     double lineLength_temp = marking_.GetResolvedLineLength(segmentlength);
 
-    double alpha = atan2(transformedEnd.x - transformedStart.x, transformedEnd.y - transformedStart.y);  // find the angle between two points
+    double alpha = atan2(end.x - start.x, end.y - start.y);  // find the angle between two points
     // find the actual distance of below parameters based on angle
     double deltaP1Gap         = cos(alpha) * marking_.GetSpaceLength();
     double deltaP0Gap         = sin(alpha) * marking_.GetSpaceLength();
@@ -2759,24 +2746,11 @@ void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, Mar
     double deltaP1StartOffset = cos(alpha) * marking_.GetStartOffset();
     double deltaP0StartOffset = sin(alpha) * marking_.GetStartOffset();
 
+    getCenterAlignedPoint(start,alpha, marking_.GetSide());
     MarkingSegment::Point2D point;
-    point.x = transformedStart.x;
-    point.y = transformedStart.y;
-    // to do center align seems wrong
-    if (marking_.GetSide() == Marking::RoadSide::RIGHT)  // center allign the marking
-    {
-        point.x -= cos(alpha) * marking_.GetWidth() / 2;
-        point.y += sin(alpha) * marking_.GetWidth() / 2;
-    }
-    else
-    {
-        point.x += cos(alpha) * marking_.GetWidth() / 2;
-        point.y -= sin(alpha) * marking_.GetWidth() / 2;
-    }
-    printf("before linear point.x %f point.y %f\n", point.x, point.y);
-    MarkingSegment::Point2D start_point;
-    start_point.x = point.x;
-    start_point.y = point.y;  // shall be used later in the loop
+    point.x = start.x;
+    point.y = start.y;
+
     // find the far points of the marking
     double beata      = marking_.GetSide() == Marking::RoadSide::RIGHT ? M_PI_2 + alpha : -M_PI_2 + alpha;
     double deltaP1Far = cos(beata) * marking_.GetWidth();
@@ -2799,7 +2773,7 @@ void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, Mar
             point.x += deltaP0Gap;
             point.y += deltaP1Gap;
         }
-        cur_s = GetLengthOfVector2D((point.x - start_point.x), (point.y - start_point.y));
+        cur_s = GetLengthOfVector2D((point.x - start.x), (point.y - start.y));
         if (segmentlength - marking_.GetStopOffset() - cur_s< SMALL_NUMBER)  // total_length and cur_s are approximately equal
         {
             break;
@@ -2810,7 +2784,7 @@ void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, Mar
         points.emplace_back(std::move(GetPoint3D(point)));      // point_ A
         points.emplace_back(std::move(GetPoint3D(pointTemp)));  // point_ B
 
-        if (GetLengthOfVector2D((point.x + deltaP0Line - start_point.x), (point.y + deltaP1Line - start_point.y)) > segmentlength - marking_.GetStopOffset() + SMALL_NUMBER)
+        if (GetLengthOfVector2D((point.x + deltaP0Line - start.x), (point.y + deltaP1Line - start.y)) > segmentlength - marking_.GetStopOffset() + SMALL_NUMBER)
         {// after gap length check line length can be trancated
 
             point.x += sin(alpha) * (segmentlength - cur_s - marking_.GetStopOffset()); // new deltaP0Line
@@ -2827,7 +2801,7 @@ void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, Mar
             pointTemp.x = point.x + deltaP0Far;
             pointTemp.y = point.y + deltaP1Far;
         }
-        cur_s = GetLengthOfVector2D((point.x - start_point.x), (point.y - start_point.y));
+        cur_s = GetLengthOfVector2D((point.x - start.x), (point.y - start.y));
         points.emplace_back(std::move(GetPoint3D(pointTemp)));  // point_ D
         points.emplace_back(std::move(GetPoint3D(point)));      // point_ C
         if (cur_s <= segmentlength - marking_.GetStopOffset() + SMALL_NUMBER)
@@ -2842,146 +2816,6 @@ void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, Mar
         }
     }
 }
-
-// void Marking::FillMarkingPoints(const MarkingSegment::Point2D& point1, const MarkingSegment::Point2D& point2, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment)
-// {
-//     // printf("before point1.x %f point1.y %f point2.x %f point2.y %f\n", point1.x, point1.y, point2.x, point2.y);
-//     MarkingSegment::Point2D point1temp = point1;
-//     MarkingSegment::Point2D point2temp = point2;
-//     double                        z;
-//     if (cornerType == OutlineCorner::CornerType::ROAD_CORNER)  // raod
-//     {
-//         GetPos(point1.x, point1.y, 0.0, point1temp.x, point1temp.y, z);  // convert to world cordinate
-//         GetPos(point2.x, point2.y, 0.0, point2temp.x, point2temp.y, z);  // convert to world cordinate
-//     }
-//     else
-//     {  // already in world cordinate
-//         point1temp.x = point1.x;
-//         point1temp.y = point1.y;
-//         point2temp.x = point2.x;
-//         point2temp.y = point2.y;
-//     }
-//     // printf("after point1temp.x %f point1temp.y %f point2temp.x %f point2temp.y %f\n", point1temp.x, point1temp.y, point2temp.x, point2temp.y);
-//     if (startOffset_ == 0.0)  // no startoffset add start merge
-//     {
-//         markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_START);
-//     }
-
-//     double lineLength_temp_ = lineLength_;
-//     double total_length     = GetLengthOfVector2D((point2temp.x - point1temp.x), (point2temp.y - point1temp.y));
-//     if (IsEqualDouble(total_length, 0.0))  // if total length is zero, no need to add any marking
-//     {
-//         return;
-//     }
-
-//     if (spaceLength_ == 0.0 || lineLength_ == -1.0)  // if space length is zero or line length is -1, add marking for total length
-//     {
-//         lineLength_temp_ = total_length;
-//     }
-//     else
-//     {
-//         if (static_cast<int>(total_length / (lineLength_ + spaceLength_)) == 0)  // no space for complete lineLength_ + spaceLength_
-//         {
-//             // add atleast linelength
-//             if (lineLength_ > total_length)
-//             {
-//                 lineLength_temp_ = total_length;  // if line length is greater than total length, add marking for total length
-//             }
-//         }
-//     }
-
-//     double alpha = atan2(point2temp.x - point1temp.x, point2temp.y - point1temp.y);  // find the angle between two points
-//     // find the actual distance of below parameters based on angle
-//     double deltaP1Gap         = cos(alpha) * spaceLength_;
-//     double deltaP0Gap         = sin(alpha) * spaceLength_;
-//     double deltaP1Line        = cos(alpha) * lineLength_temp_;
-//     double deltaP0Line        = sin(alpha) * lineLength_temp_;
-//     double deltaP1StartOffset = cos(alpha) * startOffset_;
-//     double deltaP0StartOffset = sin(alpha) * startOffset_;
-
-//     MarkingSegment::Point2D point;
-//     point.x = point1temp.x;
-//     point.y = point1temp.y;
-//     if (side_ == RoadSide::RIGHT)  // center allign the marking
-//     {
-//         point.x -= cos(alpha) * width_ / 2;
-//         point.y += sin(alpha) * width_ / 2;
-//     }
-//     else
-//     {
-//         point.x += cos(alpha) * width_ / 2;
-//         point.y -= sin(alpha) * width_ / 2;
-//     }
-//     MarkingSegment::Point2D start_point;
-//     start_point.x = point.x;
-//     start_point.y = point.y;  // shall be used later in the loop
-
-//     // find the far points of the marking
-//     double beata      = side_ == RoadSide::RIGHT ? M_PI_2 + alpha : -M_PI_2 + alpha;
-//     double deltaP1Far = cos(beata) * width_;
-//     double deltaP0Far = sin(beata) * width_;
-
-//     double                            cur_s   = 0.0;
-//     int                               counter = 1;
-//     MarkingSegment::Point2D                           pointTemp;
-//     while (total_length - cur_s >= 0.0)  // loop till total length is covered
-//     {
-//         std::vector<MarkingSegment::Point3D> points;
-//         points.reserve(3);
-
-//         if (cur_s == 0.0)  // if first block, add start offset
-//         {
-//             point.x += deltaP0StartOffset;
-//             point.y += deltaP1StartOffset;
-//         }
-//         else
-//         {
-//             point.x += deltaP0Gap;
-//             point.y += deltaP1Gap;
-//         }
-//         cur_s = GetLengthOfVector2D((point.x - start_point.x), (point.y - start_point.y));
-//         if (total_length - stopOffset_ - cur_s< SMALL_NUMBER)  // total_length and cur_s are approximately equal
-//         {
-//             break;
-//         }
-
-//         pointTemp.x = point.x + deltaP0Far;
-//         pointTemp.y = point.y + deltaP1Far;
-//         points.emplace_back(std::move(GetPoint3D(point)));      // point_ A
-//         points.emplace_back(std::move(GetPoint3D(pointTemp)));  // point_ B
-
-//         if (GetLengthOfVector2D((point.x + deltaP0Line - start_point.x), (point.y + deltaP1Line - start_point.y)) > total_length - stopOffset_ + SMALL_NUMBER)
-//         {// after gap length check line length can be trancated
-
-//             point.x += sin(alpha) * (total_length - cur_s - stopOffset_); // new deltaP0Line
-//             point.y += cos(alpha) * (total_length  - cur_s- stopOffset_); // new deltaP1Line
-
-//             pointTemp.x = point.x + deltaP0Far;
-//             pointTemp.y = point.y + deltaP1Far;
-//         }
-//         else
-//         {
-//             point.x += deltaP0Line;
-//             point.y += deltaP1Line;
-
-//             pointTemp.x = point.x + deltaP0Far;
-//             pointTemp.y = point.y + deltaP1Far;
-//         }
-//         cur_s = GetLengthOfVector2D((point.x - start_point.x), (point.y - start_point.y));
-//         points.emplace_back(std::move(GetPoint3D(pointTemp)));  // point_ D
-//         points.emplace_back(std::move(GetPoint3D(point)));      // point_ C
-//         if (cur_s <= total_length - stopOffset_ + SMALL_NUMBER)
-//         // cur_s is less than or equal to total_length + SMALL_NUMBER, add the points
-//         {
-//             markingSegment.AddPoint(points);
-//         }
-//         if (abs(total_length - cur_s) < SMALL_NUMBER)  // total_length and cur_s are approximately equal
-//         {
-//             markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_END);  // line length reached last s value
-//             break;
-//         }
-//     }
-// }
 
 void Outline::GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const
 {
@@ -3001,36 +2835,33 @@ void Outline::GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::v
     }
 }
 
-MarkingSegment::Point2D roadmanager::MarkingGenerator::transformPoint(const MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType)
+void roadmanager::MarkingGenerator::transformPoint(MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType)
 {
-    MarkingSegment::Point2D pointTemp;
     double                        z;
     if (cornerType == OutlineCorner::CornerType::ROAD_CORNER)  // raod
     {
-        marking_.GetPos(point.x, point.y, 0.0, pointTemp.x, pointTemp.y, z);  // convert to world cordinate
+        marking_.GetPos(point.x, point.y, 0.0, point.x, point.y, z);  // convert to world cordinate
     }
     else
     {  // already in world cordinate
-        pointTemp.x = point.x;
-        pointTemp.y = point.y;
+        point.x = point.x;
+        point.y = point.y;
     }
-    // to do center align seems wrong
-    // if (marking_.GetSide() == Marking::RoadSide::RIGHT)  // center allign the marking
-    // {
-    //     pointTemp.x -= cos(getAlpha()) * marking_.GetWidth() / 2;
-    //     pointTemp.x += sin(getAlpha()) * marking_.GetWidth() / 2;
-    // }
-    // else
-    // {
-    //     pointTemp.x += cos(getAlpha()) * marking_.GetWidth() / 2;
-    //     pointTemp.x -= sin(getAlpha()) * marking_.GetWidth() / 2;
-    // }
-    return pointTemp;
 }
 
-double roadmanager::MarkingGenerator::getAlpha()
+void roadmanager::MarkingGenerator::getCenterAlignedPoint(MarkingSegment::Point2D& point, double alpha, Marking::RoadSide side)
 {
-    return atan2(end_.x - start_.x, end_.y - start_.y);  // find the angle between two points;
+    // to do center align seems wrong
+    if (side == Marking::RoadSide::RIGHT)  // center allign the marking
+    {
+        point.x -= cos(alpha) * (marking_.GetWidth() / 2);
+        point.y += sin(alpha) * (marking_.GetWidth() / 2);
+    }
+    else
+    {
+        point.x += cos(alpha) * (marking_.GetWidth() / 2);
+        point.y -= sin(alpha) * (marking_.GetWidth() / 2);
+    }
 }
 
 const std::vector<int>& roadmanager::Marking::GetCornerReferenceIds() const
@@ -3276,32 +3107,32 @@ bool roadmanager::RMObject::CheckCornerReferenceId(int id)
     return false;
 }
 
-void MarkingGenerator::FillPointsFromRepeatTransformationInfoDimensions(const Repeat& repeat, const double length, const double width)
+void MarkingGenerator::GenerateMarkingSegmentFromRepeatTransformationInfoDimensions(const Repeat& repeat, const double length, const double width)
 {
     for (const auto& repeatDimension : repeat.GetRepeatDimensions())
     {
         MarkingSegment segment(-1, -1, -1);// id no need, merge wont happen
-        MarkingSegment::Point2D point1;
-        MarkingSegment::Point2D point2;
+        MarkingSegment::Point2D start;
+        MarkingSegment::Point2D end;
         if (marking_.GetSide() == Marking::RoadSide::LEFT)
         {
             // find local lower left corner
             RotateVec2D(-repeatDimension.length / 2,
                         -repeatDimension.width / 2,
                         repeatDimension.heading + repeatDimension.hOffset,
-                        point1.x,
-                        point1.y);
+                        start.x,
+                        start.y);
             // find local upper left corner
             RotateVec2D(-repeatDimension.length / 2,
                         repeatDimension.width / 2,
                         repeatDimension.heading + repeatDimension.hOffset,
-                        point2.x,
-                        point2.y);
-            point1.x = repeatDimension.x + point1.x;
-            point1.y = repeatDimension.y + point1.y;
-            point2.x = repeatDimension.x + point2.x;
-            point2.y = repeatDimension.y + point2.y;
-            GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+                        end.x,
+                        end.y);
+            start.x = repeatDimension.x + start.x;
+            start.y = repeatDimension.y + start.y;
+            end.x = repeatDimension.x + end.x;
+            end.y = repeatDimension.y + end.y;
+            GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
         }
         else
         {
@@ -3309,15 +3140,15 @@ void MarkingGenerator::FillPointsFromRepeatTransformationInfoDimensions(const Re
             RotateVec2D(repeatDimension.length / 2,
                         -repeatDimension.width / 2,
                         repeatDimension.heading + repeatDimension.hOffset,
-                        point1.x,
-                        point1.y);
+                        start.x,
+                        start.y);
             // find local upper right corner
-            RotateVec2D(repeatDimension.length / 2, repeatDimension.width / 2, repeatDimension.heading + repeatDimension.hOffset, point2.x, point2.y);
-            point1.x = repeatDimension.x + point1.x;
-            point1.y = repeatDimension.y + point1.y;
-            point2.x = repeatDimension.x + point2.x;
-            point2.y = repeatDimension.y + point2.y;
-            GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+            RotateVec2D(repeatDimension.length / 2, repeatDimension.width / 2, repeatDimension.heading + repeatDimension.hOffset, end.x, end.y);
+            start.x = repeatDimension.x + start.x;
+            start.y = repeatDimension.y + start.y;
+            end.x = repeatDimension.x + end.x;
+            end.y = repeatDimension.y + end.y;
+            GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
         }
         if(segment.GetNumberOfPoints() > 0)
         {
@@ -3330,8 +3161,8 @@ void RMObject::FillPointsFromObject(Marking& marking)
 {
     MarkingGenerator markingGenerator(marking);
     MarkingSegment segment(-1, -1, -1);// no corner ids
-    MarkingSegment::Point2D      point1;
-    MarkingSegment::Point2D      point2;
+    MarkingSegment::Point2D      start;
+    MarkingSegment::Point2D      end;
     roadmanager::Position pos;
     pos.SetTrackPosMode(GetRoadId(),
                         GetS(),
@@ -3341,26 +3172,26 @@ void RMObject::FillPointsFromObject(Marking& marking)
     if (marking.GetSide() == Marking::RoadSide::LEFT)
     {
         // find local lower left corner
-        RotateVec2D(-GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), point1.x, point1.y);
+        RotateVec2D(-GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), start.x, start.y);
         // find local upper left corner
-        RotateVec2D(-GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), point2.x, point2.y);
-        point1.x = pos.GetX() + point1.x;
-        point1.y = pos.GetY() + point1.y;
-        point2.x = pos.GetX() + point2.x;
-        point2.y = pos.GetY() + point2.y;
-        markingGenerator.GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+        RotateVec2D(-GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), end.x, end.y);
+        start.x = pos.GetX() + start.x;
+        start.y = pos.GetY() + start.y;
+        end.x = pos.GetX() + end.x;
+        end.y = pos.GetY() + end.y;
+        markingGenerator.GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
     }
     else
     {
         // find local lower right corner
-        RotateVec2D(GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), point1.x, point1.y);
+        RotateVec2D(GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), start.x, start.y);
         // find local upper right corner
-        RotateVec2D(GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), point2.x, point2.y);
-        point1.x = pos.GetX() + point1.x;
-        point1.y = pos.GetY() + point1.y;
-        point2.x = pos.GetX() + point2.x;
-        point2.y = pos.GetY() + point2.y;
-        markingGenerator.GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+        RotateVec2D(GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), end.x, end.y);
+        start.x = pos.GetX() + start.x;
+        start.y = pos.GetY() + start.y;
+        end.x = pos.GetX() + end.x;
+        end.y = pos.GetY() + end.y;
+        markingGenerator.GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
     }
     if(segment.GetNumberOfPoints() > 0)
     {
@@ -3368,19 +3199,13 @@ void RMObject::FillPointsFromObject(Marking& marking)
     }
 }
 
-void roadmanager::MarkingGenerator::SetStartEnd(MarkingSegment::Point2D start, MarkingSegment::Point2D end)
-{
-    start_ = start;
-    end_   = end;
-}
-
-void MarkingGenerator::FillPointsFromOutlines(const std::vector<Outline>& outlines)
+void MarkingGenerator::GenerateMarkingSegmentFromOutlines(const std::vector<Outline>& outlines)
 {
     for (const auto& outline : outlines)
     {
         MarkingSegment segment;
-        MarkingSegment::Point2D point1;
-        MarkingSegment::Point2D point2;
+        MarkingSegment::Point2D start;
+        MarkingSegment::Point2D end;
         if (marking_.GetCornerReferenceIdsSize() > 0)  // no corner ids
         {
             std::vector<OutlineCorner*> cornerReferences;
@@ -3392,18 +3217,18 @@ void MarkingGenerator::FillPointsFromOutlines(const std::vector<Outline>& outlin
                     segment = MarkingSegment(cornerReferences[i]->GetCornerId(), cornerReferences[i + 1]->GetCornerId(), outline.id_);
                     if (cornerReferences[i]->GetCornerType() == OutlineCorner::CornerType::ROAD_CORNER)  // road corner
                     {
-                        point1.x = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i])->GetS();
-                        point2.x = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i + 1])->GetS();
-                        point1.y = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i])->GetT();
-                        point2.y = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i + 1])->GetT();
-                        GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::ROAD_CORNER, segment);
+                        start.x = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i])->GetS();
+                        end.x = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i + 1])->GetS();
+                        start.y = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i])->GetT();
+                        end.y = static_cast<roadmanager::OutlineCornerRoad*>(cornerReferences[i + 1])->GetT();
+                        GenerateMarkingSegment(start, end, OutlineCorner::CornerType::ROAD_CORNER, segment);
                     }
                     else
                     {
                         double z1, z2;
-                        (cornerReferences[i])->GetPos(point1.x, point1.y, z1);
-                        (cornerReferences[i + 1])->GetPos(point2.x, point2.y, z2);
-                        GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+                        (cornerReferences[i])->GetPos(start.x, start.y, z1);
+                        (cornerReferences[i + 1])->GetPos(end.x, end.y, z2);
+                        GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
                     }
                     if(segment.GetNumberOfPoints() > 0)
                     {
@@ -3418,17 +3243,17 @@ void MarkingGenerator::FillPointsFromOutlines(const std::vector<Outline>& outlin
             for (size_t k = 0; k < outline.corner_.size() / 2; k++)
             {
                 segment = MarkingSegment(outline.corner_[k]->GetCornerId(), outline.corner_[outline.corner_.size() - k - 1]->GetCornerId(),k); // k says it id different segment
-                point1.x = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[k])->GetS();                               // 1st corner
-                point2.x = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[outline.corner_.size() - k - 1])->GetS();  // last corner
-                point1.y = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[k])->GetT();
-                point2.y = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[outline.corner_.size() - k - 1])->GetT();
+                start.x = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[k])->GetS();                               // 1st corner
+                end.x = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[outline.corner_.size() - k - 1])->GetS();  // last corner
+                start.y = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[k])->GetT();
+                end.y = static_cast<roadmanager::OutlineCornerRoad*>(outline.corner_[outline.corner_.size() - k - 1])->GetT();
                 if (marking_.GetSide() == Marking::RoadSide::LEFT)
                 {
-                    GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::ROAD_CORNER, segment);
+                    GenerateMarkingSegment(start, end, OutlineCorner::CornerType::ROAD_CORNER, segment);
                 }
                 else
                 {
-                    GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::ROAD_CORNER, segment);
+                    GenerateMarkingSegment(start, end, OutlineCorner::CornerType::ROAD_CORNER, segment);
                 }
                 if(segment.GetNumberOfPoints() > 0)
                 {
@@ -3439,23 +3264,23 @@ void MarkingGenerator::FillPointsFromOutlines(const std::vector<Outline>& outlin
     }
 }
 
-void MarkingGenerator::FillPointsFromUniqueOutlines(const std::vector<std::vector<Outline>>& UniqueOutlines)
+void MarkingGenerator::GenerateMarkingSegmentFromUniqueOutlines(const std::vector<std::vector<Outline>>& UniqueOutlines)
 {
     for (const auto& outlines : UniqueOutlines)
     {
-        FillPointsFromOutlines(outlines);
+        GenerateMarkingSegmentFromOutlines(outlines);
     }
 }
 
-void MarkingGenerator::FillPointsFromLocalOutlineTransformationInfo(const std::vector<Outline>& outlines, const roadmanager::Repeat& repeat)
+void MarkingGenerator::GenerateMarkingSegmentFromLocalOutlineTransformationInfo(const std::vector<Outline>& outlines, const roadmanager::Repeat& repeat)
 {
     for (const auto& outline : outlines)
     {
         int id = 0; // id for segment
         for (const auto& repeatScale : repeat.transformationInfoScales_)
         {
-            MarkingSegment::Point2D               point1;
-            MarkingSegment::Point2D               point2;
+            MarkingSegment::Point2D               start;
+            MarkingSegment::Point2D               end;
             roadmanager::Position pref;
             MarkingSegment segment;
 
@@ -3474,17 +3299,17 @@ void MarkingGenerator::FillPointsFromLocalOutlineTransformationInfo(const std::v
                         double u2, v2;
                         RotateVec2D(x * repeatScale.scale_x, y * repeatScale.scale_y, total_heading, u2, v2);
 
-                        point1.x = repeatScale.x + u2;
-                        point1.y = repeatScale.y + v2;
+                        start.x = repeatScale.x + u2;
+                        start.y = repeatScale.y + v2;
 
                         double u3, v3;
                         cornerReferences[i + 1]->GetPosLocal(x, y, z);
                         RotateVec2D(x * repeatScale.scale_x, y * repeatScale.scale_y, total_heading, u3, v3);
 
-                        point2.x = repeatScale.x + u3;
-                        point2.y = repeatScale.y + v3;
+                        end.x = repeatScale.x + u3;
+                        end.y = repeatScale.y + v3;
 
-                        GenerateMarkingSegment(point1, point2, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+                        GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
                         if(segment.GetNumberOfPoints() > 0)
                         {
                             marking_.MarkingSegments_.emplace_back(std::move(segment));
@@ -3506,25 +3331,25 @@ void RMObject::CreateMarkingsPoints(Marking& marking)
         {
             if (GetNumberOfUniqueOutlines(repeat) > 0)  // road corner outline with repeat
             {
-                markingGenerator.FillPointsFromUniqueOutlines(GetUniqueOutlines(repeat));
+                markingGenerator.GenerateMarkingSegmentFromUniqueOutlines(GetUniqueOutlines(repeat));
             }
             else if (GetNumberOfOutlines() > 0)  // local corner outline with repeat
             {
-                markingGenerator.FillPointsFromLocalOutlineTransformationInfo(GetOutlines(), repeat);
+                markingGenerator.GenerateMarkingSegmentFromLocalOutlineTransformationInfo(GetOutlines(), repeat);
             }
             else if (GetNumberOfUniqueOutlinesZeroDistance(repeat))  // non outline object with repeat distance 0 with no model
             {
-                markingGenerator.FillPointsFromOutlines(GetUniqueOutlinesZeroDistance(repeat));
+                markingGenerator.GenerateMarkingSegmentFromOutlines(GetUniqueOutlinesZeroDistance(repeat));
             }
             else  // non outline object with repeat distance greater than 0
             {
-                markingGenerator.FillPointsFromRepeatTransformationInfoDimensions(repeat, GetLength().Get(), GetWidth().Get());
+                markingGenerator.GenerateMarkingSegmentFromRepeatTransformationInfoDimensions(repeat, GetLength().Get(), GetWidth().Get());
             }
         }
     }
     else if (GetNumberOfOutlines() > 0)  // non repeat outline
     {
-        markingGenerator.FillPointsFromOutlines(GetOutlines());
+        markingGenerator.GenerateMarkingSegmentFromOutlines(GetOutlines());
     }
     else  // no outline, no repeat
     {

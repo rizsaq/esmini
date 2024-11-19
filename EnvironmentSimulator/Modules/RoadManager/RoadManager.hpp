@@ -2403,26 +2403,23 @@ namespace roadmanager
     {
     public:
         MarkingGenerator(Marking& marking) : marking_(marking) {}
-        void SetStartEnd(MarkingSegment::Point2D start, MarkingSegment::Point2D end);
-        // create and fill markings points in itself for the given outlines. e.g for non repeat outline object
-        void FillPointsFromOutlines(const std::vector<Outline> &outlines);
-        // create and fill markings points in itself for the given Unique outlines. e.g repeat with atleast one road corner in any of outlines
-        void FillPointsFromUniqueOutlines(const std::vector<std::vector<Outline>> &outlines);
-        // create and fill markings points in itself for the given Unique outlines. e.g repeat with all outline as local corner
-        void FillPointsFromLocalOutlineTransformationInfo(const std::vector<Outline> &outlines, const Repeat &repeats);
-        // create and fill markings points in itself for the given repeat and dimension. e.g for non outline repeat object
-        void FillPointsFromRepeatTransformationInfoDimensions(const Repeat &repeat, const double length, const double width);
-        // create and fill markings points in itself for the given two points
-        // void FillMarkingPoints(const MarkingSegment::Point2D &point1, const MarkingSegment::Point2D &point2, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
+        // Generate marking segment for the given outlines. e.g for non repeat outline object and store it in marking object
+        void GenerateMarkingSegmentFromOutlines(const std::vector<Outline> &outlines);
+        // Generate marking segment for the given Unique outlines. e.g repeat with atleast one road corner in any of outlines and store it in marking object
+        void GenerateMarkingSegmentFromUniqueOutlines(const std::vector<std::vector<Outline>> &outlines);
+        // Generate marking segment for the given Unique outlines. e.g repeat with all outline as local corner and store it in marking object
+        void GenerateMarkingSegmentFromLocalOutlineTransformationInfo(const std::vector<Outline> &outlines, const Repeat &repeats);
+        // Generate marking segment for the given repeat and dimension. e.g for non outline repeat object and store it in marking object
+        void GenerateMarkingSegmentFromRepeatTransformationInfoDimensions(const Repeat &repeat, const double length, const double width);
+        // generate marking segment in markingSegment for the given start and end points
         void GenerateMarkingSegment(MarkingSegment::Point2D start, MarkingSegment::Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
         // get resolved points in 3D
-        MarkingSegment::Point3D GetPoint3D(const MarkingSegment::Point2D &point);
-
-        MarkingSegment::Point2D getStartTransformPoint(OutlineCorner::CornerType cornerType);
-        MarkingSegment::Point2D getEndTransformPoint(OutlineCorner::CornerType cornerType);
-        // get points in local coordinates and center aligned to the start and end points
-        MarkingSegment::Point2D transformPoint(const MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType);
-        double getAlpha();
+        MarkingSegment::Point3D GetPoint3D(const MarkingSegment::Point2D& point);
+        // get points in local coordinates
+        void transformPoint(MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType);
+        // get points in the center aligned to the start and end points
+        void getCenterAlignedPoint(MarkingSegment::Point2D& point, double alpha, Marking::RoadSide side);
+        ~MarkingGenerator() = default;
 
     private:
         Marking& marking_;
