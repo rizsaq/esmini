@@ -1911,14 +1911,38 @@ namespace roadmanager
 
         bool      IsAllCornerIdUnique();
         bool      IsAllSameCorners();
-        int GetCornerIdFromOriginalCornerId(int originalCornerId) const;
-        int GetOriginalCornerIdFromCornerId(int CornerId) const;
-        // Resolve provided outline corner reference ids. Make id Start from 0 to n-1, Store the user provided corner id in originalCornerId
+        // Resolve provided outline corner reference ids to internal index. Make id Start from 0 to n-1, Store the user provided corner id in originalCornerId
         void ResolveOutlineCornerReferenceIds();
-        // Get consecutive corner ids for given marking corner reference ids based on the outline
-        void GetConsecutiveCornerIds(const std::vector<int>& cornerReferenceIds, std::vector<int> &cornerIds) const;
         // get reference to the corners for given corner reference id.
         void GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const;
+    };
+
+    class CornerIdManager
+    {
+    public:
+        CornerIdManager(const std::vector<OutlineCorner *> corners) : corners_(corners) {
+            updateMinMaxIds();
+        }
+        // Get consecutive corner ids(sort and fill gaps) for given marking corner reference ids based on the outline
+        std::vector<int> getConsecutiveCornerIds(const std::vector<int>& cornerReferenceIds) const;
+        int getMinId() const;
+        int getMaxId() const;
+    private:
+        const std::vector<OutlineCorner *> corners_;
+        int              min_id_ = std::numeric_limits<int>::max();
+        int              max_id_ = std::numeric_limits<int>::min();
+
+        // Helper methods:
+        // update min and max corner ids based on the outline corners internal corner ids
+        void updateMinMaxIds();
+        // get corner ids(index) from the corner reference ids
+        std::vector<int> getCornerIdFromOriginalCornerId(const std::vector<int>& originalId) const;
+        // get corner reference ids(user provided) from the corner ids(index)
+        int getOriginalCornerIdFromCornerId(int id) const;
+        // get sorted corner ids based on the corner ids(index)
+        std::vector<int> getSortIds(const std::vector<int>& ids) const;
+        // fill gaps in the corner ids(index)
+        std::vector<int> fillConsecutiveIds(const std::vector<int>& ids) const;
     };
 
     class ParkingSpace
@@ -2403,6 +2427,8 @@ namespace roadmanager
     {
     public:
         MarkingGenerator(Marking& marking) : marking_(marking) {}
+        // set start and end points for the given corner type along calculating the alpha, beta other parameters
+        void setStartAndEndPoints(MarkingSegment::Point2D& start, MarkingSegment::Point2D& end, OutlineCorner::CornerType cornerType);
         // Generate marking segment for the given outlines. e.g for non repeat outline object and store it in marking object
         void GenerateMarkingSegmentFromOutlines(const std::vector<Outline> &outlines);
         // Generate marking segment for the given Unique outlines. e.g repeat with atleast one road corner in any of outlines and store it in marking object
@@ -2423,7 +2449,9 @@ namespace roadmanager
 
     private:
         Marking& marking_;
-        MarkingSegment::Point2D start_, end_;
+        MarkingSegment::Point2D start_ ;
+        MarkingSegment::Point2D end_;
+        double segmentlength_, alpha_, beta_, deltaP1Gap_, deltaP0Gap_, deltaP1Line_, deltaP0Line_, deltaP1StartOffset_, deltaP0StartOffset_, deltaP1Far_, deltaP0Far_;
     };
 
     class RMObject : public RoadObject

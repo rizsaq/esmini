@@ -2561,28 +2561,82 @@ bool roadmanager::Outline::IsAllSameCorners()
     return true;
 }
 
-int roadmanager::Outline::GetCornerIdFromOriginalCornerId(int originalCornerId) const
+void Outline::GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const
 {
-    for (const auto& corner : corner_)
+    // std::vector<int> ids;
+    // GetConsecutiveCornerIds(cornerReferenceIds, ids);
+    CornerIdManager cornerIdManager(corner_);
+    std::vector<int> ids = cornerIdManager.getConsecutiveCornerIds(cornerReferenceIds);
+    // fetch the corner reference from corner id
+    for (const auto cornerReferenceId : ids)
     {
-        if (corner->GetOriginalCornerId() == originalCornerId)
+        for (const auto& corner : corner_)
         {
-            return corner->GetCornerId();
+            if (corner->GetOriginalCornerId() == cornerReferenceId)
+            {
+                cornerReferences.push_back(corner);
+                break;
+            }
         }
     }
-    return -1;
 }
 
-int roadmanager::Outline::GetOriginalCornerIdFromCornerId(int cornerId) const
+void Outline::ResolveOutlineCornerReferenceIds()
+{
+    int currentId = 0;
+    for (auto& corner : corner_)
+    {
+        corner->SetOriginalCornerId();
+        corner->SetCornerId(currentId);
+        currentId++;
+    }
+}
+
+Outline::Outline(Outline&& other)
+{
+    corner_   = std::move(other.corner_);
+    fillType_ = other.fillType_;
+    id_       = other.id_;
+    areaType_ = other.areaType_;
+    other.corner_.clear();
+}
+
+void Outline::TransformRoadCornerToLocal(std::vector<Outline::point>& localPoints, bool RemoveMin)
 {
     for (const auto& corner : corner_)
     {
-        if (corner->GetCornerId() == cornerId)
+        Outline::point     point;
+        OutlineCornerRoad* roadCorner = static_cast<OutlineCornerRoad*>(corner);
+        point.x                       = roadCorner->GetS();  // s and t not transformed to x and y yet. just storing as x and y for future processing
+        point.y                       = roadCorner->GetT();
+        point.z                       = corner->GetZ();
+        point.h                       = corner->GetHeight();
+        localPoints.emplace_back(std::move(point));  // this is not transformed to local yet, Shall be tranformed below after finding minX
+    }
+
+    if (RemoveMin)
+    {
+        // find the minimum x value
+        double minX = localPoints[0].x;
+        for (const auto& localPoint : localPoints)
         {
-            return corner->GetOriginalCornerId();
+            minX = std::min(minX, localPoint.x);  // Update minX with the smaller value
+        }
+        // reduce the x with minX to tranform into local
+        for (auto& localPoint : localPoints)
+        {
+            localPoint.x = localPoint.x - minX;
         }
     }
-    return -1;
+}
+
+Outline::~Outline()
+{
+    for (auto& corner : corner_)
+    {
+        delete (corner);
+    }
+    corner_.clear();
 }
 
 OutlineCornerLocal::OutlineCornerLocal(id_t   roadId,
@@ -2688,6 +2742,75 @@ ParkingSpace::Access ParkingSpace::ParseAccess(pugi::xml_node node)
     return access;
 }
 
+void MarkingSegment::AddPoint(const std::vector<Point3D>& points)
+{
+    allPoints_.emplace_back(points);
+}
+double Repeat::GetLengthWithFactor(double factor)
+{
+    double repeatLength = GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart()));  // add small number to round double value
+    double h_offset     = atan2(GetTEnd() - GetTStart(), repeatLength);
+    return ((GetLengthStartResolved() + factor * (GetLengthEndResolved() - GetLengthStartResolved())) / cos(h_offset));
+}
+
+double Repeat::GetWidthWithFactor(double factor)
+{
+    return (GetWidthStartResolved() + (factor * (GetWidthEndResolved() - GetWidthStartResolved())));
+}
+
+double Repeat::GetZOffsetWithFactor(double factor)
+{
+    return (GetZOffsetStartResolved() + (factor * (GetZOffsetEndResolved() - GetZOffsetStartResolved())));
+}
+
+double Repeat::GetHeightWithFactor(double factor)
+{
+    return (GetHeightStart() + (factor * (GetHeightEnd() - GetHeightStart())));
+}
+
+std::vector<std::vector<MarkingSegment::Point3D>>& MarkingSegment::GetAllPoints()
+{
+    return allPoints_;
+}
+
+void roadmanager::MarkingSegment::SetMergeType(MergeType mergeType)
+{
+    if (mergeType_ == MergeType::MERGE_START &&
+        mergeType == MergeType::MERGE_END)  // if already start merge and new merge is end then set both and vice versa
+    {
+        mergeType_ = MergeType::MERGE_BOTH;
+    }
+    else
+    {
+        mergeType_ = mergeType;
+    }
+}
+
+bool roadmanager::MarkingSegment::IsMergeStart()
+{
+    return mergeType_ == MergeType::MERGE_START || mergeType_ == MergeType::MERGE_BOTH;
+}
+
+bool roadmanager::MarkingSegment::IsMergeEnd()
+{
+    return mergeType_ == MergeType::MERGE_END || mergeType_ == MergeType::MERGE_BOTH;
+}
+
+int roadmanager::MarkingSegment::GetStartCornerId()
+{
+    return startCornerId_;
+}
+
+int roadmanager::MarkingSegment::GetEndCornerId()
+{
+    return endCornerId_;
+}
+
+int roadmanager::MarkingSegment::GetOutlineId()
+{
+    return outlineId_;
+}
+
 const Marking::RoadSide Marking::GetSide() const
 {
     return side_;
@@ -2705,163 +2828,6 @@ void Marking::GetPos(double s, double t, double dz, double& x, double& y, double
     x = pos.GetX();
     y = pos.GetY();
     z = pos.GetZ() + dz;
-}
-
-MarkingSegment::Point3D MarkingGenerator::GetPoint3D(const MarkingSegment::Point2D& point)
-{
-    bool check = false;
-    roadmanager::MarkingSegment::Point3D pointTemp;
-    roadmanager::Position         tmp_pos;
-    tmp_pos.SetMode(Position::PosModeType::UPDATE,
-                    Position::PosMode::Z_REL | Position::PosMode::H_REL | Position::PosMode::H_REL | Position::PosMode::H_REL);
-    pointTemp.x = point.x;
-    pointTemp.y = point.y;
-    tmp_pos.SetInertiaPos(pointTemp.x, pointTemp.y, 0.0);
-    pointTemp.z = tmp_pos.GetZ() + marking_.GetZOffset();
-    return pointTemp;
-}
-
-void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, MarkingSegment::Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment)
-{
-    // Transform points to world coordinates if needed
-    transformPoint(start, cornerType);
-    transformPoint(end, cornerType);
-    if (marking_.GetStartOffset() == 0.0)  // no startoffset add start merge
-    {
-        markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_START);
-    }
-    double segmentlength     = GetLengthOfVector2D((end.x - start.x), (end.y - start.y));
-    if (IsEqualDouble(segmentlength, 0.0))  // if total length is zero, no need to add any marking
-    {
-        return;
-    }
-    double lineLength_temp = marking_.GetResolvedLineLength(segmentlength);
-
-    double alpha = atan2(end.x - start.x, end.y - start.y);  // find the angle between two points
-    // find the actual distance of below parameters based on angle
-    double deltaP1Gap         = cos(alpha) * marking_.GetSpaceLength();
-    double deltaP0Gap         = sin(alpha) * marking_.GetSpaceLength();
-    double deltaP1Line        = cos(alpha) * lineLength_temp;
-    double deltaP0Line        = sin(alpha) * lineLength_temp;
-    double deltaP1StartOffset = cos(alpha) * marking_.GetStartOffset();
-    double deltaP0StartOffset = sin(alpha) * marking_.GetStartOffset();
-
-    getCenterAlignedPoint(start,alpha, marking_.GetSide());
-    MarkingSegment::Point2D point;
-    point.x = start.x;
-    point.y = start.y;
-
-    // find the far points of the marking
-    double beata      = marking_.GetSide() == Marking::RoadSide::RIGHT ? M_PI_2 + alpha : -M_PI_2 + alpha;
-    double deltaP1Far = cos(beata) * marking_.GetWidth();
-    double deltaP0Far = sin(beata) * marking_.GetWidth();
-
-    double                            cur_s   = 0.0;
-    MarkingSegment::Point2D                           pointTemp;
-    while (segmentlength - cur_s >= 0.0)  // loop till total length is covered
-    {
-        std::vector<MarkingSegment::Point3D> points;
-        points.reserve(3);
-
-        if (cur_s == 0.0)  // if first block, add start offset
-        {
-            point.x += deltaP0StartOffset;
-            point.y += deltaP1StartOffset;
-        }
-        else
-        {
-            point.x += deltaP0Gap;
-            point.y += deltaP1Gap;
-        }
-        cur_s = GetLengthOfVector2D((point.x - start.x), (point.y - start.y));
-        if (segmentlength - marking_.GetStopOffset() - cur_s< SMALL_NUMBER)  // total_length and cur_s are approximately equal
-        {
-            break;
-        }
-
-        pointTemp.x = point.x + deltaP0Far;
-        pointTemp.y = point.y + deltaP1Far;
-        points.emplace_back(std::move(GetPoint3D(point)));      // point_ A
-        points.emplace_back(std::move(GetPoint3D(pointTemp)));  // point_ B
-
-        if (GetLengthOfVector2D((point.x + deltaP0Line - start.x), (point.y + deltaP1Line - start.y)) > segmentlength - marking_.GetStopOffset() + SMALL_NUMBER)
-        {// after gap length check line length can be trancated
-
-            point.x += sin(alpha) * (segmentlength - cur_s - marking_.GetStopOffset()); // new deltaP0Line
-            point.y += cos(alpha) * (segmentlength  - cur_s- marking_.GetStopOffset()); // new deltaP1Line
-
-            pointTemp.x = point.x + deltaP0Far;
-            pointTemp.y = point.y + deltaP1Far;
-        }
-        else
-        {
-            point.x += deltaP0Line;
-            point.y += deltaP1Line;
-
-            pointTemp.x = point.x + deltaP0Far;
-            pointTemp.y = point.y + deltaP1Far;
-        }
-        cur_s = GetLengthOfVector2D((point.x - start.x), (point.y - start.y));
-        points.emplace_back(std::move(GetPoint3D(pointTemp)));  // point_ D
-        points.emplace_back(std::move(GetPoint3D(point)));      // point_ C
-        if (cur_s <= segmentlength - marking_.GetStopOffset() + SMALL_NUMBER)
-        // cur_s is less than or equal to total_length + SMALL_NUMBER, add the points
-        {
-            markingSegment.AddPoint(points);
-        }
-        if (abs(segmentlength - cur_s) < SMALL_NUMBER)  // total_length and cur_s are approximately equal
-        {
-            markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_END);  // line length reached last s value
-            break;
-        }
-    }
-}
-
-void Outline::GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const
-{
-    std::vector<int> ids;
-    GetConsecutiveCornerIds(cornerReferenceIds, ids);
-    // fetch the corner reference from corner id
-    for (const auto cornerReferenceId : ids)
-    {
-        for (const auto& corner : corner_)
-        {
-            if (corner->GetOriginalCornerId() == cornerReferenceId)
-            {
-                cornerReferences.push_back(corner);
-                break;
-            }
-        }
-    }
-}
-
-void roadmanager::MarkingGenerator::transformPoint(MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType)
-{
-    double                        z;
-    if (cornerType == OutlineCorner::CornerType::ROAD_CORNER)  // raod
-    {
-        marking_.GetPos(point.x, point.y, 0.0, point.x, point.y, z);  // convert to world cordinate
-    }
-    else
-    {  // already in world cordinate
-        point.x = point.x;
-        point.y = point.y;
-    }
-}
-
-void roadmanager::MarkingGenerator::getCenterAlignedPoint(MarkingSegment::Point2D& point, double alpha, Marking::RoadSide side)
-{
-    // to do center align seems wrong
-    if (side == Marking::RoadSide::RIGHT)  // center allign the marking
-    {
-        point.x -= cos(alpha) * (marking_.GetWidth() / 2);
-        point.y += sin(alpha) * (marking_.GetWidth() / 2);
-    }
-    else
-    {
-        point.x += cos(alpha) * (marking_.GetWidth() / 2);
-        point.y -= sin(alpha) * (marking_.GetWidth() / 2);
-    }
 }
 
 const std::vector<int>& roadmanager::Marking::GetCornerReferenceIds() const
@@ -2925,150 +2891,141 @@ double roadmanager::Marking::GetWidth()
     return width_;
 }
 
-void MarkingSegment::AddPoint(const std::vector<Point3D>& points)
-{
-    allPoints_.emplace_back(points);
-}
-
-std::vector<std::vector<MarkingSegment::Point3D>>& MarkingSegment::GetAllPoints()
-{
-    return allPoints_;
-}
-
 int MarkingSegment::GetNumberOfPoints() const
 {
     return allPoints_.size();
 }
 
-void roadmanager::MarkingSegment::SetMergeType(MergeType mergeType)
+std::vector<int> roadmanager::CornerIdManager::getConsecutiveCornerIds(const std::vector<int>& cornerReferenceIds) const
 {
-    if (mergeType_ == MergeType::MERGE_START &&
-        mergeType == MergeType::MERGE_END)  // if already start merge and new merge is end then set both and vice versa
+    std::vector<int> Ids;
+    std::vector<int> cornerIds = getCornerIdFromOriginalCornerId(cornerReferenceIds);
+    if (cornerIds.size() > 0)
     {
-        mergeType_ = MergeType::MERGE_BOTH;
+        std::vector<int> sortedIds = getSortIds(cornerIds);
+        std::vector<int> consecutiveIds = fillConsecutiveIds(sortedIds);
+
+        // now return th resolved corner reference ids in orginal from
+        for (const auto& id : consecutiveIds)
+        {
+            int orginalId = getOriginalCornerIdFromCornerId(id);
+            if (orginalId != -1)
+            {
+                Ids.push_back(orginalId);
+            }
+        }
     }
-    else
-    {
-        mergeType_ = mergeType;
-    }
+    return Ids;
 }
 
-bool roadmanager::MarkingSegment::IsMergeStart()
+int roadmanager::CornerIdManager::getMinId() const
 {
-    return mergeType_ == MergeType::MERGE_START || mergeType_ == MergeType::MERGE_BOTH;
+    return min_id_;
 }
 
-bool roadmanager::MarkingSegment::IsMergeEnd()
+int roadmanager::CornerIdManager::getMaxId() const
 {
-    return mergeType_ == MergeType::MERGE_END || mergeType_ == MergeType::MERGE_BOTH;
+    return max_id_;
 }
 
-int roadmanager::MarkingSegment::GetStartCornerId()
+void roadmanager::CornerIdManager::updateMinMaxIds()
 {
-    return startCornerId_;
-}
-
-int roadmanager::MarkingSegment::GetEndCornerId()
-{
-    return endCornerId_;
-}
-
-int roadmanager::MarkingSegment::GetOutlineId()
-{
-    return outlineId_;
-}
-
-void Outline::ResolveOutlineCornerReferenceIds()
-{
-    int currentId = 0;
-    for (auto& corner : corner_)
-    {
-        corner->SetOriginalCornerId();
-        corner->SetCornerId(currentId);
-        currentId++;
-    }
-}
-
-void roadmanager::Outline::GetConsecutiveCornerIds(const std::vector<int>& cornerReferenceIds, std::vector<int>& Ids) const
-{
-    std::vector<int> resolvedCornerReferenceIds;
-    int              min_id = std::numeric_limits<int>::max();
-    int              max_id = std::numeric_limits<int>::min();
-
-    // Find the minimum and maximum IDs across all outlines
-    for (const auto& corner : corner_)
+    // Find the minimum and maximum IDs across all outline
+    for (const auto& corner : corners_)
     {
         int id = corner->GetCornerId();
-        if (id < min_id)
-            min_id = id;
-        if (id > max_id)
-            max_id = id;
+        if (id < min_id_)
+            min_id_ = id;
+        if (id > max_id_)
+            max_id_ = id;
     }
+}
 
-    // find the corner reference id from original corner id
-    for (size_t i = 0; i < cornerReferenceIds.size(); ++i)
+std::vector<int> roadmanager::CornerIdManager::getCornerIdFromOriginalCornerId(const std::vector<int>& originalId) const
+{
+    std::vector<int> resolvedCornerReferenceIds;
+    for (const auto& id : originalId)
     {
-        int id = GetCornerIdFromOriginalCornerId(cornerReferenceIds[i]);
-        if (id != -1)
+        for (const auto& corner : corners_)
         {
-            resolvedCornerReferenceIds.push_back(id);
+            if (corner->GetOriginalCornerId() == id)
+            {
+                if (corner->GetOriginalCornerId() != -1)
+                {
+                    resolvedCornerReferenceIds.push_back(corner->GetCornerId());
+                    break;
+                }
+            }
         }
     }
-    if (resolvedCornerReferenceIds.size() == 0)
-    {
-        return;
-    }
+    return resolvedCornerReferenceIds;
+}
 
-    // Switch values as small to large for each marking, but skip switch if it contains only max_id as start and min_id as end eg 3,0
-    if (resolvedCornerReferenceIds.size() == 2)
+int roadmanager::CornerIdManager::getOriginalCornerIdFromCornerId(int id) const
+{
+    for (const auto& corner : corners_)
     {
-        if ((resolvedCornerReferenceIds[0] != max_id || resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] != min_id) &&
-            resolvedCornerReferenceIds[0] > resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1])
+        if (corner->GetCornerId() == id)
         {
-            std::swap(resolvedCornerReferenceIds[0], resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1]);
+            return corner->GetOriginalCornerId();
+        }
+    }
+    return -1;
+}
+
+std::vector<int> roadmanager::CornerIdManager::getSortIds(const std::vector<int>& ids) const
+{
+    std::vector<int> sortedIds = ids;
+    // Switch values as small to large for each marking, but skip switch if it contains only max_id as start and min_id as end eg 3,0
+    if (sortedIds.size() == 2)
+    {
+        if ((sortedIds[0] != getMaxId() || sortedIds[sortedIds.size() - 1] != getMinId()) &&
+            sortedIds[0] > sortedIds[sortedIds.size() - 1])
+        {
+            std::swap(sortedIds[0], sortedIds[sortedIds.size() - 1]);
         }
     }
     else
     {
-        if (!(resolvedCornerReferenceIds[0] == 0 && resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] == 0)) // not (0,1,2,3,0)
+        if (!(sortedIds[0] == 0 && sortedIds[sortedIds.size() - 1] == 0)) // not (0,1,2,3,0)
         {
-            std::sort(resolvedCornerReferenceIds.begin(), resolvedCornerReferenceIds.end());
+            std::sort(sortedIds.begin(), sortedIds.end());
         }
         else
         {
-            std::sort(resolvedCornerReferenceIds.begin(), resolvedCornerReferenceIds.end() - 1);// dont inclusive last element
+            std::sort(sortedIds.begin(), sortedIds.end() - 1);// dont inclusive last element
         }
 
     }
+    return sortedIds;
+}
 
+std::vector<int> roadmanager::CornerIdManager::fillConsecutiveIds(const std::vector<int>& ids) const
+{
+    std::vector<int> consecutive_cornerReferenceIds;
     // Create new cornerReferenceIds between consecutive cornerReferenceIds
-    if (resolvedCornerReferenceIds[0] ==
-        resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1])
+    if (ids[0] ==
+        ids[ids.size() - 1])
     {
-
-        std::vector<int> consecutive_cornerReferenceIds;
-        int id = resolvedCornerReferenceIds[0];
+        int id = ids[0];
         do
         {
            consecutive_cornerReferenceIds.push_back(id);
-           if(++id == corner_.size())
+           if(++id == corners_.size())
            {
                id = 0;
            }
         }
-        while (id != resolvedCornerReferenceIds[0]);
-
-        consecutive_cornerReferenceIds.push_back(resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1]);  // arrange as 0,1,2,3,0
-        resolvedCornerReferenceIds = std::move(consecutive_cornerReferenceIds);
+        while (id != ids[0]);
+        consecutive_cornerReferenceIds.push_back(ids[ids.size() - 1]);  // arrange as 0,1,2,3,0
     }
-    else if (!(resolvedCornerReferenceIds.size() == 2 && resolvedCornerReferenceIds[0] == max_id &&
-               resolvedCornerReferenceIds[resolvedCornerReferenceIds.size() - 1] == min_id))
+    else if (!(ids.size() == 2 && ids[0] == getMaxId() &&
+               ids[ids.size() - 1] == getMinId()))
     {
-        std::vector<int> consecutive_cornerReferenceIds;
-        for (size_t i = 0; i < resolvedCornerReferenceIds.size() - 1; ++i)
+        for (size_t i = 0; i < ids.size() - 1; ++i)
         {
-            int start_id = resolvedCornerReferenceIds[i];
-            int end_id   = resolvedCornerReferenceIds[i + 1];
+            int start_id = ids[i];
+            int end_id   = ids[i + 1];
             consecutive_cornerReferenceIds.push_back(start_id);
 
             // Add intermediate IDs
@@ -3077,34 +3034,157 @@ void roadmanager::Outline::GetConsecutiveCornerIds(const std::vector<int>& corne
                 consecutive_cornerReferenceIds.push_back(j);
             }
         }
-        consecutive_cornerReferenceIds.push_back(resolvedCornerReferenceIds.back());
-        resolvedCornerReferenceIds = std::move(consecutive_cornerReferenceIds);
+        consecutive_cornerReferenceIds.push_back(ids.back());
     }
-
-    // now return th resolved corner reference ids in orginal from
-    for (size_t i = 0; i < resolvedCornerReferenceIds.size(); ++i)
+    else
     {
-        int id = GetOriginalCornerIdFromCornerId(resolvedCornerReferenceIds[i]);
-        if (id != -1)
-        {
-            Ids.push_back(id);
-        }
+        consecutive_cornerReferenceIds = ids;
+    }
+    return consecutive_cornerReferenceIds;
+}
+
+void roadmanager::MarkingGenerator::transformPoint(MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType)
+{
+    double                        z;
+    if (cornerType == OutlineCorner::CornerType::ROAD_CORNER)  // raod
+    {
+        marking_.GetPos(point.x, point.y, 0.0, point.x, point.y, z);  // convert to world cordinate
+    }
+    else
+    {  // already in world cordinate
+        point.x = point.x;
+        point.y = point.y;
     }
 }
 
-bool roadmanager::RMObject::CheckCornerReferenceId(int id)
+void roadmanager::MarkingGenerator::getCenterAlignedPoint(MarkingSegment::Point2D& point, double alpha, Marking::RoadSide side)
 {
-    for (const auto& outline : GetOutlines())
+    // to do center align seems wrong
+    if (side == Marking::RoadSide::RIGHT)  // center allign the marking
     {
-        for (const auto& corner : outline.corner_)
+        point.x -= cos(alpha) * (marking_.GetWidth() / 2);
+        point.y += sin(alpha) * (marking_.GetWidth() / 2);
+    }
+    else
+    {
+        point.x += cos(alpha) * (marking_.GetWidth() / 2);
+        point.y -= sin(alpha) * (marking_.GetWidth() / 2);
+    }
+}
+
+void roadmanager::MarkingGenerator::setStartAndEndPoints(MarkingSegment::Point2D& start, MarkingSegment::Point2D& end, OutlineCorner::CornerType cornerType)
+{
+    // Transform points to world coordinates if needed
+    transformPoint(start, cornerType);
+    transformPoint(end, cornerType);
+    segmentlength_ = GetLengthOfVector2D((end.x - start.x), (end.y - start.y));
+    alpha_ = atan2(end.x - start.x, end.y - start.y);  // find the angle between two points
+    getCenterAlignedPoint(start,alpha_, marking_.GetSide()); // center allign the marking
+    start_ = start;
+    end_   = end;
+    // find the actual distance of below parameters based on angle
+    deltaP1Gap_        = cos(alpha_) * marking_.GetSpaceLength();
+    deltaP0Gap_        = sin(alpha_) * marking_.GetSpaceLength();
+    deltaP1Line_        = cos(alpha_) * marking_.GetResolvedLineLength(segmentlength_);
+    deltaP0Line_        = sin(alpha_) * marking_.GetResolvedLineLength(segmentlength_);
+    deltaP1StartOffset_ = cos(alpha_) * marking_.GetStartOffset();
+    deltaP0StartOffset_ = sin(alpha_) * marking_.GetStartOffset();
+
+    // find the far points of the marking
+    beta_      = marking_.GetSide() == Marking::RoadSide::RIGHT ? M_PI_2 + alpha_ : -M_PI_2 + alpha_;
+    deltaP1Far_ = cos(beta_) * marking_.GetWidth();
+    deltaP0Far_ = sin(beta_) * marking_.GetWidth();
+}
+
+MarkingSegment::Point3D MarkingGenerator::GetPoint3D(const MarkingSegment::Point2D& point)
+{
+    bool check = false;
+    roadmanager::MarkingSegment::Point3D pointTemp;
+    roadmanager::Position         tmp_pos;
+    tmp_pos.SetMode(Position::PosModeType::UPDATE,
+                    Position::PosMode::Z_REL | Position::PosMode::H_REL | Position::PosMode::H_REL | Position::PosMode::H_REL);
+    pointTemp.x = point.x;
+    pointTemp.y = point.y;
+    tmp_pos.SetInertiaPos(pointTemp.x, pointTemp.y, 0.0);
+    pointTemp.z = tmp_pos.GetZ() + marking_.GetZOffset();
+    return pointTemp;
+}
+
+void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, MarkingSegment::Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment)
+{
+    setStartAndEndPoints(start, end, cornerType);
+    if (marking_.GetStartOffset() == 0.0)  // no startoffset add start merge
+    {
+        markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_START);
+    }
+    if (IsEqualDouble(segmentlength_, 0.0))  // if total length is zero, no need to add any marking
+    {
+        return;
+    }
+
+    MarkingSegment::Point2D point;
+    point.x = start_.x;
+    point.y = start_.y;
+
+    double                            cur_s   = 0.0;
+    MarkingSegment::Point2D                           pointTemp;
+    while (segmentlength_ - cur_s >= 0.0)  // loop till total length is covered
+    {
+        std::vector<MarkingSegment::Point3D> points;
+        points.reserve(3);
+
+        if (cur_s == 0.0)  // if first block, add start offset
         {
-            if (corner->GetOriginalCornerId() == id)
-            {
-                return true;
-            }
+            point.x += deltaP0StartOffset_;
+            point.y += deltaP1StartOffset_;
+        }
+        else
+        {
+            point.x += deltaP0Gap_;
+            point.y += deltaP1Gap_;
+        }
+        cur_s = GetLengthOfVector2D((point.x - start_.x), (point.y - start_.y));
+        if (segmentlength_ - marking_.GetStopOffset() - cur_s< SMALL_NUMBER)  // total_length and cur_s are approximately equal
+        {
+            break;
+        }
+
+        pointTemp.x = point.x + deltaP0Far_;
+        pointTemp.y = point.y + deltaP1Far_;
+        points.emplace_back(std::move(GetPoint3D(point)));      // point_ A
+        points.emplace_back(std::move(GetPoint3D(pointTemp)));  // point_ B
+
+        if (GetLengthOfVector2D((point.x + deltaP0Line_ - start_.x), (point.y + deltaP1Line_ - start_.y)) > segmentlength_ - marking_.GetStopOffset() + SMALL_NUMBER)
+        {// after gap length check line length can be trancated
+
+            point.x += sin(alpha_) * (segmentlength_ - cur_s - marking_.GetStopOffset()); // new deltaP0Line
+            point.y += cos(alpha_) * (segmentlength_  - cur_s- marking_.GetStopOffset()); // new deltaP1Line
+
+            pointTemp.x = point.x + deltaP0Far_;
+            pointTemp.y = point.y + deltaP1Far_;
+        }
+        else
+        {
+            point.x += deltaP0Line_;
+            point.y += deltaP1Line_;
+
+            pointTemp.x = point.x + deltaP0Far_;
+            pointTemp.y = point.y + deltaP1Far_;
+        }
+        cur_s = GetLengthOfVector2D((point.x - start.x), (point.y - start.y));
+        points.emplace_back(std::move(GetPoint3D(pointTemp)));  // point_ D
+        points.emplace_back(std::move(GetPoint3D(point)));      // point_ C
+        if (cur_s <= segmentlength_ - marking_.GetStopOffset() + SMALL_NUMBER)
+        // cur_s is less than or equal to total_length + SMALL_NUMBER, add the points
+        {
+            markingSegment.AddPoint(std::move(points));
+        }
+        if (abs(segmentlength_ - cur_s) < SMALL_NUMBER)  // total_length and cur_s are approximately equal
+        {
+            markingSegment.SetMergeType(MarkingSegment::MergeType::MERGE_END);  // line length reached last s value
+            break;
         }
     }
-    return false;
 }
 
 void MarkingGenerator::GenerateMarkingSegmentFromRepeatTransformationInfoDimensions(const Repeat& repeat, const double length, const double width)
@@ -3154,48 +3234,6 @@ void MarkingGenerator::GenerateMarkingSegmentFromRepeatTransformationInfoDimensi
         {
             marking_.MarkingSegments_.emplace_back(std::move(segment));
         }
-    }
-}
-
-void RMObject::FillPointsFromObject(Marking& marking)
-{
-    MarkingGenerator markingGenerator(marking);
-    MarkingSegment segment(-1, -1, -1);// no corner ids
-    MarkingSegment::Point2D      start;
-    MarkingSegment::Point2D      end;
-    roadmanager::Position pos;
-    pos.SetTrackPosMode(GetRoadId(),
-                        GetS(),
-                        GetT(),
-                        roadmanager::Position::PosMode::H_REL | roadmanager::Position::PosMode::Z_REL | roadmanager::Position::PosMode::P_REL |
-                            roadmanager::Position::PosMode::R_REL);
-    if (marking.GetSide() == Marking::RoadSide::LEFT)
-    {
-        // find local lower left corner
-        RotateVec2D(-GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), start.x, start.y);
-        // find local upper left corner
-        RotateVec2D(-GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), end.x, end.y);
-        start.x = pos.GetX() + start.x;
-        start.y = pos.GetY() + start.y;
-        end.x = pos.GetX() + end.x;
-        end.y = pos.GetY() + end.y;
-        markingGenerator.GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
-    }
-    else
-    {
-        // find local lower right corner
-        RotateVec2D(GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), start.x, start.y);
-        // find local upper right corner
-        RotateVec2D(GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), end.x, end.y);
-        start.x = pos.GetX() + start.x;
-        start.y = pos.GetY() + start.y;
-        end.x = pos.GetX() + end.x;
-        end.y = pos.GetY() + end.y;
-        markingGenerator.GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
-    }
-    if(segment.GetNumberOfPoints() > 0)
-    {
-        marking.MarkingSegments_.emplace_back(std::move(segment));
     }
 }
 
@@ -3322,6 +3360,48 @@ void MarkingGenerator::GenerateMarkingSegmentFromLocalOutlineTransformationInfo(
     }
 }
 
+void RMObject::FillPointsFromObject(Marking& marking)
+{
+    MarkingGenerator markingGenerator(marking);
+    MarkingSegment segment(-1, -1, -1);// no corner ids
+    MarkingSegment::Point2D      start;
+    MarkingSegment::Point2D      end;
+    roadmanager::Position pos;
+    pos.SetTrackPosMode(GetRoadId(),
+                        GetS(),
+                        GetT(),
+                        roadmanager::Position::PosMode::H_REL | roadmanager::Position::PosMode::Z_REL | roadmanager::Position::PosMode::P_REL |
+                            roadmanager::Position::PosMode::R_REL);
+    if (marking.GetSide() == Marking::RoadSide::LEFT)
+    {
+        // find local lower left corner
+        RotateVec2D(-GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), start.x, start.y);
+        // find local upper left corner
+        RotateVec2D(-GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), end.x, end.y);
+        start.x = pos.GetX() + start.x;
+        start.y = pos.GetY() + start.y;
+        end.x = pos.GetX() + end.x;
+        end.y = pos.GetY() + end.y;
+        markingGenerator.GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+    }
+    else
+    {
+        // find local lower right corner
+        RotateVec2D(GetLength().Get() / 2, -GetWidth().Get() / 2, pos.GetH() + GetHOffset(), start.x, start.y);
+        // find local upper right corner
+        RotateVec2D(GetLength().Get() / 2, GetWidth().Get() / 2, pos.GetH() + GetHOffset(), end.x, end.y);
+        start.x = pos.GetX() + start.x;
+        start.y = pos.GetY() + start.y;
+        end.x = pos.GetX() + end.x;
+        end.y = pos.GetY() + end.y;
+        markingGenerator.GenerateMarkingSegment(start, end, OutlineCorner::CornerType::LOCAL_CORNER, segment);
+    }
+    if(segment.GetNumberOfPoints() > 0)
+    {
+        marking.MarkingSegments_.emplace_back(std::move(segment));
+    }
+}
+
 void RMObject::CreateMarkingsPoints(Marking& marking)
 {
     MarkingGenerator markingGenerator(marking);
@@ -3398,6 +3478,21 @@ void RMObject::ResolveTwoLinesWithWidth(std::vector<std::vector<MarkingSegment::
 
 }
 
+bool roadmanager::RMObject::CheckCornerReferenceId(int id)
+{
+    for (const auto& outline : GetOutlines())
+    {
+        for (const auto& corner : outline.corner_)
+        {
+            if (corner->GetOriginalCornerId() == id)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void RMObject::ResolveMarkings()
 {
     for (size_t i = 0; i < markings_.size(); i++)
@@ -3413,21 +3508,15 @@ void RMObject::ResolveMarkings()
                         // printf("same marking element\n");
                         continue;
                     }
-                    if (markings_[i].MarkingSegments_[j].GetOutlineId() != -1 && markings_[l].MarkingSegments_[m].GetOutlineId() != -1) // check its from outline
+                    if ((markings_[i].MarkingSegments_[j].GetOutlineId() != -1 && markings_[l].MarkingSegments_[m].GetOutlineId() != -1) && // check its from outline
+                        (markings_[i].MarkingSegments_[j].GetOutlineId() == markings_[l].MarkingSegments_[m].GetOutlineId()) && // check its from same outline
+                        (markings_[i].MarkingSegments_[j].GetEndCornerId() == markings_[l].MarkingSegments_[m].GetStartCornerId()) && // check is consective corner ids
+                        (markings_[i].MarkingSegments_[j].IsMergeEnd() && markings_[l].MarkingSegments_[m].IsMergeStart())) // check if one marking touches end and touches start, resolve
                     {
-                        if (markings_[i].MarkingSegments_[j].GetOutlineId() == markings_[l].MarkingSegments_[m].GetOutlineId()) // check its from same outline
-                        {
-                            if (markings_[i].MarkingSegments_[j].GetEndCornerId() == markings_[l].MarkingSegments_[m].GetStartCornerId()) // check is consective corner ids
-                            {
-                                if (markings_[i].MarkingSegments_[j].IsMergeEnd() && markings_[l].MarkingSegments_[m].IsMergeStart()) // check if one marking touches end and touches start, resolve
-                                {
-                                    ResolveTwoLinesWithWidth(markings_[i].MarkingSegments_[j].GetAllPoints(),  markings_[l].MarkingSegments_[m].GetAllPoints());
-                                    // printf("secound loop\n");
-                                    // printf("Resolved outline id are %d <----> %d\n", markings_[i].MarkingSegments_[j].GetOutlineId(), markings_[l].MarkingSegments_[m].GetOutlineId());
-                                    // printf("Resolved end and start corner id are %d <----> %d\n",  markings_[i].MarkingSegments_[j].GetEndCornerId(), markings_[l].MarkingSegments_[m].GetStartCornerId());
-                                }
-                            }
-                        }
+                        ResolveTwoLinesWithWidth(markings_[i].MarkingSegments_[j].GetAllPoints(),  markings_[l].MarkingSegments_[m].GetAllPoints());
+                        // printf("secound loop\n");
+                        // printf("Resolved outline id are %d <----> %d\n", markings_[i].MarkingSegments_[j].GetOutlineId(), markings_[l].MarkingSegments_[m].GetOutlineId());
+                        // printf("Resolved end and start corner id are %d <----> %d\n",  markings_[i].MarkingSegments_[j].GetEndCornerId(), markings_[l].MarkingSegments_[m].GetStartCornerId());
                     }
                 }
             }
@@ -4015,53 +4104,6 @@ RMObject::Orientation RMObject::ParseOrientation(pugi::xml_node node, int road_i
     return orientation;
 }
 
-Outline::~Outline()
-{
-    for (auto& corner : corner_)
-    {
-        delete (corner);
-    }
-    corner_.clear();
-}
-
-Outline::Outline(Outline&& other)
-{
-    corner_   = std::move(other.corner_);
-    fillType_ = other.fillType_;
-    id_       = other.id_;
-    areaType_ = other.areaType_;
-    other.corner_.clear();
-}
-
-void Outline::TransformRoadCornerToLocal(std::vector<Outline::point>& localPoints, bool RemoveMin)
-{
-    for (const auto& corner : corner_)
-    {
-        Outline::point     point;
-        OutlineCornerRoad* roadCorner = static_cast<OutlineCornerRoad*>(corner);
-        point.x                       = roadCorner->GetS();  // s and t not transformed to x and y yet. just storing as x and y for future processing
-        point.y                       = roadCorner->GetT();
-        point.z                       = corner->GetZ();
-        point.h                       = corner->GetHeight();
-        localPoints.emplace_back(std::move(point));  // this is not transformed to local yet, Shall be tranformed below after finding minX
-    }
-
-    if (RemoveMin)
-    {
-        // find the minimum x value
-        double minX = localPoints[0].x;
-        for (const auto& localPoint : localPoints)
-        {
-            minX = std::min(minX, localPoint.x);  // Update minX with the smaller value
-        }
-        // reduce the x with minX to tranform into local
-        for (auto& localPoint : localPoints)
-        {
-            localPoint.x = localPoint.x - minX;
-        }
-    }
-}
-
 void RMObject::TransformToLocal(std::vector<std::vector<Outline::point>>& localPoints)
 {
     // find the minimum x value
@@ -4137,28 +4179,6 @@ double RMObject::GetRepeatHeightWithFactor(Repeat& rep, double factor)
     {
         return 0;
     }
-}
-
-double Repeat::GetLengthWithFactor(double factor)
-{
-    double repeatLength = GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart())) + SMALL_NUMBER;  // add small number to round double value
-    double h_offset     = atan2(GetTEnd() - GetTStart(), repeatLength);
-    return ((GetLengthStartResolved() + factor * (GetLengthEndResolved() - GetLengthStartResolved())) / cos(h_offset));
-}
-
-double Repeat::GetWidthWithFactor(double factor)
-{
-    return (GetWidthStartResolved() + (factor * (GetWidthEndResolved() - GetWidthStartResolved())));
-}
-
-double Repeat::GetZOffsetWithFactor(double factor)
-{
-    return (GetZOffsetStartResolved() + (factor * (GetZOffsetEndResolved() - GetZOffsetStartResolved())));
-}
-
-double Repeat::GetHeightWithFactor(double factor)
-{
-    return (GetHeightStart() + (factor * (GetHeightEnd() - GetHeightStart())));
 }
 
 std::string RMObject::Type2Str(RMObject::ObjectType type)
@@ -15202,4 +15222,3 @@ int Shape::FindClosestPoint(double xin, double yin, TrajVertex& pos, int& index,
 
     return -1;
 }
-
