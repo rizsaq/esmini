@@ -506,7 +506,7 @@ int OSIReporter::UpdateOSIHostVehicleData(ObjectState *objectState)
     return 0;
 }
 
-int UpdateOSIStationaryObjectODRMarking(std::vector<std::vector<roadmanager::MarkingSegment::Point3D>>& points)
+int UpdateOSIStationaryObjectODRMarking(std::vector<std::vector<Point3D>>& points)
 {
     obj_osi_internal.rm = obj_osi_internal.gt->add_road_marking();
     obj_osi_internal.rm->mutable_classification()->set_type(osi3::RoadMarking_Classification_Type::RoadMarking_Classification_Type_TYPE_OTHER);
@@ -713,7 +713,7 @@ int OSIReporter::UpdateOSIStationaryObjectODR(id_t road_id, roadmanager::RMObjec
                         for (const auto &outline : object->GetOutlines())
                         {
                             AddOSIStationaryObjectAtPosition(object, repeatScale.x, repeatScale.y, repeatScale.z + repeatScale.hOffset);
-                            AddPolygonToOSIStationaryObject(outline);
+                            AddPolygonToOSIStationaryObject(outline, repeatScale);
                         }
                     }
                 }

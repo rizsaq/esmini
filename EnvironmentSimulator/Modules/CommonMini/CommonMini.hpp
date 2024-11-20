@@ -185,6 +185,17 @@ enum class GhostMode
     RESTARTING  // ghost restart is ongoing, including the final restart timestep
 };
 
+struct Point2D
+{
+    double x = 0.0;
+    double y = 0.0;
+};
+
+struct Point3D : public Point2D
+{
+    double z = 0.0;
+};
+
 class SE_Vector
 {
 public:
@@ -306,8 +317,6 @@ private:
     double x_;
     double y_;
 };
-
-bool IsEqualDouble(double val1, double val2);
 
 // Useful operations
 
@@ -621,6 +630,8 @@ void RotateVec3d(const double h0,
 void SwapByteOrder(unsigned char* buf, int data_type_size, int buf_size);
 
 bool IsNumber(const std::string& str, int max_digits = -1);
+
+bool IsEqualDouble(double val1, double val2);
 
 #if (defined WINVER && WINVER == _WIN32_WINNT_WIN7)
 #else
