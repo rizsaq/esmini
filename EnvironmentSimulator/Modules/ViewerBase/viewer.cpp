@@ -3045,6 +3045,16 @@ void Viewer::CreateOutlinesModel(const std::vector<roadmanager::Outline>& Outlin
         ChangeModelAsWireFrame(geode, isMarkingAvailable);
     }
 }
+// check this above and this function can be merged
+void Viewer::CreateZeroDistanceOutlineModel(const roadmanager::Outline& outline, osg::Vec4 color, bool isMarkingAvailable)
+{
+    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+    CreateOutlineModel(outline, color, geode, false);  // create outline model
+    osg::ref_ptr<osg::Group> group = new osg::Group();
+    group->addChild(geode);
+    env_origin2odr_->addChild(group);
+    ChangeModelAsWireFrame(geode, isMarkingAvailable);
+}
 
 void Viewer::CreateUniqueModels(roadmanager::RMObject* object)
 {
@@ -3271,7 +3281,7 @@ void Viewer::CreateRepeatObject(roadmanager::RMObject* object, osg::ref_ptr<osg:
                 }
                 else  // repeat with zero distance
                 {
-                    CreateOutlinesModel(object->GetUniqueOutlinesZeroDistance(repeat), color, object->GetNumberOfMarkings() > 0);
+                    CreateZeroDistanceOutlineModel(object->GetUniqueOutlineZeroDistance(repeat), color, object->GetNumberOfMarkings() > 0);
                 }
             }
         }

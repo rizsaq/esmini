@@ -503,7 +503,7 @@ int OSIReporter::UpdateOSIHostVehicleData(ObjectState *objectState)
     return 0;
 }
 
-int UpdateOSIStationaryObjectODRMarking(std::vector<std::vector<roadmanager::MarkingSegment::Point3D>>& points)
+int UpdateOSIStationaryObjectODRMarking(std::vector<std::vector<Point3D>>& points)
 {
     obj_osi_internal.rm = obj_osi_internal.gt->add_road_marking();
     obj_osi_internal.rm->mutable_classification()->set_type(osi3::RoadMarking_Classification_Type::RoadMarking_Classification_Type_TYPE_OTHER);
@@ -677,17 +677,14 @@ int OSIReporter::UpdateOSIStationaryObjectODR(id_t road_id, roadmanager::RMObjec
             {
                 if (IsEqualDouble(repeat.GetDistance(), 0.0))  // repeat with zero distance
                 {
-                    for (const auto &outline : object->GetUniqueOutlinesZeroDistance(repeat))
-                    {
-                        roadmanager::Position pos;
-                        double                x, y, z;
-                        pos.SetTrackPos(road_id, repeat.GetS(), repeat.GetTStart());
-                        x = pos.GetX();
-                        y = pos.GetY();
-                        z = pos.GetZ() + repeat.GetZOffsetEndResolved();
-                        AddOSIStationaryObjectAtPosition(object, x, y, z);
-                        AddPolygonToOSIStationaryObject(outline);
-                    }
+                    roadmanager::Position pos;
+                    double                x, y, z;
+                    pos.SetTrackPos(road_id, repeat.GetS(), repeat.GetTStart());
+                    x = pos.GetX();
+                    y = pos.GetY();
+                    z = pos.GetZ() + repeat.GetZOffsetEndResolved();
+                    AddOSIStationaryObjectAtPosition(object, x, y, z);
+                    AddPolygonToOSIStationaryObject(object->GetUniqueOutlineZeroDistance(repeat));
                 }
                 else
                 {

@@ -637,6 +637,35 @@ TEST(DistanceTest, TestTrajectoryDistance)
     delete se;
 }
 
+TEST(OutlineTest, checkZeroDistanceOutline)
+{
+    Position::GetOpenDrive()->LoadOpenDriveFile("../../../EnvironmentSimulator/Unittest/xodr/test_repeat_zero_distance.xodr");
+    OpenDrive* odr = Position::GetOpenDrive();
+    ASSERT_NE(odr, nullptr);
+    Road* road = odr->GetRoadById(0);
+    ASSERT_NE(road, nullptr);
+    // zero distance repeat not created yet. only phrasing is done
+    RMObject* obj0 = road->GetRoadObject(0);
+    ASSERT_EQ(obj0->GetNumberOfUniqueOutlinesZeroDistance(), 0);
+    ASSERT_EQ(obj0->GetNumberOfOutlines(), 0);
+    const Outline& zero_outline = obj0->GetUniqueOutlineZeroDistance(obj0->GetRepeats()[0]);
+    // zero outline is created
+    ASSERT_EQ(obj0->GetNumberOfUniqueOutlinesZeroDistance(), 1);
+    ASSERT_EQ(obj0->GetNumberOfOutlines(), 0);
+    ASSERT_EQ(zero_outline.id_, 0);
+
+    // non zero distance repeat object
+    RMObject* obj1 = road->GetRoadObject(1);
+    ASSERT_EQ(obj1->GetNumberOfUniqueOutlinesZeroDistance(), 0);
+    ASSERT_EQ(obj1->GetNumberOfOutlines(), 0);
+    ASSERT_EQ(obj1->GetOutlines()[0].id_, 0);
+    // non zero distance repeat, no outline shall be created
+    // todo check what shall happen if zero distance outline not exist
+    // const Outline& zero_outline1 = obj1->GetUniqueOutlineZeroDistance(obj1->GetRepeats()[0]);
+    // ASSERT_EQ(obj1->GetNumberOfUniqueOutlinesZeroDistance(), 0);
+    // ASSERT_EQ(obj1->GetNumberOfOutlines(), 0);
+}
+
 TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
 {
     Position::GetOpenDrive()->LoadOpenDriveFile("../../../EnvironmentSimulator/Unittest/xodr/test_markings_corner_reference.xodr");

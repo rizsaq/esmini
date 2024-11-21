@@ -629,6 +629,7 @@ namespace viewer
         bool                             CreateRoadMarkLines(roadmanager::OpenDrive* od);
         // Loop each outline and create outline shape model for each outline
         void CreateOutlinesModel(const std::vector<roadmanager::Outline>& Outlines, osg::Vec4 color, bool isMarkingAvailable);
+        void CreateZeroDistanceOutlineModel(const roadmanager::Outline& outline, osg::Vec4 color, bool isMarkingAvailable);
         // Loop each outline and create outline shape model for each outline e.g for atleast one corner as road corner in any of outlines
         void CreateUniqueModels(roadmanager::RMObject* object);
         // create one unique model and remaining as shallow copies
