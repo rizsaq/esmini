@@ -2237,24 +2237,6 @@ namespace roadmanager
             return (!std::isnan(GetHeightStart()) || !std::isnan(GetHeightEnd()));
         }
 
-        struct Point2D
-        {
-            double x = 0.0;
-            double y = 0.0;
-        };
-        struct LineWithWidth2D
-        {
-            Point2D p1;
-            Point2D p2;
-            Point2D p3;
-            Point2D p4;
-        };
-
-        struct Point3D : public Point2D
-        {
-            double z = 0.0;
-        };
-
         struct RepeatTransformationInfo
         {
             double x;
@@ -2334,16 +2316,7 @@ namespace roadmanager
          ~MarkingSegment()
         {
         }
-        struct Point2D
-        {
-            double x = 0.0;
-            double y = 0.0;
-        };
 
-        struct Point3D : public Point2D
-        {
-            double z = 0.0;
-        };
         enum class MergeType
         {
             MERGE_NONE,
@@ -2428,7 +2401,7 @@ namespace roadmanager
     public:
         MarkingGenerator(Marking& marking) : marking_(marking) {}
         // set start and end points for the given corner type along calculating the alpha, beta other parameters
-        void setStartAndEndPoints(MarkingSegment::Point2D& start, MarkingSegment::Point2D& end, OutlineCorner::CornerType cornerType);
+        void setStartAndEndPoints(Point2D& start, Point2D& end, OutlineCorner::CornerType cornerType);
         // Generate marking segment for the given outlines. e.g for non repeat outline object and store it in marking object
         void GenerateMarkingSegmentFromOutlines(const std::vector<Outline> &outlines);
         // Generate marking segment for the given Unique outlines. e.g repeat with atleast one road corner in any of outlines and store it in marking object
@@ -2438,19 +2411,19 @@ namespace roadmanager
         // Generate marking segment for the given repeat and dimension. e.g for non outline repeat object and store it in marking object
         void GenerateMarkingSegmentFromRepeatTransformationInfoDimensions(const Repeat &repeat, const double length, const double width);
         // generate marking segment in markingSegment for the given start and end points
-        void GenerateMarkingSegment(MarkingSegment::Point2D start, MarkingSegment::Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
+        void GenerateMarkingSegment(Point2D start, Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
         // get resolved points in 3D
-        MarkingSegment::Point3D GetPoint3D(const MarkingSegment::Point2D& point);
+        Point3D GetPoint3D(const Point2D& point);
         // get points in local coordinates
-        void transformPoint(MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType);
+        void transformPoint(Point2D& point, OutlineCorner::CornerType cornerType);
         // get points in the center aligned to the start and end points
-        void getCenterAlignedPoint(MarkingSegment::Point2D& point, double alpha, Marking::RoadSide side);
+        void getCenterAlignedPoint(Point2D& point, double alpha, Marking::RoadSide side);
         ~MarkingGenerator() = default;
 
     private:
         Marking& marking_;
-        MarkingSegment::Point2D start_ ;
-        MarkingSegment::Point2D end_;
+        Point2D start_ ;
+        Point2D end_;
         double segmentlength_, alpha_, beta_, deltaP1Gap_, deltaP0Gap_, deltaP1Line_, deltaP0Line_, deltaP1StartOffset_, deltaP0StartOffset_, deltaP1Far_, deltaP0Far_;
     };
 
@@ -2736,7 +2709,7 @@ namespace roadmanager
         // Resolve markings for the given object. This shall be used to draw markings
         void ResolveMarkings();
 
-        void ResolveTwoLinesWithWidth(std::vector<std::vector<MarkingSegment::Point3D>>& line1, std::vector<std::vector<MarkingSegment::Point3D>>& line2);
+        void ResolveTwoLinesWithWidth(std::vector<std::vector<Point3D>>& line1, std::vector<std::vector<Point3D>>& line2);
         // check weather given id is present in corner reference ids in atleast one outline
         bool CheckCornerReferenceId(int id);
 

@@ -2768,7 +2768,7 @@ double Repeat::GetHeightWithFactor(double factor)
     return (GetHeightStart() + (factor * (GetHeightEnd() - GetHeightStart())));
 }
 
-std::vector<std::vector<MarkingSegment::Point3D>>& MarkingSegment::GetAllPoints()
+std::vector<std::vector<Point3D>>& MarkingSegment::GetAllPoints()
 {
     return allPoints_;
 }
@@ -3043,7 +3043,7 @@ std::vector<int> roadmanager::CornerIdManager::fillConsecutiveIds(const std::vec
     return consecutive_cornerReferenceIds;
 }
 
-void roadmanager::MarkingGenerator::transformPoint(MarkingSegment::Point2D& point, OutlineCorner::CornerType cornerType)
+void roadmanager::MarkingGenerator::transformPoint(Point2D& point, OutlineCorner::CornerType cornerType)
 {
     double                        z;
     if (cornerType == OutlineCorner::CornerType::ROAD_CORNER)  // raod
@@ -3057,7 +3057,7 @@ void roadmanager::MarkingGenerator::transformPoint(MarkingSegment::Point2D& poin
     }
 }
 
-void roadmanager::MarkingGenerator::getCenterAlignedPoint(MarkingSegment::Point2D& point, double alpha, Marking::RoadSide side)
+void roadmanager::MarkingGenerator::getCenterAlignedPoint(Point2D& point, double alpha, Marking::RoadSide side)
 {
     // to do center align seems wrong
     if (side == Marking::RoadSide::RIGHT)  // center allign the marking
@@ -3072,7 +3072,7 @@ void roadmanager::MarkingGenerator::getCenterAlignedPoint(MarkingSegment::Point2
     }
 }
 
-void roadmanager::MarkingGenerator::setStartAndEndPoints(MarkingSegment::Point2D& start, MarkingSegment::Point2D& end, OutlineCorner::CornerType cornerType)
+void roadmanager::MarkingGenerator::setStartAndEndPoints(Point2D& start, Point2D& end, OutlineCorner::CornerType cornerType)
 {
     // Transform points to world coordinates if needed
     transformPoint(start, cornerType);
@@ -3096,10 +3096,10 @@ void roadmanager::MarkingGenerator::setStartAndEndPoints(MarkingSegment::Point2D
     deltaP0Far_ = sin(beta_) * marking_.GetWidth();
 }
 
-MarkingSegment::Point3D MarkingGenerator::GetPoint3D(const MarkingSegment::Point2D& point)
+Point3D MarkingGenerator::GetPoint3D(const Point2D& point)
 {
     bool check = false;
-    roadmanager::MarkingSegment::Point3D pointTemp;
+    roadmanager::Point3D pointTemp;
     roadmanager::Position         tmp_pos;
     tmp_pos.SetMode(Position::PosModeType::UPDATE,
                     Position::PosMode::Z_REL | Position::PosMode::H_REL | Position::PosMode::H_REL | Position::PosMode::H_REL);
@@ -3110,7 +3110,7 @@ MarkingSegment::Point3D MarkingGenerator::GetPoint3D(const MarkingSegment::Point
     return pointTemp;
 }
 
-void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, MarkingSegment::Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment)
+void MarkingGenerator::GenerateMarkingSegment(Point2D start, Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment)
 {
     setStartAndEndPoints(start, end, cornerType);
     if (marking_.GetStartOffset() == 0.0)  // no startoffset add start merge
@@ -3122,15 +3122,15 @@ void MarkingGenerator::GenerateMarkingSegment(MarkingSegment::Point2D start, Mar
         return;
     }
 
-    MarkingSegment::Point2D point;
+    Point2D point;
     point.x = start_.x;
     point.y = start_.y;
 
     double                            cur_s   = 0.0;
-    MarkingSegment::Point2D                           pointTemp;
+    Point2D                           pointTemp;
     while (segmentlength_ - cur_s >= 0.0)  // loop till total length is covered
     {
-        std::vector<MarkingSegment::Point3D> points;
+        std::vector<Point3D> points;
         points.reserve(3);
 
         if (cur_s == 0.0)  // if first block, add start offset
@@ -3192,8 +3192,8 @@ void MarkingGenerator::GenerateMarkingSegmentFromRepeatTransformationInfoDimensi
     for (const auto& repeatDimension : repeat.GetRepeatDimensions())
     {
         MarkingSegment segment(-1, -1, -1);// id no need, merge wont happen
-        MarkingSegment::Point2D start;
-        MarkingSegment::Point2D end;
+        Point2D start;
+        Point2D end;
         if (marking_.GetSide() == Marking::RoadSide::LEFT)
         {
             // find local lower left corner
@@ -3242,8 +3242,8 @@ void MarkingGenerator::GenerateMarkingSegmentFromOutlines(const std::vector<Outl
     for (const auto& outline : outlines)
     {
         MarkingSegment segment;
-        MarkingSegment::Point2D start;
-        MarkingSegment::Point2D end;
+        Point2D start;
+        Point2D end;
         if (marking_.GetCornerReferenceIdsSize() > 0)  // no corner ids
         {
             std::vector<OutlineCorner*> cornerReferences;
@@ -3317,8 +3317,8 @@ void MarkingGenerator::GenerateMarkingSegmentFromLocalOutlineTransformationInfo(
         int id = 0; // id for segment
         for (const auto& repeatScale : repeat.transformationInfoScales_)
         {
-            MarkingSegment::Point2D               start;
-            MarkingSegment::Point2D               end;
+            Point2D               start;
+            Point2D               end;
             roadmanager::Position pref;
             MarkingSegment segment;
 
@@ -3364,8 +3364,8 @@ void RMObject::FillPointsFromObject(Marking& marking)
 {
     MarkingGenerator markingGenerator(marking);
     MarkingSegment segment(-1, -1, -1);// no corner ids
-    MarkingSegment::Point2D      start;
-    MarkingSegment::Point2D      end;
+    Point2D      start;
+    Point2D      end;
     roadmanager::Position pos;
     pos.SetTrackPosMode(GetRoadId(),
                         GetS(),
@@ -3437,7 +3437,7 @@ void RMObject::CreateMarkingsPoints(Marking& marking)
     }
 }
 
-void RMObject::ResolveTwoLinesWithWidth(std::vector<std::vector<MarkingSegment::Point3D>>& line1, std::vector<std::vector<MarkingSegment::Point3D>>& line2)
+void RMObject::ResolveTwoLinesWithWidth(std::vector<std::vector<Point3D>>& line1, std::vector<std::vector<Point3D>>& line2)
 {
 
     double x3, y3;

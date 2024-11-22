@@ -184,6 +184,17 @@ enum class GhostMode
     RESTARTING  // ghost restart is ongoing, including the final restart timestep
 };
 
+struct Point2D
+{
+    double x = 0.0;
+    double y = 0.0;
+};
+
+struct Point3D : public Point2D
+{
+    double z = 0.0;
+};
+
 class SE_Vector
 {
 public:

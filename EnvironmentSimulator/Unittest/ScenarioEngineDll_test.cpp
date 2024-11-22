@@ -3434,6 +3434,39 @@ TEST(TestOsiReporter, TestMarkingMerge)
 
 }
 
+TEST(TestOsiReporter, TestMarkingsCircularRoad)
+{
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_markings_circular_raod.xosc";
+    const char* Scenario_file = scenario_file.c_str();
+    int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
+    ASSERT_EQ(i_init, 0);
+
+    SE_StepDT(0.001f);
+    SE_UpdateOSIGroundTruth();
+
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
+    osi_gt.ParseFromArray(gt, sv_size);
+
+    EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 2);
+    EXPECT_EQ(osi_gt.mutable_road_marking()->size(), 2);
+    osi3::RoadMarking_Classification_Type marking_type = osi_gt.road_marking(0).classification().type();
+    EXPECT_EQ(marking_type, osi3::RoadMarking_Classification_Type::RoadMarking_Classification_Type_TYPE_OTHER);
+
+    EXPECT_EQ(osi_gt.road_marking(0).base().base_polygon_size(), 4);
+    EXPECT_NEAR(osi_gt.road_marking(0).base().base_polygon(0).x(), -12.379, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(0).base().base_polygon(0).y(), -0.911, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(0).base().base_polygon(3).x(), -10.159, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(0).base().base_polygon(3).y(), 1.105, 1e-3);
+
+    EXPECT_EQ(osi_gt.road_marking(1).base().base_polygon_size(), 4);
+    EXPECT_NEAR(osi_gt.road_marking(1).base().base_polygon(1).x(), -13.288, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(1).base().base_polygon(1).y(), -0.160, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(1).base().base_polygon(2).x(), -10.638, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(1).base().base_polygon(2).y(), 1.245, 1e-3);
+}
+
 TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
 {
     std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_object_repeat.xosc";
