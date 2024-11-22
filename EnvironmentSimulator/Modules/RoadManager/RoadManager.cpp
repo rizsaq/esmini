@@ -2746,6 +2746,114 @@ void MarkingSegment::AddPoint(const std::vector<Point3D>& points)
 {
     allPoints_.emplace_back(points);
 }
+
+double roadmanager::Repeat::GetLengthStartResolved() const
+{
+    if (!std::isnan(GetLengthStart()))
+    {
+        return GetLengthStart();
+    }
+    return 0;
+}
+
+double roadmanager::Repeat::GetLengthEndResolved() const
+{
+    if (!std::isnan(GetLengthEnd()))
+    {
+        return GetLengthEnd();
+    }
+    return 0;
+}
+
+double roadmanager::Repeat::GetWidthStartResolved() const
+{
+    if (!std::isnan(GetWidthStart()))
+    {
+        return GetWidthStart();
+    }
+    return 0;
+}
+
+double roadmanager::Repeat::GetWidthEndResolved() const
+{
+    if (!std::isnan(GetWidthEnd()))
+    {
+        return GetWidthEnd();
+    }
+    return 0;
+}
+
+double roadmanager::Repeat::GetZOffsetStartResolved() const
+{
+    if (!std::isnan(GetZOffsetStart()))
+    {
+        return GetZOffsetStart();
+    }
+    return 0;
+}
+
+double roadmanager::Repeat::GetZOffsetEndResolved() const
+{
+    if (!std::isnan(GetZOffsetEnd()))
+    {
+        return GetZOffsetEnd();
+    }
+    return 0;
+}
+
+double roadmanager::Repeat::GetHeightStartResolved() const
+{
+    if (!std::isnan(GetHeightStart()))
+    {
+        return GetHeightStart();
+    }
+    return 0;
+}
+
+double roadmanager::Repeat::GetHeightEndResolved() const
+{
+    if (!std::isnan(GetHeightEnd()))
+    {
+        return GetHeightEnd();
+    }
+    return 0;
+}
+
+double roadmanager::Repeat::GetTotalLength() const
+{
+    return GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart()));
+}
+// calculate and return heading offset of repeat
+double roadmanager::Repeat::GetHOffset() const
+{
+    return atan2(GetTEnd() - GetTStart(), GetTotalLength());
+}
+// calculate and return t position for given factor
+double roadmanager::Repeat::GetTWithFactor(double factor) const
+{
+    return GetTStart() + factor * (GetTEnd() - GetTStart());
+}
+// return true any start and end are set otherwise false
+bool roadmanager::Repeat::IsLengthSet() const
+{
+    return (!std::isnan(GetLengthStart()) || !std::isnan(GetLengthEnd()));
+}
+// return true any start and end are set otherwise false
+bool roadmanager::Repeat::IsWidthSet() const
+{
+    return (!std::isnan(GetWidthStart()) || !std::isnan(GetWidthEnd()));
+}
+// return true any start and end are set otherwise false
+bool roadmanager::Repeat::IsZOffsetSet() const
+{
+    return (!std::isnan(GetZOffsetStart()) || !std::isnan(GetZOffsetEnd()));
+}
+// return true any start and end are set otherwise false
+bool roadmanager::Repeat::IsHeightSet() const
+{
+    return (!std::isnan(GetHeightStart()) || !std::isnan(GetHeightEnd()));
+}
+
 double Repeat::GetLengthWithFactor(double factor)
 {
     double repeatLength = GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart()));  // add small number to round double value
@@ -3099,7 +3207,7 @@ void roadmanager::MarkingGenerator::setStartAndEndPoints(Point2D& start, Point2D
 Point3D MarkingGenerator::GetPoint3D(const Point2D& point)
 {
     bool check = false;
-    roadmanager::Point3D pointTemp;
+    Point3D pointTemp;
     roadmanager::Position         tmp_pos;
     tmp_pos.SetMode(Position::PosModeType::UPDATE,
                     Position::PosMode::Z_REL | Position::PosMode::H_REL | Position::PosMode::H_REL | Position::PosMode::H_REL);
@@ -3417,7 +3525,7 @@ void RMObject::CreateMarkingsPoints(Marking& marking)
             {
                 markingGenerator.GenerateMarkingSegmentFromLocalOutlineTransformationInfo(GetOutlines(), repeat);
             }
-            else if (GetNumberOfUniqueOutlinesZeroDistance(repeat))  // non outline object with repeat distance 0 with no model
+            else if (GetNumberOfUniqueOutlinesZeroDistance(repeat) > 0)  // non outline object with repeat distance 0 with no model
             {
                 markingGenerator.GenerateMarkingSegmentFromOutlines(GetUniqueOutlinesZeroDistance(repeat));
             }

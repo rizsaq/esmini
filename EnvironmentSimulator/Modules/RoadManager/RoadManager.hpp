@@ -2130,112 +2130,43 @@ namespace roadmanager
             return radiusEnd_;
         }
         // return length start if set else return zero
-        double GetLengthStartResolved() const
-        {
-            if (!std::isnan(GetLengthStart()))
-            {
-                return GetLengthStart();
-            }
-            return 0;
-        }
+        double GetLengthStartResolved() const;
         // return length end if set else return zero
-        double GetLengthEndResolved() const
-        {
-            if (!std::isnan(GetLengthEnd()))
-            {
-                return GetLengthEnd();
-            }
-            return 0;
-        }
+        double GetLengthEndResolved() const;
         // return width start if set else return zero
-        double GetWidthStartResolved() const
-        {
-            if (!std::isnan(GetWidthStart()))
-            {
-                return GetWidthStart();
-            }
-            return 0;
-        }
+        double GetWidthStartResolved() const;
         // return width end if set else return zero
-        double GetWidthEndResolved() const
-        {
-            if (!std::isnan(GetWidthEnd()))
-            {
-                return GetWidthEnd();
-            }
-            return 0;
-        }
+        double GetWidthEndResolved() const;
         // return z offset start if set else return zero
-        double GetZOffsetStartResolved() const
-        {
-            if (!std::isnan(GetZOffsetStart()))
-            {
-                return GetZOffsetStart();
-            }
-            return 0;
-        }
+        double GetZOffsetStartResolved() const;
         // return z offset end if set else return zero
-        double GetZOffsetEndResolved() const
-        {
-            if (!std::isnan(GetZOffsetEnd()))
-            {
-                return GetZOffsetEnd();
-            }
-            return 0;
-        }
+        double GetZOffsetEndResolved() const;
         // return Height start if set else return zero
-        double GetHeightStartResolved() const
-        {
-            if (!std::isnan(GetHeightStart()))
-            {
-                return GetHeightStart();
-            }
-            return 0;
-        }
+        double GetHeightStartResolved() const;
         // return Height end if set else return zero
-        double GetHeightEndResolved() const
-        {
-            if (!std::isnan(GetHeightEnd()))
-            {
-                return GetHeightEnd();
-            }
-            return 0;
-        }
+        double GetHeightEndResolved() const;
         // calculate and return total length of repeat
-        double GetTotalLength() const
-        {
-            return GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart()));
-        }
+        double GetTotalLength() const;
         // calculate and return heading offset of repeat
-        double GetHOffset() const
-        {
-            return atan2(GetTEnd() - GetTStart(), GetTotalLength());
-        }
+        double GetHOffset() const;
         // calculate and return t position for given factor
-        double GetTWithFactor(double factor) const
-        {
-            return GetTStart() + factor * (GetTEnd() - GetTStart());
-        }
+        double GetTWithFactor(double factor) const;
         // return true any start and end are set otherwise false
-        bool IsLengthSet() const
-        {
-            return (!std::isnan(GetLengthStart()) || !std::isnan(GetLengthEnd()));
-        }
+        bool IsLengthSet() const;
         // return true any start and end are set otherwise false
-        bool IsWidthSet() const
-        {
-            return (!std::isnan(GetWidthStart()) || !std::isnan(GetWidthEnd()));
-        }
+        bool IsWidthSet() const;
         // return true any start and end are set otherwise false
-        bool IsZOffsetSet() const
-        {
-            return (!std::isnan(GetZOffsetStart()) || !std::isnan(GetZOffsetEnd()));
-        }
+        bool IsZOffsetSet() const;
         // return true any start and end are set otherwise false
-        bool IsHeightSet() const
-        {
-            return (!std::isnan(GetHeightStart()) || !std::isnan(GetHeightEnd()));
-        }
+        bool IsHeightSet() const;
+        // calculate and return segment length of repeat for given factor
+        double GetLengthWithFactor(double factor);
+        // calculate and return segment width of repeat for given factor
+        double GetWidthWithFactor(double factor);
+        // calculate and return segment zoffset of repeat for given factor
+        double GetZOffsetWithFactor(double factor);
+        // calculate and return segment height of repeat for given factor
+        double GetHeightWithFactor(double factor);
 
         struct RepeatTransformationInfo
         {
@@ -2282,17 +2213,6 @@ namespace roadmanager
             return transformationInfoScales_;
         }
 
-        std::vector<RepeatTransformationInfoScale>     transformationInfoScales_;
-        std::vector<RepeatTransformationInfoDimension> transformationInfoDimensions_;
-        // calculate and return segment length of repeat for given factor
-        double GetLengthWithFactor(double factor);
-        // calculate and return segment width of repeat for given factor
-        double GetWidthWithFactor(double factor);
-        // calculate and return segment zoffset of repeat for given factor
-        double GetZOffsetWithFactor(double factor);
-        // calculate and return segment height of repeat for given factor
-        double GetHeightWithFactor(double factor);
-
         void AddUniqueOutline(std::vector<Outline> UniqueOutline)
         {
             uniqueOutlines_.emplace_back(std::move(UniqueOutline));
@@ -2303,6 +2223,8 @@ namespace roadmanager
         }
         std::vector<std::vector<Outline>> uniqueOutlines_;
         std::vector<Outline>              uniqueOutlinesZeroDistance_;
+        std::vector<RepeatTransformationInfoScale>     transformationInfoScales_;
+        std::vector<RepeatTransformationInfoDimension> transformationInfoDimensions_;
     };
 
     class MarkingSegment
