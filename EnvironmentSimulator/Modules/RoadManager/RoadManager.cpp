@@ -3701,7 +3701,7 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
         const double max_segment_length = 10.0;
 
         // find smallest value of length and rlength, but between SMALL_NUMBER and max_segment_length
-        double segment_length = min(max_segment_length, GetLength().Get(), rep.GetLength());
+        double segment_length = std::min({max_segment_length, GetLength().Get(), rep.GetLength()});
         segment_length = segment_length < SMALL_NUMBER ? max_segment_length : segment_length;
         unsigned int n_segments = static_cast<int>((MAX(1.0, rep.GetLength() / segment_length)));
 
@@ -3715,7 +3715,7 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
                 double w_local = std::max(GetRepeatWidthWithFactor(rep, factor), min_dim);
                 OutlineCorner* corner  = (OutlineCorner*)(new OutlineCornerRoad(
                     GetRoadId(),
-                    rep.GetS() + factor * rep.GetLength(),
+                    rep.GetS() + factor * rep.GetLength(), // todo have to include start and end offse, Use GetRepeatLengthWithFactor
                     rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
                     rep.GetZOffsetWithFactor(factor),
                     std::max(GetRepeatHeightWithFactor(rep, factor), min_dim),
