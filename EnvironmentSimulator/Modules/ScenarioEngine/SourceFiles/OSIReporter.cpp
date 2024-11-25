@@ -710,7 +710,7 @@ int OSIReporter::UpdateOSIStationaryObjectODR(id_t road_id, roadmanager::RMObjec
                         for (const auto &outline : object->GetOutlines())
                         {
                             AddOSIStationaryObjectAtPosition(object, repeatScale.x, repeatScale.y, repeatScale.z + repeatScale.hOffset);
-                            AddPolygonToOSIStationaryObject(outline);
+                            AddPolygonToOSIStationaryObject(outline, repeatScale);
                         }
                     }
                 }

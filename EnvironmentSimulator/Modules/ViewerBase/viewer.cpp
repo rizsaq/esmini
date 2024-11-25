@@ -2910,6 +2910,7 @@ void Viewer::CreateShallowCopyModels(roadmanager::RMObject* object, osg::ref_ptr
         {
             // position mode relative for aligning to road heading
             osg::ref_ptr<osg::PositionAttitudeTransform> xform = new osg::PositionAttitudeTransform();
+            geode->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
             xform->addChild(geode);
             xform->setScale(osg::Vec3d(repeatScale.scale_x, repeatScale.scale_y, repeatScale.scale_z));
             xform->setPosition(osg::Vec3d(repeatScale.x - origin_[0], repeatScale.y - origin_[1], repeatScale.z));
