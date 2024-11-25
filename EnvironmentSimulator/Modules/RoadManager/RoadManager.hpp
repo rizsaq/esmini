@@ -1785,9 +1785,7 @@ namespace roadmanager
         int                       roadId_, cornerId_, originalCornerId_;
         double                    s_, t_, dz_, height_, center_s_, center_t_, center_heading_;
         OutlineCorner::CornerType type_ = OutlineCorner::CornerType::ROAD_CORNER;
-        double                    x_    = std::nan("");
-        double                    y_    = std::nan("");
-        double                    z_    = std::nan("");
+        double                    x_, y_, z_    = std::nan("");
     };
 
     class OutlineCornerLocal : public OutlineCorner
@@ -1853,7 +1851,7 @@ namespace roadmanager
         int                       roadId_, cornerId_, originalCornerId_;
         double                    s_, t_, u_, v_, zLocal_, height_, heading_;
         OutlineCorner::CornerType type_ = OutlineCorner::CornerType::LOCAL_CORNER;
-        double                    x_, y_, z_;
+        double                    x_, y_, z_    = std::nan("");
     };
 
     class Outline

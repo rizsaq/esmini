@@ -8,11 +8,11 @@
     </ParameterDeclarations>
     <CatalogLocations>
       <VehicleCatalog>
-         <Directory path="../xosc/Catalogs/Vehicles"/>
+         <Directory path="../../../resources/xosc/Catalogs/Vehicles"/>
       </VehicleCatalog>
    </CatalogLocations>
     <RoadNetwork>
-        <LogicFile filepath="../xodr/crest-curve.xodr"/>
+        <LogicFile filepath="../../../resources/xodr/crest-curve.xodr"/>
     </RoadNetwork>
     <Entities>
         <ScenarioObject name="Car">

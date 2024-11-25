@@ -2856,7 +2856,7 @@ bool roadmanager::Repeat::IsHeightSet() const
 
 double Repeat::GetLengthWithFactor(double factor)
 {
-    double repeatLength = GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart()));  // add small number to round double value
+    double repeatLength = GetLengthOfVector2D(GetLength(), (GetTEnd() - GetTStart()));
     double h_offset     = atan2(GetTEnd() - GetTStart(), repeatLength);
     return ((GetLengthStartResolved() + factor * (GetLengthEndResolved() - GetLengthStartResolved())) / cos(h_offset));
 }
@@ -3697,21 +3697,12 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
     }
     if (rep.GetDistance() < SMALL_NUMBER)
     {
-        // inter-distance is zero, treat as outline
         Outline      outline(GetId(), Outline::FillType::FILL_TYPE_UNDEFINED, Outline::AreaType::CLOSED);
         const double max_segment_length = 10.0;
 
         // find smallest value of length and rlength, but between SMALL_NUMBER and max_segment_length
-        double segment_length = max_segment_length;
-        if (GetLength().Get() > SMALL_NUMBER && GetLength().Get() < segment_length)
-        {
-            segment_length = GetLength().Get();
-        }
-        if (rep.GetLength() > SMALL_NUMBER && rep.GetLength() < segment_length)
-        {
-            segment_length = rep.GetLength();
-        }
-
+        double segment_length = min(max_segment_length, GetLength().Get(), rep.GetLength());
+        segment_length = segment_length < SMALL_NUMBER ? max_segment_length : segment_length;
         unsigned int n_segments = static_cast<int>((MAX(1.0, rep.GetLength() / segment_length)));
 
         // Create outline polygon, visiting corners counter clockwise
@@ -3721,27 +3712,13 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
             {
                 double       factor  = static_cast<double>((i == 0 ? j : (n_segments - j))) / n_segments;
                 const double min_dim = 0.05;
-                double       w_start = rep.GetWidthStartResolved();
-                double       w_end   = rep.GetWidthEndResolved();
-                double       h_start = rep.GetHeightStartResolved();
-                double       h_end   = rep.GetHeightEndResolved();
-
-                if (w_start < SMALL_NUMBER && w_end < SMALL_NUMBER)
-                {
-                    w_start = w_end = min_dim;
-                }
-                if (h_start < SMALL_NUMBER && h_end < SMALL_NUMBER)
-                {
-                    h_start = h_end = min_dim;
-                }
-
-                double         w_local = w_start + factor * (w_end - w_start);
+                double w_local = std::max(GetRepeatWidthWithFactor(rep, factor), min_dim);
                 OutlineCorner* corner  = (OutlineCorner*)(new OutlineCornerRoad(
                     GetRoadId(),
                     rep.GetS() + factor * rep.GetLength(),
-                    rep.GetTStart() + factor * (rep.GetTEnd() - rep.GetTStart()) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
-                    rep.GetZOffsetStartResolved() + factor * (rep.GetZOffsetEndResolved() - rep.GetZOffsetStartResolved()),
-                    h_start + factor * (h_end - h_start),
+                    rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
+                    rep.GetZOffsetWithFactor(factor),
+                    std::max(GetRepeatHeightWithFactor(rep, factor), min_dim),
                     GetS(),
                     GetT(),
                     GetHOffset(),

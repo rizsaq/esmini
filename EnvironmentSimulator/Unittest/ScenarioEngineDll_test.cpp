@@ -3519,8 +3519,6 @@ TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
                           "60",
                           "800",
                           "400",
-                          "--aa_mode",
-                          "4",
                           "--headless"};
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
@@ -3564,14 +3562,12 @@ TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
 TEST(TestOsiReporter, CrestCurveRoadObjectTest)
 {
     const char* args[] = {"--osc",
-                          "../../../EnvironmentSimulator/Unittest/xosc/test_crest-curve.xosc",
+                          "../EnvironmentSimulator/Unittest/xosc/test_crest-curve.xosc",
                           "--window",
                           "60",
                           "60",
                           "800",
                           "400",
-                          "--aa_mode",
-                          "4",
                           "--headless"};
     ASSERT_EQ(SE_InitWithArgs(sizeof(args) / sizeof(char*), args), 0);
 
@@ -3656,15 +3652,15 @@ TEST(TestOsiReporter, CrestCurveRoadObjectTest)
 #else
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().base_polygon_size(), 22);
 #endif  // _USE_OSG
-    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(0).x(), -0.015, 1e-3);
-    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(0).y(), -0.019, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(0).x(), -0.077, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(0).y(), -0.098, 1e-3);
 #ifdef _USE_OSG
-    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(3).x(), 9.415, 1e-3);
-    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(3).y(), -8.098, 1e-3);
-    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(7).x(), 20.829, 1e-3);
-    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(7).y(), -20.186, 1e-3);
-    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(8).x(), 23.433, 1e-3);
-    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(8).y(), -23.446, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(3).x(), 9.347, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(3).y(), -8.171, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(7).x(), 20.752, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(7).y(), -20.250, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(8).x(), 23.354, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(8).y(), -23.507, 1e-3);
 #else
     EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(3).x(), 22.145, 1e-3);
     EXPECT_NEAR(osi_gt.stationary_object(4).base().base_polygon(3).y(), -21.804, 1e-3);
