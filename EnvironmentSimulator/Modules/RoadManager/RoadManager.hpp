@@ -2611,13 +2611,13 @@ namespace roadmanager
         bool IsMixedCorners();
 
         // Get length from repeat given factor. Priority 1.repeat start - end length, 2.Object length, 3.Zero
-        double GetRepeatLengthWithFactor(Repeat &rep, double factor);
+        double GetRepeatedObjLengthWithFactor(Repeat &rep, double factor);
         // Get width from repeat given factor. Priority 1.repeat start - end width, 2.Object width, 3.Zero
-        double GetRepeatWidthWithFactor(Repeat &rep, double factor);
+        double GetRepeatedObjWidthWithFactor(Repeat &rep, double factor);
         // Get z offset from repeat start and end z offset for given factor
-        double GetRepeatZOffsetWithFactor(Repeat &rep, double factor);
+        double GetRepeatedObjZOffsetWithFactor(Repeat &rep, double factor);
         // Get height from repeat given factor. Priority 1.repeat start - end height, 2.Object height, 3.Zero
-        double GetRepeatHeightWithFactor(Repeat &rep, double factor);
+        double GetRepeatedObjHeightWithFactor(Repeat &rep, double factor);
         void   TransformToLocal(std::vector<std::vector<Outline::point>> &localPoints);
 
         // Get or create markings with filled points for the given object. This points shall be used to draw markings
@@ -2632,6 +2632,15 @@ namespace roadmanager
         void ResolveTwoLinesWithWidth(std::vector<std::vector<Point3D>>& line1, std::vector<std::vector<Point3D>>& line2);
         // check weather given id is present in corner reference ids in atleast one outline
         bool CheckCornerReferenceId(int id);
+
+        // get the length of outlines(compound length of all corners) for the given object
+        const double GetCompoundOutlinesLength();
+        // get the width of outlines(compound width of all corners) for the given object
+        const double GetCompoundOutlinesWidth();
+        // get the height of outlines(compound height of all corners) for the given object
+        const double GetCompoundOutlinesHeight();
+        // get the z offset of outlines(compound z offset of all corners) for the given object
+        const double GetCompoundOutlinesZoffset();
 
     private:
         std::string                name_;
@@ -2648,6 +2657,10 @@ namespace roadmanager
         double                     pitch_   = 0.0;
         double                     roll_    = 0.0;
         double                     road_id_;
+        double compoundOutlinesLength_ = std::nan("");
+        double compoundOutlineWidth_ = std::nan("");
+        double compoundOutlineHeight_ = std::nan("");
+        double compoundOutlineZoffset_ = std::nan("");
 
         std::vector<Outline> outlines_;
         std::vector<Repeat>  repeats_;

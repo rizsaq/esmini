@@ -3468,6 +3468,41 @@ void MarkingGenerator::GenerateMarkingSegmentFromLocalOutlineTransformationInfo(
     }
 }
 
+void GetBoundingBoxFromCorners(const std::vector<std::vector<Outline::point>>& cornerPointsVector,
+                               double&                                         length,
+                               double&                                         width,
+                               double&                                         height,
+                               double&                                         z)
+{
+    // Find max, min x and y,z and height
+    // Initialize with first element's x value for clarity
+    double minX = cornerPointsVector[0][0].x;
+    double maxX = cornerPointsVector[0][0].x;
+    double minY = cornerPointsVector[0][0].y;
+    double maxY = cornerPointsVector[0][0].y;
+    double minZ = cornerPointsVector[0][0].z;
+    double maxZ = cornerPointsVector[0][0].z;
+
+    for (const auto& cornerPoints : cornerPointsVector)
+    {
+        for (const auto& cornerPoint : cornerPoints)
+        {
+            minX = std::min(minX, cornerPoint.x);  // Update minX with the smaller value
+            minY = std::min(minY, cornerPoint.y);
+            minZ = std::min(minZ, cornerPoint.z);
+            maxX = std::max(maxX, cornerPoint.x);  // Update maxX with the larger value
+            maxY = std::max(maxY, cornerPoint.y);
+            maxZ = std::max(maxZ, cornerPoint.z + cornerPoint.h);
+        }
+    }
+
+    // find local bb from corner points
+    length = maxX - minX;
+    width  = maxY - minY;
+    height = maxZ - minZ;
+    z      = minZ;
+}
+
 void RMObject::FillPointsFromObject(Marking& marking)
 {
     MarkingGenerator markingGenerator(marking);
@@ -3601,6 +3636,54 @@ bool roadmanager::RMObject::CheckCornerReferenceId(int id)
     return false;
 }
 
+const double roadmanager::RMObject::GetCompoundOutlinesLength()
+{
+    if (std::isnan(compoundOutlinesLength_))
+    {
+        // get all as local point from outlines
+        std::vector<std::vector<Outline::point>> localPoints = GetPointsFromOutlines();
+        // Now all local points are availbel, find the bb from the corner
+        GetBoundingBoxFromCorners(localPoints, compoundOutlinesLength_, compoundOutlineWidth_, compoundOutlineHeight_, compoundOutlineZoffset_);
+    }
+    return compoundOutlinesLength_;
+}
+
+const double roadmanager::RMObject::GetCompoundOutlinesWidth()
+{
+    if (std::isnan(compoundOutlineWidth_))
+    {
+        // get all as local point from outlines
+        std::vector<std::vector<Outline::point>> localPoints = GetPointsFromOutlines();
+        // Now all local points are availbel, find the bb from the corner
+        GetBoundingBoxFromCorners(localPoints, compoundOutlinesLength_, compoundOutlineWidth_, compoundOutlineHeight_, compoundOutlineZoffset_);
+    }
+    return compoundOutlineWidth_;
+}
+
+const double roadmanager::RMObject::GetCompoundOutlinesHeight()
+{
+    if (std::isnan(compoundOutlineHeight_))
+    {
+        // get all as local point from outlines
+        std::vector<std::vector<Outline::point>> localPoints = GetPointsFromOutlines();
+        // Now all local points are availbel, find the bb from the corner
+        GetBoundingBoxFromCorners(localPoints, compoundOutlinesLength_, compoundOutlineWidth_, compoundOutlineHeight_, compoundOutlineZoffset_);
+    }
+    return compoundOutlineHeight_;
+}
+
+const double roadmanager::RMObject::GetCompoundOutlinesZoffset()
+{
+    if (std::isnan(compoundOutlineZoffset_ ))
+    {
+        // get all as local point from outlines
+        std::vector<std::vector<Outline::point>> localPoints = GetPointsFromOutlines();
+        // Now all local points are availbel, find the bb from the corner
+        GetBoundingBoxFromCorners(localPoints, compoundOutlinesLength_, compoundOutlineWidth_, compoundOutlineHeight_, compoundOutlineZoffset_);
+    }
+    return compoundOutlineZoffset_;
+}
+
 void RMObject::ResolveMarkings()
 {
     for (size_t i = 0; i < markings_.size(); i++)
@@ -3645,41 +3728,6 @@ std::vector<Marking> RMObject::GetMarkingsWithPoints()
     return GetMarkings();
 }
 
-void GetBoundingBoxFromCorners(const std::vector<std::vector<Outline::point>>& cornerPointsVector,
-                               double&                                         length,
-                               double&                                         width,
-                               double&                                         height,
-                               double&                                         z)
-{
-    // Find max, min x and y,z and height
-    // Initialize with first element's x value for clarity
-    double minX = cornerPointsVector[0][0].x;
-    double maxX = cornerPointsVector[0][0].x;
-    double minY = cornerPointsVector[0][0].y;
-    double maxY = cornerPointsVector[0][0].y;
-    double minZ = cornerPointsVector[0][0].z;
-    double maxZ = cornerPointsVector[0][0].z;
-
-    for (const auto& cornerPoints : cornerPointsVector)
-    {
-        for (const auto& cornerPoint : cornerPoints)
-        {
-            minX = std::min(minX, cornerPoint.x);  // Update minX with the smaller value
-            minY = std::min(minY, cornerPoint.y);
-            minZ = std::min(minZ, cornerPoint.z);
-            maxX = std::max(maxX, cornerPoint.x);  // Update maxX with the larger value
-            maxY = std::max(maxY, cornerPoint.y);
-            maxZ = std::max(maxZ, cornerPoint.z + cornerPoint.h);
-        }
-    }
-
-    // find local bb from corner points
-    length = maxX - minX;
-    width  = maxY - minY;
-    height = maxZ - minZ;
-    z      = minZ;
-}
-
 const std::vector<Repeat::RepeatTransformationInfoDimension>& RMObject::GetRepeatTransformationInfoDimensions(Repeat& repeat)
 {
     if (repeat.transformationInfoDimensions_.size() == 0)
@@ -3712,13 +3760,13 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
             {
                 double       factor  = static_cast<double>((i == 0 ? j : (n_segments - j))) / n_segments;
                 const double min_dim = 0.05;
-                double w_local = std::max(GetRepeatWidthWithFactor(rep, factor), min_dim);
+                double w_local = std::max(GetRepeatedObjWidthWithFactor(rep, factor), min_dim);
                 OutlineCorner* corner  = (OutlineCorner*)(new OutlineCornerRoad(
                     GetRoadId(),
-                    rep.GetS() + factor * rep.GetLength(), // todo have to include start and end offse, Use GetRepeatLengthWithFactor
+                    rep.GetS() + factor * rep.GetLength(), // todo have to include start and end offse, Use GetRepeatedObjLengthWithFactor
                     rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
                     rep.GetZOffsetWithFactor(factor),
-                    std::max(GetRepeatHeightWithFactor(rep, factor), min_dim),
+                    std::max(GetRepeatedObjHeightWithFactor(rep, factor), min_dim),
                     GetS(),
                     GetT(),
                     GetHOffset(),
@@ -3752,7 +3800,7 @@ int RMObject::CreateRepeatDimensions(Repeat& rep)
         while (cur_s < repeatLength)
         {
             double factor        = cur_s / repeatLength;
-            double length_repeat = GetRepeatLengthWithFactor(rep, factor);
+            double length_repeat = GetRepeatedObjLengthWithFactor(rep, factor);
             if (IsEqualDouble(length_repeat, 0.0))
             {
                 break;  // no length to repeat
@@ -3779,14 +3827,14 @@ int RMObject::CreateRepeatDimensions(Repeat& rep)
             Repeat::RepeatTransformationInfoDimension dimensionDetail;
             dimensionDetail.x       = pos.GetX();
             dimensionDetail.y       = pos.GetY();
-            dimensionDetail.z       = pos.GetZ() + GetRepeatZOffsetWithFactor(rep, factor);
+            dimensionDetail.z       = pos.GetZ() + GetRepeatedObjZOffsetWithFactor(rep, factor);
             dimensionDetail.roll    = pos.GetR();
             dimensionDetail.pitch   = pos.GetP();
             dimensionDetail.heading = pos.GetH();
             dimensionDetail.hOffset = orientation + GetHOffset();
             dimensionDetail.length  = length_repeat;
-            dimensionDetail.width   = GetRepeatWidthWithFactor(rep, factor);
-            dimensionDetail.height  = GetRepeatHeightWithFactor(rep, factor);
+            dimensionDetail.width   = GetRepeatedObjWidthWithFactor(rep, factor);
+            dimensionDetail.height  = GetRepeatedObjHeightWithFactor(rep, factor);
             rep.AddTransformationInfoDimension(std::move(dimensionDetail));
         }
     }
@@ -4017,57 +4065,22 @@ void RMObject::CalculateLocalOutlineTransformationInfo(Repeat& repeat)
     double repeatLength = repeat.GetTotalLength();
     if (repeatLength > SMALL_NUMBER)
     {
-        // transform all the corner as local to find the combined bb
-        std::vector<std::vector<Outline::point>> localPointsList = GetPointsFromOutlines();
-        // Now all local points are availbel, find the bb from the corner
-        double lengthOutline;
-        double widthOutline;
-        double zOutline;
-        double heightOutline;
-        GetBoundingBoxFromCorners(localPointsList, lengthOutline, widthOutline, heightOutline, zOutline);
-        double                                cur_length = lengthOutline;
-        double                                cur_width  = widthOutline;
-        double                                cur_z      = zOutline;
-        double                                cur_height = heightOutline;
         std::shared_ptr<Outline>              outline    = nullptr;
         Repeat::RepeatTransformationInfoScale scale;  // for shollow copy
         Position                              pos;
         while (cur_s < repeatLength)
         {
             double factor = cur_s / repeatLength;
-            if (repeat.IsLengthSet())  // repect length from repeat
-            {
-                cur_length = repeat.GetLengthWithFactor(factor);
-            }
-            if (repeat.IsWidthSet())  // repect width from repeat
-            {
-                cur_width = repeat.GetWidthWithFactor(factor);
-            }
-            if (repeat.IsZOffsetSet())  // repect zoffset from repeat
-            {
-                cur_z = repeat.GetZOffsetWithFactor(factor);
-            }
-            if (repeat.IsHeightSet())  // repect height from repeat
-            {
-                cur_height = repeat.GetHeightWithFactor(factor);
-            }
-            if (IsEqualDouble(cur_length, 0.0))  // no length to iterate
-            {
-                break;
-            }
-            double scale_u = abs(cur_length / lengthOutline);
-            double scale_v = abs(cur_width / widthOutline);
-            double scale_z = abs(cur_z + cur_height) / (zOutline + heightOutline);
             pos.SetTrackPosMode(GetRoadId(),
                                 repeat.GetS() + cur_s,
                                 repeat.GetTWithFactor(factor),
                                 roadmanager::Position::PosMode::H_REL | roadmanager::Position::PosMode::Z_REL |
                                     roadmanager::Position::PosMode::P_REL | roadmanager::Position::PosMode::R_REL);
             pos.SetHeadingRelative(repeat.GetHOffset());
-
-            scale.scale_x = scale_u;
-            scale.scale_y = scale_v;
-            scale.scale_z = scale_z;
+            // todo check why abs needed
+            scale.scale_x = abs(GetRepeatedObjLengthWithFactor(repeat, factor) / GetCompoundOutlinesLength());;
+            scale.scale_y = abs(GetRepeatedObjWidthWithFactor(repeat, factor) / GetCompoundOutlinesWidth());;
+            scale.scale_z = abs((GetRepeatedObjZOffsetWithFactor(repeat, factor) + GetRepeatedObjHeightWithFactor(repeat, factor)) / (GetCompoundOutlinesZoffset() + GetCompoundOutlinesHeight()));
             scale.x       = pos.GetX();
             scale.y       = pos.GetY();
             scale.z       = pos.GetZ();
@@ -4078,7 +4091,7 @@ void RMObject::CalculateLocalOutlineTransformationInfo(Repeat& repeat)
             repeat.transformationInfoScales_.emplace_back(std::move(scale));  // store points for shallow copy
             if (repeat.GetDistance() < SMALL_NUMBER)
             {
-                cur_s += pos.DistanceToDS(cur_length);
+                cur_s += pos.DistanceToDS(GetRepeatedObjLengthWithFactor(repeat, factor));
             }
             else
             {
@@ -4210,12 +4223,16 @@ void RMObject::TransformToLocal(std::vector<std::vector<Outline::point>>& localP
     }
 }
 
-// Priority 1.repeat lenght, 2.Object length
-double RMObject::GetRepeatLengthWithFactor(Repeat& rep, double factor)
+// Priority 1.repeat lenght, 2. outline length 3.Object length
+double RMObject::GetRepeatedObjLengthWithFactor(Repeat& rep, double factor)
 {
     if (rep.IsLengthSet())
     {
         return rep.GetLengthWithFactor(factor);
+    }
+    else if(GetNumberOfOutlines() > 0)
+    {
+        return GetCompoundOutlinesLength();
     }
     else if (GetLength().IsSet())
     {
@@ -4228,11 +4245,15 @@ double RMObject::GetRepeatLengthWithFactor(Repeat& rep, double factor)
 }
 
 // Priority 1.repeat width, 2.Object width
-double RMObject::GetRepeatWidthWithFactor(Repeat& rep, double factor)
+double RMObject::GetRepeatedObjWidthWithFactor(Repeat& rep, double factor)
 {
     if (rep.IsWidthSet())
     {
         return rep.GetWidthWithFactor(factor);
+    }
+    else if(GetNumberOfOutlines() > 0)
+    {
+        return GetCompoundOutlinesWidth();
     }
     else if (GetWidth().IsSet())
     {
@@ -4244,17 +4265,21 @@ double RMObject::GetRepeatWidthWithFactor(Repeat& rep, double factor)
     }
 }
 
-double RMObject::GetRepeatZOffsetWithFactor(Repeat& rep, double factor)
+double RMObject::GetRepeatedObjZOffsetWithFactor(Repeat& rep, double factor)
 {
     return rep.GetZOffsetWithFactor(factor);
 }
 
 // Priority 1.repeat height, 2.Object height
-double RMObject::GetRepeatHeightWithFactor(Repeat& rep, double factor)
+double RMObject::GetRepeatedObjHeightWithFactor(Repeat& rep, double factor)
 {
     if (rep.IsHeightSet())
     {
         return rep.GetHeightWithFactor(factor);
+    }
+    else if(GetNumberOfOutlines() > 0)
+    {
+        return GetCompoundOutlinesHeight();
     }
     else if (GetHeight().IsSet())
     {

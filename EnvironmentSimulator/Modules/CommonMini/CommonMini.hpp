@@ -317,8 +317,6 @@ private:
     double y_;
 };
 
-bool IsEqualDouble(double val1, double val2);
-
 // Useful operations
 
 /**
@@ -631,6 +629,8 @@ void RotateVec3d(const double h0,
 void SwapByteOrder(unsigned char* buf, int data_type_size, int buf_size);
 
 bool IsNumber(const std::string& str, int max_digits = -1);
+
+bool IsEqualDouble(double val1, double val2);
 
 #if (defined WINVER && WINVER == _WIN32_WINNT_WIN7)
 #else
