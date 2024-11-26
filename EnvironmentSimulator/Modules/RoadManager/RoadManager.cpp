@@ -2646,6 +2646,7 @@ Outline::Outline(Outline&& other)
     fillType_ = other.fillType_;
     id_       = other.id_;
     areaType_ = other.areaType_;
+    outlineType_ = other.outlineType_;
     other.corner_.clear();
 }
 
@@ -3787,6 +3788,33 @@ std::vector<Marking> RMObject::GetMarkingsWithPoints()
     return GetMarkings();
 }
 
+int roadmanager::RMObject::GetNumberOfOutlines()
+{
+    int count = 0;
+    for(auto& outline : GetOutlines())
+    {
+        if(outline.outlineType_ == Outline::OutlineType::ORIGINAL)
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
+// to do, always one outline is there, need to check. maybe wrong
+int roadmanager::RMObject::GetNumberOfUniqueOutlinesZeroDistance(Repeat& repeat)
+{
+    int count = 0;
+    for(auto& outline : GetOutlines())
+    {
+        if(outline.outlineType_ == Outline::OutlineType::ZERO_DISTANCE)
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
 const std::vector<Repeat::RepeatTransformationInfoDimension>& RMObject::GetRepeatTransformationInfoDimensions(Repeat& repeat)
 {
     if (repeat.transformationInfoDimensions_.size() == 0)
@@ -3804,7 +3832,7 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
     }
     if (rep.GetDistance() < SMALL_NUMBER)
     {
-        Outline      outline(GetId(), Outline::FillType::FILL_TYPE_UNDEFINED, Outline::AreaType::CLOSED);
+        Outline      outline(GetId(), Outline::FillType::FILL_TYPE_UNDEFINED, Outline::AreaType::CLOSED, Outline::OutlineType::ZERO_DISTANCE);
         const double max_segment_length = 10.0;
 
         // find smallest value of length and rlength, but between SMALL_NUMBER and max_segment_length
@@ -3834,7 +3862,7 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
                 outline.AddCorner(corner);
             }
         }
-        rep.AddUniqueOutlineZeroDistance(std::move(outline));
+        AddOutline(std::move(outline));
     }
     return 0;
 }
@@ -3845,7 +3873,7 @@ std::vector<Outline>& RMObject::GetUniqueOutlinesZeroDistance(Repeat& repeat)
     {
         CalculateUniqueOutlineZeroDistance(repeat);
     }
-    return repeat.uniqueOutlinesZeroDistance_;
+    return GetOutlines();
 }
 
 int RMObject::CreateRepeatDimensions(Repeat& rep)

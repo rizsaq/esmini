@@ -1898,13 +1898,19 @@ namespace roadmanager
             CLOSED,
             OPEN
         } AreaType;
+        typedef enum
+        {
+            ORIGINAL,
+            ZERO_DISTANCE
+        } OutlineType;
 
         int                          id_;
         FillType                     fillType_;
         AreaType                     areaType_;
         std::vector<OutlineCorner *> corner_;
+        OutlineType                  outlineType_;
 
-        Outline(int id, FillType fillType, AreaType areaType) : id_(id), fillType_(fillType), areaType_(areaType)
+        Outline(int id, FillType fillType, AreaType areaType, OutlineType outlineType = OutlineType::ORIGINAL) : id_(id), fillType_(fillType), areaType_(areaType), outlineType_(outlineType)
         {
         }
 
@@ -2239,12 +2245,8 @@ namespace roadmanager
         {
             uniqueOutlines_.emplace_back(std::move(UniqueOutline));
         }
-        void AddUniqueOutlineZeroDistance(Outline UniqueOutline)
-        {
-            uniqueOutlinesZeroDistance_.emplace_back(std::move(UniqueOutline));
-        }
+
         std::vector<std::vector<Outline>> uniqueOutlines_;
-        std::vector<Outline>              uniqueOutlinesZeroDistance_;
         std::vector<RepeatTransformationInfoScale>     transformationInfoScales_;
         std::vector<RepeatTransformationInfoDimension> transformationInfoDimensions_;
     };
@@ -2520,18 +2522,12 @@ namespace roadmanager
             repeats_.emplace_back(std::move(repeat));
         };
 
-        size_t GetNumberOfOutlines() const
-        {
-            return outlines_.size();
-        }
+        int GetNumberOfOutlines();
         size_t GetNumberOfUniqueOutlines(Repeat &repeat) const
         {
             return repeat.uniqueOutlines_.size();
         }
-        size_t GetNumberOfUniqueOutlinesZeroDistance(Repeat &repeat) const
-        {
-            return repeat.uniqueOutlinesZeroDistance_.size();
-        }
+        int GetNumberOfUniqueOutlinesZeroDistance(Repeat &repeat);
         size_t GetNumberOfRepeats() const
         {
             return repeats_.size();
