@@ -1717,6 +1717,10 @@ namespace roadmanager
         virtual bool       IsCalculated()                               = 0;
         virtual void       SetOriginalCornerId()                        = 0;
         virtual void       SetCornerId(int cornerId)                    = 0;
+        virtual double       GetLengthPointInCompoundOutlines()           = 0;
+        virtual double       GetWidthPointInCompoundOutlines()            = 0;
+        virtual double       GetHeightPointInCompoundOutlines()           = 0;
+        virtual double       GetZoffsetPointInCompoundOutlines()          = 0;
 
         virtual ~OutlineCorner()
         {
@@ -1780,12 +1784,23 @@ namespace roadmanager
         {
             cornerId_ = cornerId;
         }
+        // todo below functions are maybe worng, have to remove local min from all points after converting to local
+        double       GetLengthPointInCompoundOutlines() override;
+        double       GetWidthPointInCompoundOutlines() override;
+        double       GetHeightPointInCompoundOutlines() override;
+        double       GetZoffsetPointInCompoundOutlines() override;
 
     private:
         int                       roadId_, cornerId_, originalCornerId_;
         double                    s_, t_, dz_, height_, center_s_, center_t_, center_heading_;
         OutlineCorner::CornerType type_ = OutlineCorner::CornerType::ROAD_CORNER;
-        double                    x_, y_, z_    = std::nan("");
+        double                    x_    = std::nan("");
+        double                    y_    = std::nan("");
+        double                    z_    = std::nan("");
+        double lengthPointInCompoundOutlines_ = std::nan("");
+        double widthOfPointInCompoundOutlines_ = std::nan("");
+        double HeightOfPointInCompoundOutlines_ = std::nan("");
+        double ZoffsetOfPointInCompoundOutlines_ = std::nan("");
     };
 
     class OutlineCornerLocal : public OutlineCorner
@@ -1846,12 +1861,22 @@ namespace roadmanager
         {
             cornerId_ = cornerId;
         }
+        double       GetLengthPointInCompoundOutlines() override;
+        double       GetWidthPointInCompoundOutlines() override;
+        double       GetHeightPointInCompoundOutlines() override;
+        double       GetZoffsetPointInCompoundOutlines() override;
 
     private:
         int                       roadId_, cornerId_, originalCornerId_;
         double                    s_, t_, u_, v_, zLocal_, height_, heading_;
         OutlineCorner::CornerType type_ = OutlineCorner::CornerType::LOCAL_CORNER;
-        double                    x_, y_, z_    = std::nan("");
+        double                    x_    = std::nan("");
+        double                    y_    = std::nan("");
+        double                    z_    = std::nan("");
+        double lengthPointInCompoundOutlines_ = std::nan("");
+            double widthOfPointInCompoundOutlines_ = std::nan("");
+            double HeightOfPointInCompoundOutlines_ = std::nan("");
+        double ZoffsetOfPointInCompoundOutlines_ = std::nan("");
     };
 
     class Outline
@@ -1905,7 +1930,6 @@ namespace roadmanager
             double z;
             double h;
         };
-        void TransformRoadCornerToLocal(std::vector<Outline::point> &localPointsList, bool RemoveMin);
 
         bool      IsAllCornerIdUnique();
         bool      IsAllSameCorners();
@@ -2600,10 +2624,9 @@ namespace roadmanager
         // calculate unique outlines and store itself in given repeat. e.g. non outline repeat with zero distance
         int CalculateUniqueOutlineZeroDistance(Repeat &repeat);
 
-        // Get all points for all the outlines. Each vector for one outline
-        std::vector<std::vector<Outline::point>> GetPointsFromOutlines();
-        // Get all points for all the outlines and convert it local. Each vector for one outline
-        std::vector<std::vector<Outline::point>> GetLocalPointsFromOutlines();
+        // Get all points for all the outlines in road coordinate. Each vector for one outline
+        std::vector<std::vector<Outline::point>> GetPointsInRoadCoordinateFromOutlines();
+
         // check whether all corners in all outlines are local, In which each all outlines shall have same shape. Hence e.g. shallow copies is
         // possible
         bool IsAllCornersLocal();
@@ -2657,10 +2680,10 @@ namespace roadmanager
         double                     pitch_   = 0.0;
         double                     roll_    = 0.0;
         double                     road_id_;
-        double compoundOutlinesLength_ = std::nan("");
-        double compoundOutlineWidth_ = std::nan("");
-        double compoundOutlineHeight_ = std::nan("");
-        double compoundOutlineZoffset_ = std::nan("");
+        double lengthOfCompoundOutlines_ = std::nan("");
+        double widthOfCompoundOutlines_ = std::nan("");
+        double HeightOfCompoundOutlines_ = std::nan("");
+        double ZoffsetOfCompoundOutlines_ = std::nan("");
 
         std::vector<Outline> outlines_;
         std::vector<Repeat>  repeats_;

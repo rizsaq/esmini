@@ -4005,9 +4005,9 @@ TEST(TestOsiReporter, MultipleOutlinesWithMultipleRepeats)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(102).base().base_polygon(0).y(), -2.5);
 }
 
-TEST(TestOsiReporter, CornerOutline)
+TEST(TestOsiReporter, LocalCornerOutline)
 {
-    std::string scenario_file = "../EnvironmentSimulator/Unittest/xosc/test_local_corner_outline.xosc";
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_local_corner_outline.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
     ASSERT_EQ(i_init, 0);
@@ -4132,6 +4132,40 @@ TEST(TestOsiReporter, CornerOutline)
     EXPECT_NEAR(osi_gt.stationary_object(6).base().base_polygon(3).x(), 15.000, 1e-3);
     EXPECT_NEAR(osi_gt.stationary_object(6).base().base_polygon(3).y(), -2.500, 1e-3);
 
+}
+
+TEST(TestOsiReporter, RoadCornerOutline)
+{
+    std::string scenario_file = "../../../EnvironmentSimulator/Unittest/xosc/test_raod_corner_outline.xosc";
+    const char* Scenario_file = scenario_file.c_str();
+    int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
+    ASSERT_EQ(i_init, 0);
+
+    SE_StepDT(0.001f);
+    SE_UpdateOSIGroundTruth();
+
+    int               sv_size = 0;
+    osi3::GroundTruth osi_gt;
+    const char*       gt = SE_GetOSIGroundTruth(&sv_size);
+    osi_gt.ParseFromArray(gt, sv_size);
+
+    // no repeat object
+    EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 1);
+
+    const auto id0 = osi_gt.stationary_object(0).id().value();
+    EXPECT_EQ(id0, 0);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().position().x(), 12.500, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().position().y(), -7.000, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().position().z(), 0.000, 1e-3);
+    EXPECT_EQ(osi_gt.stationary_object(0).base().base_polygon_size(), 4);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(0).x(), -2.500, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(0).y(), 4.500, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(1).x(), -2.500, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(1).y(), 9.500, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(2).x(), 2.500, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(2).y(), 9.500, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(3).x(), 2.500, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(3).y(), 4.500, 1e-3);
 }
 
 #endif  // _USE_OSI
