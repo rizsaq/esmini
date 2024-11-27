@@ -1874,8 +1874,8 @@ namespace roadmanager
         double                    y_    = std::nan("");
         double                    z_    = std::nan("");
         double lengthPointInCompoundOutlines_ = std::nan("");
-            double widthOfPointInCompoundOutlines_ = std::nan("");
-            double HeightOfPointInCompoundOutlines_ = std::nan("");
+        double widthOfPointInCompoundOutlines_ = std::nan("");
+        double HeightOfPointInCompoundOutlines_ = std::nan("");
         double ZoffsetOfPointInCompoundOutlines_ = std::nan("");
     };
 
