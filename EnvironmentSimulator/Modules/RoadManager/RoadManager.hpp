@@ -1717,10 +1717,6 @@ namespace roadmanager
         virtual bool       IsCalculated()                               = 0;
         virtual void       SetOriginalCornerId()                        = 0;
         virtual void       SetCornerId(int cornerId)                    = 0;
-        virtual double       GetLengthPointInCompoundOutlines()           = 0;
-        virtual double       GetWidthPointInCompoundOutlines()            = 0;
-        virtual double       GetHeightPointInCompoundOutlines()           = 0;
-        virtual double       GetZoffsetPointInCompoundOutlines()          = 0;
 
         virtual ~OutlineCorner()
         {
@@ -1784,11 +1780,6 @@ namespace roadmanager
         {
             cornerId_ = cornerId;
         }
-        // todo below functions are maybe worng, have to remove local min from all points after converting to local
-        double       GetLengthPointInCompoundOutlines() override;
-        double       GetWidthPointInCompoundOutlines() override;
-        double       GetHeightPointInCompoundOutlines() override;
-        double       GetZoffsetPointInCompoundOutlines() override;
 
     private:
         int                       roadId_, cornerId_, originalCornerId_;
@@ -1797,10 +1788,6 @@ namespace roadmanager
         double                    x_    = std::nan("");
         double                    y_    = std::nan("");
         double                    z_    = std::nan("");
-        double lengthPointInCompoundOutlines_ = std::nan("");
-        double widthOfPointInCompoundOutlines_ = std::nan("");
-        double HeightOfPointInCompoundOutlines_ = std::nan("");
-        double ZoffsetOfPointInCompoundOutlines_ = std::nan("");
     };
 
     class OutlineCornerLocal : public OutlineCorner
@@ -1820,6 +1807,7 @@ namespace roadmanager
                            double z);
         // OutlineCornerLocal operator=(const OutlineCornerLocal&);
         void   GetPos(double &x, double &y, double &z) override;
+        void   GetPos(const RepeatTransformationInfoScale &repeatScale, double& x, double& y, double& z);
         void   GetPosLocal(double &x, double &y, double &z) override;
         double GetHeight() override
         {
@@ -1861,10 +1849,6 @@ namespace roadmanager
         {
             cornerId_ = cornerId;
         }
-        double       GetLengthPointInCompoundOutlines() override;
-        double       GetWidthPointInCompoundOutlines() override;
-        double       GetHeightPointInCompoundOutlines() override;
-        double       GetZoffsetPointInCompoundOutlines() override;
 
     private:
         int                       roadId_, cornerId_, originalCornerId_;
@@ -1873,10 +1857,6 @@ namespace roadmanager
         double                    x_    = std::nan("");
         double                    y_    = std::nan("");
         double                    z_    = std::nan("");
-        double lengthPointInCompoundOutlines_ = std::nan("");
-        double widthOfPointInCompoundOutlines_ = std::nan("");
-        double HeightOfPointInCompoundOutlines_ = std::nan("");
-        double ZoffsetOfPointInCompoundOutlines_ = std::nan("");
     };
 
     class Outline
@@ -2567,11 +2547,6 @@ namespace roadmanager
         {
             return road_id_;
         }
-        // Get the difference between object reference S and repeat reference S
-        double GetDifferenceOfRepeatAndObjectS(Repeat &repeat)
-        {
-            return repeat.GetS() - GetS();
-        }
         // Get the difference between object reference T and repeat reference T
         double GetDifferenceOfRepeatAndObjectT(Repeat &repeat)
         {
@@ -2597,7 +2572,7 @@ namespace roadmanager
         int CalculateUniqueOutlineZeroDistance(Repeat &repeat);
 
         // Get all points for all the outlines in road coordinate. Each vector for one outline
-        std::vector<std::vector<Outline::point>> GetPointsInRoadCoordinateFromOutlines();
+        std::vector<std::vector<Outline::point>> GetPosFromOutlines();
 
         // check whether all corners in all outlines are local, In which each all outlines shall have same shape. Hence e.g. shallow copies is
         // possible
