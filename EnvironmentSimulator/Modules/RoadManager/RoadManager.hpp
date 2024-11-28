@@ -2196,30 +2196,6 @@ namespace roadmanager
         // calculate and return segment height of repeat for given factor
         double GetHeightWithFactor(double factor);
 
-        struct RepeatTransformationInfo
-        {
-            double x;
-            double y;
-            double z;
-            double roll;
-            double pitch;
-            double heading;
-            double hOffset;
-        };
-
-        struct RepeatTransformationInfoDimension : public RepeatTransformationInfo
-        {
-            double length;
-            double width;
-            double height;
-        };
-
-        struct RepeatTransformationInfoScale : public RepeatTransformationInfo
-        {
-            double scale_x = 1;
-            double scale_y = 1;
-            double scale_z = 1;
-        };
         // stores repeat transformation info for non outline object
         void AddTransformationInfoDimension(RepeatTransformationInfoDimension repeatDimension)
         {
@@ -2602,9 +2578,9 @@ namespace roadmanager
             return repeat.GetTStart() - GetT();
         }
         // Get or create transformation info for repeat which shall be used to create more models e.g non outline repeat object
-        const std::vector<Repeat::RepeatTransformationInfoDimension> &GetRepeatTransformationInfoDimensions(Repeat &repeat);
+        const std::vector<RepeatTransformationInfoDimension> &GetRepeatTransformationInfoDimensions(Repeat &repeat);
         // Get or create transformation info for repeat which shall be used to create more models e.g repeat with all outline as local corner
-        const std::vector<Repeat::RepeatTransformationInfoScale> &GetRepeatLocalOutlineTransformationInfo(Repeat &repeat);
+        const std::vector<RepeatTransformationInfoScale> &GetRepeatLocalOutlineTransformationInfo(Repeat &repeat);
         // Get or create unique outlines for repeat which shall be used to create more models e.g repeat with atleast one road corner in any of
         // outlines
         std::vector<std::vector<Outline>> &GetUniqueOutlines(Repeat &repeat);

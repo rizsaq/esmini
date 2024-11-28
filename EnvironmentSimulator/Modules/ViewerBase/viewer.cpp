@@ -2827,7 +2827,7 @@ void Viewer::CreateOutlineModel(const roadmanager::Outline& outline,
     uint64_t                     nrPoints       = roof ? outline.corner_.size() + 1 : outline.corner_.size();
     osg::ref_ptr<osg::Vec3Array> vertices_sides = new osg::Vec3Array(nrPoints * 2);  // one set at bottom and one at top
     osg::ref_ptr<osg::Vec3Array> vertices_top   = new osg::Vec3Array(nrPoints);      // one set at bottom and one at top
-
+    printf("from viewer\n");
     for (size_t i = 0; i < outline.corner_.size(); i++)
     {
         double                      x, y, z_bottom;
@@ -2998,7 +2998,7 @@ int Viewer::CreateRoadSignals(osg::ref_ptr<osg::Group> objGroup, std::vector<roa
                 filename += "_" + signal->GetSubType();
             }
 
-            if (!signal->GetValueStr().empty())
+            if (!NEAR_NUMBERS(signal->GetValue(), -1.0))
             {
                 filename += "-" + signal->GetValueStr();
             }
@@ -3178,7 +3178,7 @@ Viewer::ViewerObjectDetail Viewer::ViewerObjectDetail::copy(const roadmanager::R
 }
 
 Viewer::ViewerObjectDetail Viewer::ViewerObjectDetail::copy(roadmanager::RMObject*                                       object,
-                                                            const roadmanager::Repeat::RepeatTransformationInfoDimension repeatDimension)
+                                                            const RepeatTransformationInfoDimension repeatDimension)
 {
     ViewerObjectDetail detail;
     detail.scale_x = GetViewerDimension(repeatDimension.length) / GetViewerDimension(object->GetLength());
@@ -3194,7 +3194,7 @@ Viewer::ViewerObjectDetail Viewer::ViewerObjectDetail::copy(roadmanager::RMObjec
     return detail;
 }
 
-Viewer::ViewerObjectDetail Viewer::ViewerObjectDetail::copy(const roadmanager::Repeat::RepeatTransformationInfoDimension repeatDimension,
+Viewer::ViewerObjectDetail Viewer::ViewerObjectDetail::copy(const RepeatTransformationInfoDimension repeatDimension,
                                                             double                                                       dim_x,
                                                             double                                                       dim_y,
                                                             double                                                       dim_z)

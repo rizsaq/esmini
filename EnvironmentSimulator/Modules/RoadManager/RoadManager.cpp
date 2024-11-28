@@ -2494,6 +2494,7 @@ void OutlineCornerRoad::GetPos(double& x, double& y, double& z)
         y = y_ = pos.GetY();
         z = z_ = pos.GetZ() + dz_;
     }
+    printf("corner road getpos x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 void OutlineCornerRoad::GetPosLocal(double& x, double& y, double& z)
@@ -2506,6 +2507,7 @@ void OutlineCornerRoad::GetPosLocal(double& x, double& y, double& z)
     Global2LocalCoordinates(point.GetX(), point.GetY(), pref.GetX(), pref.GetY(), 0.0, x, y);
 
     z = pref.GetZ() + dz_;
+    printf("corner road getposlocal x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 double roadmanager::OutlineCornerRoad::GetLengthPointInCompoundOutlines()
@@ -2701,6 +2703,7 @@ void OutlineCornerLocal::GetPos(double& x, double& y, double& z)
         y = y_ = pref.GetY() + v2;
         z = z_ = pref.GetZ() + zLocal_;
     }
+    printf("corner local getpos x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 void OutlineCornerLocal::GetPosLocal(double& x, double& y, double& z)
@@ -2718,6 +2721,7 @@ void OutlineCornerLocal::GetPosLocal(double& x, double& y, double& z)
     x = u2;
     y = v2;
     z = zLocal_;
+    printf("corner local getposlocal x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 double roadmanager::OutlineCornerLocal::GetLengthPointInCompoundOutlines()
@@ -3816,7 +3820,7 @@ int roadmanager::RMObject::GetNumberOfUniqueOutlinesZeroDistance(Repeat& repeat)
     return count;
 }
 
-const std::vector<Repeat::RepeatTransformationInfoDimension>& RMObject::GetRepeatTransformationInfoDimensions(Repeat& repeat)
+const std::vector<RepeatTransformationInfoDimension>& RMObject::GetRepeatTransformationInfoDimensions(Repeat& repeat)
 {
     if (repeat.transformationInfoDimensions_.size() == 0)
     {  // repeat dimensions already availble
@@ -3912,7 +3916,7 @@ int RMObject::CreateRepeatDimensions(Repeat& rep)
                 cur_s += pos.DistanceToDS(length_repeat);
             }
 
-            Repeat::RepeatTransformationInfoDimension dimensionDetail;
+            RepeatTransformationInfoDimension dimensionDetail;
             dimensionDetail.x       = pos.GetX();
             dimensionDetail.y       = pos.GetY();
             dimensionDetail.z       = pos.GetZ() + GetRepeatedObjZOffsetWithFactor(rep, factor);
@@ -4080,7 +4084,7 @@ bool RMObject::IsAllCornersLocal()
     return true;
 }
 
-const std::vector<Repeat::RepeatTransformationInfoScale>& RMObject::GetRepeatLocalOutlineTransformationInfo(Repeat& repeat)
+const std::vector<RepeatTransformationInfoScale>& RMObject::GetRepeatLocalOutlineTransformationInfo(Repeat& repeat)
 {
     if (repeat.transformationInfoScales_.size() == 0)  // repeat scales already created
     {
@@ -4096,7 +4100,7 @@ void RMObject::CalculateLocalOutlineTransformationInfo(Repeat& repeat)
     if (repeatLength > SMALL_NUMBER)
     {
         std::shared_ptr<Outline>              outline    = nullptr;
-        Repeat::RepeatTransformationInfoScale scale;  // for shollow copy
+        RepeatTransformationInfoScale scale;  // for shollow copy
         Position                              pos;
         while (cur_s < repeatLength)
         {
