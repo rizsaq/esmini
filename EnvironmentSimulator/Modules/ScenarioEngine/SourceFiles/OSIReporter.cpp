@@ -639,7 +639,7 @@ void AddOSIStationaryObjectAtPosition(roadmanager::RMObject *object)
 
 void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline, const RepeatTransformationInfoScale &repeatScale)
 {
-    printf("from osi reporter\n");
+    // printf("from osi reporter\n");
     double height = 0;
     for (const auto &corner : outline.corner_)
     {
@@ -655,7 +655,7 @@ void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline, const 
 
 void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline)
 {
-    printf("from osi reporter\n");
+    // printf("from osi reporter\n");
     double height = 0;
     for (const auto &corner : outline.corner_)
     {
@@ -697,7 +697,7 @@ int OSIReporter::UpdateOSIStationaryObjectODR(roadmanager::RMObject *object)
                 {
                     for (const auto &outline : object->GetUniqueOutlinesZeroDistance(repeat))
                     {
-                        AddOSIStationaryObjectAtPosition(object);
+                        AddOSIStationaryObject(object); // check if this is correct, it not actually a outline
                         AddPolygonToOSIStationaryObject(outline);
                     }
                 }

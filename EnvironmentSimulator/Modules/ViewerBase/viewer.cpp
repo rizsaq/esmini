@@ -2827,7 +2827,7 @@ void Viewer::CreateOutlineModel(const roadmanager::Outline& outline,
     uint64_t                     nrPoints       = roof ? outline.corner_.size() + 1 : outline.corner_.size();
     osg::ref_ptr<osg::Vec3Array> vertices_sides = new osg::Vec3Array(nrPoints * 2);  // one set at bottom and one at top
     osg::ref_ptr<osg::Vec3Array> vertices_top   = new osg::Vec3Array(nrPoints);      // one set at bottom and one at top
-    printf("from viewer\n");
+    // printf("from viewer\n");
     for (size_t i = 0; i < outline.corner_.size(); i++)
     {
         double                      x, y, z_bottom;

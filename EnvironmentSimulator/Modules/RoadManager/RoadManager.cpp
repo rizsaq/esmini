@@ -2472,42 +2472,52 @@ OutlineCornerRoad::OutlineCornerRoad(id_t   roadId,
       center_t_(center_t),
       center_heading_(center_heading),
       cornerId_(cornerId),
-      x_(x),
-      y_(y),
-      z_(z)
+      xPos_(x),
+      yPos_(y),
+      zPos_(z)
 {
 }
 
 void OutlineCornerRoad::GetPos(double& x, double& y, double& z)
 {
-    if (IsCalculated())
+    if (IsPosCalculated())
     {
-        x = x_;
-        y = y_;
-        z = z_;
+        x = xPos_;
+        y = yPos_;
+        z = zPos_;
     }
     else
     {
         roadmanager::Position pos;
         pos.SetTrackPos(roadId_, s_, t_);
-        x = x_ = pos.GetX();
-        y = y_ = pos.GetY();
-        z = z_ = pos.GetZ() + dz_;
+        x = xPos_ = pos.GetX();
+        y = yPos_ = pos.GetY();
+        z = zPos_ = pos.GetZ() + dz_;
     }
-    printf("corner road getpos x: %f, y: %f, z: %f\n", x, y, z);
+    // printf("corner road getpos x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 void OutlineCornerRoad::GetPosLocal(double& x, double& y, double& z)
 {
-    roadmanager::Position pref;
-    pref.SetTrackPos(roadId_, center_s_, center_t_);
-    roadmanager::Position point;
-    point.SetTrackPos(roadId_, s_, t_);
-
-    Global2LocalCoordinates(point.GetX(), point.GetY(), pref.GetX(), pref.GetY(), 0.0, x, y);
-
-    z = pref.GetZ() + dz_;
-    printf("corner road getposlocal x: %f, y: %f, z: %f\n", x, y, z);
+    if (IsPosLocalCalculated())
+    {
+        x = xPosLocal_;
+        y = yPosLocal_;
+        z = zPosLocal_;
+    }
+    else
+    {
+        roadmanager::Position pref;
+        pref.SetTrackPos(roadId_, center_s_, center_t_);
+        roadmanager::Position point;
+        point.SetTrackPos(roadId_, s_, t_);
+        Global2LocalCoordinates(point.GetX(), point.GetY(), pref.GetX(), pref.GetY(), 0.0, x, y);
+        z = pref.GetZ() + dz_;
+        xPosLocal_ = x;
+        yPosLocal_ = y;
+        zPosLocal_ = z;
+    }
+    // printf("corner road getposlocal x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 bool Outline::IsAllCornerIdUnique()
@@ -2556,8 +2566,6 @@ bool roadmanager::Outline::IsAllSameCorners()
 
 void Outline::GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const
 {
-    // std::vector<int> ids;
-    // GetConsecutiveCornerIds(cornerReferenceIds, ids);
     CornerIdManager cornerIdManager(corner_);
     std::vector<int> ids = cornerIdManager.getConsecutiveCornerIds(cornerReferenceIds);
     // fetch the corner reference from corner id
@@ -2625,19 +2633,19 @@ OutlineCornerLocal::OutlineCornerLocal(id_t   roadId,
       height_(height),
       heading_(heading),
       cornerId_(cornerId),
-      x_(x),
-      y_(y),
-      z_(z)
+      xPos_(x),
+      yPos_(y),
+      zPos_(z)
 {
 }
 
 void OutlineCornerLocal::GetPos(double& x, double& y, double& z)
 {
-    if (IsCalculated())
+    if (IsPosCalculated())
     {
-        x = x_;
-        y = y_;
-        z = z_;
+        x = xPos_;
+        y = yPos_;
+        z = zPos_;
     }
     else
     {
@@ -2651,11 +2659,11 @@ void OutlineCornerLocal::GetPos(double& x, double& y, double& z)
         double u2, v2;
         RotateVec2D(u_, v_, total_heading, u2, v2);
 
-        x = x_ = pref.GetX() + u2;
-        y = y_ = pref.GetY() + v2;
-        z = z_ = pref.GetZ() + zLocal_;
+        x = xPos_ = pref.GetX() + u2;
+        y = yPos_ = pref.GetY() + v2;
+        z = zPos_ = pref.GetZ() + zLocal_;
     }
-    printf("corner local getpos x: %f, y: %f, z: %f\n", x, y, z);
+    // printf("corner local getpos x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 void OutlineCornerLocal::GetPos(const RepeatTransformationInfoScale &repeatScale, double& x, double& y, double& z)
@@ -2673,25 +2681,34 @@ void OutlineCornerLocal::GetPos(const RepeatTransformationInfoScale &repeatScale
         x = pref.GetX() + u2;
         y = pref.GetY() + v2;
         z = pref.GetZ() + zLocal_;
-    printf("corner local getpos overloaded  x: %f, y: %f, z: %f\n", x, y, z);
+    // printf("corner local getpos overloaded  x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 void OutlineCornerLocal::GetPosLocal(double& x, double& y, double& z)
 {
-    roadmanager::Position pref;
-    pref.SetTrackPosMode(roadId_,
-                         s_,
-                         t_,
-                         roadmanager::Position::PosMode::Z_REL | roadmanager::Position::PosMode::H_REL | roadmanager::Position::PosMode::P_REL |
-                             roadmanager::Position::PosMode::R_REL);
-    double total_heading = GetAngleSum(pref.GetH(), heading_);
-    double u2, v2;
-    RotateVec2D(u_, v_, total_heading, u2, v2);
+    if (IsPosLocalCalculated())
+    {
+        x = xPosLocal_;
+        y = yPosLocal_;
+        z = zPosLocal_;
+    }
+    else
+    {
+        roadmanager::Position pref;
+        pref.SetTrackPosMode(roadId_,
+                            s_,
+                            t_,
+                            roadmanager::Position::PosMode::Z_REL | roadmanager::Position::PosMode::H_REL | roadmanager::Position::PosMode::P_REL |
+                                roadmanager::Position::PosMode::R_REL);
+        double total_heading = GetAngleSum(pref.GetH(), heading_);
+        double u2, v2;
+        RotateVec2D(u_, v_, total_heading, u2, v2);
 
-    x = u2;
-    y = v2;
-    z = zLocal_;
-    printf("corner local getposlocal x: %f, y: %f, z: %f\n", x, y, z);
+        x = xPosLocal_ = u2;
+        y = yPosLocal_ = v2;
+        z = zPosLocal_ = zLocal_;
+    }
+    // printf("corner local getposlocal x: %f, y: %f, z: %f\n", x, y, z);
 }
 
 ParkingSpace::Access ParkingSpace::ParseAccess(pugi::xml_node node)
@@ -3639,7 +3656,7 @@ const double roadmanager::RMObject::GetCompoundOutlinesLength()
         std::vector<std::vector<Outline::point>> points = GetPosFromOutlines();
         // Now all local points are availbel, find the bb from the corner
         GetBoundingBoxFromCorners(points, lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
-        printf("length, width, height, zoffset are %f, %f, %f, %f\n", lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
+        // printf("length, width, height, zoffset are %f, %f, %f, %f\n", lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
     }
     return lengthOfCompoundOutlines_;
 }
@@ -3925,7 +3942,7 @@ int RMObject::CalculateUniqueOutlines(Repeat& repeat)
                 {
                     double u, v, z;
                     corner_original->GetPosLocal(u, v, z);
-                    printf("u, v, z are %f, %f, %f\n", u, v, z);
+                    // printf("u, v, z are %f, %f, %f\n", u, v, z);
                     // calculate how much to add based on local dimension
                     double     x_to_add        = GetRepeatedObjLengthWithFactor(repeat, factor);
                     if (GetCompoundOutlinesLength() > 0.0)  // avoid divide by 0
@@ -4083,7 +4100,7 @@ std::vector<std::vector<Outline::point>> RMObject::GetPosFromOutlines()
             if (cornerType == OutlineCorner::CornerType::LOCAL_CORNER)  // check first corner
             {
                 OutlineCornerLocal* localCorner = static_cast<OutlineCornerLocal*>(corner);
-                localCorner->GetPosLocal(point.x, point.y, point.z);
+                localCorner->GetPos(point.x, point.y, point.z);
                 point.h = corner->GetHeight();
                 points.emplace_back(std::move(point));
             }
@@ -6118,7 +6135,6 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                     double rradiusStart = (rattr = ReadAttribute(repeat_node, "radiusStart", false)) == "" ? std::nan("") : std::stod(rattr);
                     double rradiusEnd   = (rattr = ReadAttribute(repeat_node, "radiusEnd", false)) == "" ? std::nan("") : std::stod(rattr);
 
-                    // Always add the repeat object, even if treated as outline - in case 3D model should be used in visualization
                     Repeat repeat =
                         Repeat(rs, rlength, rdistance, rtStart, rtEnd, rheightStart, rheightEnd, rzOffsetStart, rzOffsetEnd, r->GetLength());
                     repeat.SetWidthStart(rwidthStart);

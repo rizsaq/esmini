@@ -1714,7 +1714,8 @@ namespace roadmanager
         virtual int        GetOriginalCornerId()                        = 0;
         virtual CornerType GetCornerType()                              = 0;
         virtual double     GetZ()                                       = 0;
-        virtual bool       IsCalculated()                               = 0;
+        virtual bool       IsPosCalculated()                               = 0;
+        virtual bool       IsPosLocalCalculated()                          = 0;
         virtual void       SetOriginalCornerId()                        = 0;
         virtual void       SetCornerId(int cornerId)                    = 0;
 
@@ -1768,9 +1769,13 @@ namespace roadmanager
         {
             return dz_;
         }
-        bool IsCalculated() override
+        bool IsPosCalculated() override
         {
-            return !(std::isnan(x_) && std::isnan(y_) && std::isnan(z_));
+            return !(std::isnan(xPos_) && std::isnan(yPos_) && std::isnan(zPos_));
+        }
+        bool IsPosLocalCalculated() override
+        {
+            return !(std::isnan(xPosLocal_) && std::isnan(yPosLocal_) && std::isnan(zPosLocal_));
         }
         void SetOriginalCornerId() override
         {
@@ -1785,9 +1790,12 @@ namespace roadmanager
         int                       roadId_, cornerId_, originalCornerId_;
         double                    s_, t_, dz_, height_, center_s_, center_t_, center_heading_;
         OutlineCorner::CornerType type_ = OutlineCorner::CornerType::ROAD_CORNER;
-        double                    x_    = std::nan("");
-        double                    y_    = std::nan("");
-        double                    z_    = std::nan("");
+        double                    xPos_    = std::nan("");
+        double                    yPos_    = std::nan("");
+        double                    zPos_    = std::nan("");
+        double                    xPosLocal_    = std::nan("");
+        double                    yPosLocal_    = std::nan("");
+        double                    zPosLocal_    = std::nan("");
     };
 
     class OutlineCornerLocal : public OutlineCorner
@@ -1837,9 +1845,13 @@ namespace roadmanager
         {
             return zLocal_;
         }
-        bool IsCalculated() override
+        bool IsPosCalculated() override
         {
-            return !(std::isnan(x_) && std::isnan(y_) && std::isnan(z_));
+            return !(std::isnan(xPos_) && std::isnan(yPos_) && std::isnan(zPos_));
+        }
+        bool IsPosLocalCalculated() override
+        {
+            return !(std::isnan(xPosLocal_) && std::isnan(yPosLocal_) && std::isnan(zPosLocal_));
         }
         void SetOriginalCornerId() override
         {
@@ -1854,9 +1866,12 @@ namespace roadmanager
         int                       roadId_, cornerId_, originalCornerId_;
         double                    s_, t_, u_, v_, zLocal_, height_, heading_;
         OutlineCorner::CornerType type_ = OutlineCorner::CornerType::LOCAL_CORNER;
-        double                    x_    = std::nan("");
-        double                    y_    = std::nan("");
-        double                    z_    = std::nan("");
+        double                    xPos_    = std::nan("");
+        double                    yPos_    = std::nan("");
+        double                    zPos_    = std::nan("");
+        double                    xPosLocal_    = std::nan("");
+        double                    yPosLocal_    = std::nan("");
+        double                    zPosLocal_    = std::nan("");
     };
 
     class Outline
