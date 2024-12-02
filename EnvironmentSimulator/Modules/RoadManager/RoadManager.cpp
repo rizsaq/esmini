@@ -3648,15 +3648,25 @@ bool roadmanager::RMObject::CheckCornerReferenceId(int id)
     return false;
 }
 
-const double roadmanager::RMObject::GetCompoundOutlinesLength()
+const double roadmanager::RMObject::GetCompoundOutlinesBB(double& length, double& width, double& height, double& z)
+
 {
     if (std::isnan(lengthOfCompoundOutlines_))
     {
         // get all as point from outlines
         std::vector<std::vector<Outline::point>> points = GetPosFromOutlines();
         // Now all local points are availbel, find the bb from the corner
-        GetBoundingBoxFromCorners(points, lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
+        GetBoundingBoxFromCorners(points, length, width, height, z);
         // printf("length, width, height, zoffset are %f, %f, %f, %f\n", lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
+    }
+    return lengthOfCompoundOutlines_;
+}
+
+const double roadmanager::RMObject::GetCompoundOutlinesLength()
+{
+    if (std::isnan(widthOfCompoundOutlines_))
+    {
+        GetCompoundOutlinesBB(lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
     }
     return lengthOfCompoundOutlines_;
 }
@@ -3665,10 +3675,7 @@ const double roadmanager::RMObject::GetCompoundOutlinesWidth()
 {
     if (std::isnan(widthOfCompoundOutlines_))
     {
-        // get all as point from outlines
-        std::vector<std::vector<Outline::point>> points = GetPosFromOutlines();
-        // Now all local points are availbel, find the bb from the corner
-        GetBoundingBoxFromCorners(points, lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
+GetCompoundOutlinesBB(lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
     }
     return widthOfCompoundOutlines_;
 }
@@ -3677,10 +3684,7 @@ const double roadmanager::RMObject::GetCompoundOutlinesHeight()
 {
     if (std::isnan(HeightOfCompoundOutlines_))
     {
-        // get all as point from outlines
-        std::vector<std::vector<Outline::point>> points = GetPosFromOutlines();
-        // Now all local points are availbel, find the bb from the corner
-        GetBoundingBoxFromCorners(points, lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
+        GetCompoundOutlinesBB(lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
     }
     return HeightOfCompoundOutlines_;
 }
@@ -3689,10 +3693,7 @@ const double roadmanager::RMObject::GetCompoundOutlinesZoffset()
 {
     if (std::isnan(ZoffsetOfCompoundOutlines_ ))
     {
-        // get all as point from outlines
-        std::vector<std::vector<Outline::point>> points = GetPosFromOutlines();
-        // Now all local points are availbel, find the bb from the corner
-        GetBoundingBoxFromCorners(points, lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
+        GetCompoundOutlinesBB(lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
     }
     return ZoffsetOfCompoundOutlines_;
 }
@@ -3801,9 +3802,13 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
                 double       factor  = static_cast<double>((i == 0 ? j : (n_segments - j))) / n_segments;
                 const double min_dim = 0.05;
                 double w_local = std::max(GetRepeatedObjWidthWithFactor(rep, factor), min_dim);
+                // printf("old length is %f\n", rep.GetS() + factor * rep.GetLength());
+                // printf("old length rep %f\n", factor * rep.GetLength());
+                // printf("new length is %f\n", rep.GetS() + GetRepeatedObjLengthWithFactor(rep, factor));
+                // printf("new length rep %f\n", GetRepeatedObjLengthWithFactor(rep, factor));
                 OutlineCorner* corner  = (OutlineCorner*)(new OutlineCornerRoad(
                     GetRoadId(),
-                    rep.GetS() + factor * rep.GetLength(), // todo have to include start and end offse, Use GetRepeatedObjLengthWithFactor
+                    rep.GetS() + factor * rep.GetLength(), // todo have to include start and end length, Use GetRepeatedObjLengthWithFactor
                     rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
                     rep.GetZOffsetWithFactor(factor),
                     std::max(GetRepeatedObjHeightWithFactor(rep, factor), min_dim),
@@ -3934,6 +3939,8 @@ int RMObject::CalculateUniqueOutlines(Repeat& repeat)
             double       scale_v = 1.0;
             double       scale_z = 1.0;
             double       scale_h = 1.0;
+            double lengthBb, widthBb, heightBb, zBb;
+            GetCompoundOutlinesBB(lengthBb, widthBb, heightBb, zBb);
             std::vector<Outline> outlineCopies;
             for (auto& outlineOriginal: GetOutlines())
             {
@@ -3945,28 +3952,28 @@ int RMObject::CalculateUniqueOutlines(Repeat& repeat)
                     // printf("u, v, z are %f, %f, %f\n", u, v, z);
                     // calculate how much to add based on local dimension
                     double     x_to_add        = GetRepeatedObjLengthWithFactor(repeat, factor);
-                    if (GetCompoundOutlinesLength() > 0.0)  // avoid divide by 0
+                    if (lengthBb> 0.0)  // avoid divide by 0
                     {
-                        x_to_add = GetRepeatedObjLengthWithFactor(repeat, factor) * (u / GetCompoundOutlinesLength());
-                        scale_u  = abs(GetRepeatedObjLengthWithFactor(repeat, factor) / GetCompoundOutlinesLength());
+                        x_to_add = GetRepeatedObjLengthWithFactor(repeat, factor) * (u / lengthBb);
+                        scale_u  = abs(GetRepeatedObjLengthWithFactor(repeat, factor) / lengthBb);
                     }
                     double y_to_add = GetRepeatedObjWidthWithFactor(repeat, factor);
-                    if (GetCompoundOutlinesWidth() > 0.0)   // avoid divide by 0
+                    if (widthBb > 0.0)   // avoid divide by 0
                     {
-                        y_to_add = GetRepeatedObjWidthWithFactor(repeat, factor) * (v / GetCompoundOutlinesWidth());
-                        scale_v  = abs(GetRepeatedObjWidthWithFactor(repeat, factor) / GetCompoundOutlinesWidth());
+                        y_to_add = GetRepeatedObjWidthWithFactor(repeat, factor) * (v / widthBb);
+                        scale_v  = abs(GetRepeatedObjWidthWithFactor(repeat, factor) / widthBb);
                     }
                     double z_to_add = GetRepeatedObjZOffsetWithFactor(repeat, factor);
-                    if (GetCompoundOutlinesZoffset() > 0.0)   // avoid divide by 0
+                    if (zBb > 0.0)   // avoid divide by 0
                     {
-                        z_to_add = GetRepeatedObjZOffsetWithFactor(repeat, factor) * (z / GetCompoundOutlinesZoffset());
-                        scale_z  = abs(GetRepeatedObjZOffsetWithFactor(repeat, factor) / GetCompoundOutlinesZoffset());
+                        z_to_add = GetRepeatedObjZOffsetWithFactor(repeat, factor) * (z / zBb);
+                        scale_z  = abs(GetRepeatedObjZOffsetWithFactor(repeat, factor) / zBb);
                     }
                     double h_to_add = GetRepeatedObjHeightWithFactor(repeat, factor);
-                    if (GetCompoundOutlinesHeight() > 0.0)   // avoid divide by 0
+                    if (heightBb > 0.0)   // avoid divide by 0
                     {
-                        h_to_add = GetRepeatedObjHeightWithFactor(repeat, factor) * (corner_original->GetHeight() / GetCompoundOutlinesHeight());
-                        scale_h  = abs(GetRepeatedObjHeightWithFactor(repeat, factor) / GetCompoundOutlinesHeight());
+                        h_to_add = GetRepeatedObjHeightWithFactor(repeat, factor) * (corner_original->GetHeight() / heightBb);
+                        scale_h  = abs(GetRepeatedObjHeightWithFactor(repeat, factor) / heightBb);
                     }
 
                     double         start_s = repeat.GetS() + cur_s + x_to_add;
@@ -4053,6 +4060,8 @@ void RMObject::CalculateLocalOutlineTransformationInfo(Repeat& repeat)
         std::shared_ptr<Outline>              outline    = nullptr;
         RepeatTransformationInfoScale scale;  // for shollow copy
         Position                              pos;
+        double lengthBb, widthBb, heightBb, zBb;
+        GetCompoundOutlinesBB(lengthBb, widthBb, heightBb, zBb);
         while (cur_s < repeatLength)
         {
             double factor = cur_s / repeatLength;
@@ -4063,9 +4072,9 @@ void RMObject::CalculateLocalOutlineTransformationInfo(Repeat& repeat)
                                     roadmanager::Position::PosMode::P_REL | roadmanager::Position::PosMode::R_REL);
             pos.SetHeadingRelative(repeat.GetHOffset());
             // todo check why abs needed
-            scale.scale_x = abs(GetRepeatedObjLengthWithFactor(repeat, factor) / GetCompoundOutlinesLength());;
-            scale.scale_y = abs(GetRepeatedObjWidthWithFactor(repeat, factor) / GetCompoundOutlinesWidth());;
-            scale.scale_z = abs((GetRepeatedObjZOffsetWithFactor(repeat, factor) + GetRepeatedObjHeightWithFactor(repeat, factor)) / (GetCompoundOutlinesZoffset() + GetCompoundOutlinesHeight()));
+            scale.scale_x = abs(GetRepeatedObjLengthWithFactor(repeat, factor) / lengthBb);;
+            scale.scale_y = abs(GetRepeatedObjWidthWithFactor(repeat, factor) / widthBb);;
+            scale.scale_z = abs((GetRepeatedObjZOffsetWithFactor(repeat, factor) + GetRepeatedObjHeightWithFactor(repeat, factor)) / (zBb + heightBb));
             scale.x       = pos.GetX();
             scale.y       = pos.GetY();
             scale.z       = pos.GetZ();
@@ -4093,24 +4102,12 @@ std::vector<std::vector<Outline::point>> RMObject::GetPosFromOutlines()
     {
         std::vector<Outline::point> points;  // store corners of one outline
         points.reserve(outlineOriginal.corner_.size());
-        OutlineCorner::CornerType cornerType = outlineOriginal.corner_[0]->GetCornerType();
         for (const auto& corner : outlineOriginal.corner_)
         {
             Outline::point point;
-            if (cornerType == OutlineCorner::CornerType::LOCAL_CORNER)  // check first corner
-            {
-                OutlineCornerLocal* localCorner = static_cast<OutlineCornerLocal*>(corner);
-                localCorner->GetPos(point.x, point.y, point.z);
-                point.h = corner->GetHeight();
-                points.emplace_back(std::move(point));
-            }
-            else
-            {
-                OutlineCornerRoad* roadCorner = static_cast<OutlineCornerRoad*>(corner);
-                roadCorner->GetPos(point.x, point.y, point.z);
-                point.h = corner->GetHeight();
-                points.emplace_back(std::move(point));
-            }
+            corner->GetPos(point.x, point.y, point.z);
+            point.h = corner->GetHeight();
+            points.emplace_back(std::move(point));
         }
         pointsList.emplace_back(std::move(points));
     }
@@ -6280,7 +6277,7 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                                     break;
                                 }
                             }
-                            if (marking.GetCornerReferenceIdsSize() < 2)
+                            if (isValidMarking && marking.GetCornerReferenceIdsSize() < 2)
                             {
                                 LOG("Skiping marking, Atleast two <cornerReference> elements are mandatory, Skiping");
                                 break;

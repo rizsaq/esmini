@@ -671,6 +671,7 @@ void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline)
 
 int OSIReporter::UpdateOSIStationaryObjectODR(roadmanager::RMObject *object)
 {
+    // printf("from reporter\n");
     if (object->GetNumberOfRepeats() == 0)
     {
         if (object->GetNumberOfOutlines() > 0)
@@ -693,7 +694,8 @@ int OSIReporter::UpdateOSIStationaryObjectODR(roadmanager::RMObject *object)
         {
             for (auto &repeat : object->GetRepeats())
             {
-                if (IsEqualDouble(repeat.GetDistance(), 0.0))  // repeat with zero distance
+                // if (IsEqualDouble(repeat.GetDistance(), 0.0) && repeat.transformationInfoDimensions_.size() == 0)  // repeat with zero distance and no model found in viewer
+                if (IsEqualDouble(repeat.GetDistance(), 0.0)) // repeat with zero distance, todo check above line is correct
                 {
                     for (const auto &outline : object->GetUniqueOutlinesZeroDistance(repeat))
                     {

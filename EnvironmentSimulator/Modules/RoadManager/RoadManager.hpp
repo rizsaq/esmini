@@ -2618,7 +2618,9 @@ namespace roadmanager
         // check weather given id is present in corner reference ids in atleast one outline
         bool CheckCornerReferenceId(int id);
 
-        // get the length of outlines(compound length of all corners) for the given object
+        // get the bb of outlines(compound bb of all corners) for the given object
+        const double GetCompoundOutlinesBB(double& length, double& width, double& height, double& z);
+        // get the Length of outlines(compound width of all corners) for the given object
         const double GetCompoundOutlinesLength();
         // get the width of outlines(compound width of all corners) for the given object
         const double GetCompoundOutlinesWidth();
