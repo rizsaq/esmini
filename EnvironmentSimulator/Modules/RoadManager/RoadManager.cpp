@@ -3692,15 +3692,19 @@ std::vector<Marking> RMObject::GetMarkingsWithPoints()
 
 int roadmanager::RMObject::GetNumberOfOutlines()
 {
-    int count = 0;
-    for(auto& outline : GetOutlines())
+    if(numberOfOriginalOutline_ == -1)
     {
-        if(outline.outlineType_ == Outline::OutlineType::ORIGINAL)
+        int count = 0;
+        for(auto& outline : GetOutlines())
         {
-            count++;
+            if(outline.outlineType_ == Outline::OutlineType::ORIGINAL)
+            {
+                count++;
+            }
         }
+        numberOfOriginalOutline_ = count;
     }
-    return count;
+    return numberOfOriginalOutline_;
 }
 
 // to do, always one outline is there, need to check. maybe wrong
@@ -6190,25 +6194,35 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                     {
                         bool    isValidMarking = true;
                         Marking marking;
+                        Marking::RoadSide side = Marking::RoadSide::RIGHT;
                         if (!strcmp(marking_node.name(), "marking"))
                         {
                             LaneRoadMark  laneRoadMark;
                             RoadMarkColor color    = laneRoadMark.ParseColor(marking_node);
                             std::string   side_str = marking_node.attribute("side").value();
-                            if (obj->GetNumberOfOutlines() == 0 && side_str.compare("left") != 0 && side_str.compare("right") != 0)
+                            if (obj->GetNumberOfOutlines() == 0)
                             {
-                                LOG("skiping marking, Side attribute is mandatory in marking with no outline");
-                                isValidMarking = false;
-                                break;
+                                if(side_str == "left")
+                                {
+                                    side = Marking::RoadSide::LEFT;
+                                }
+                                else if(side_str == "right")
+                                {
+                                    side = Marking::RoadSide::RIGHT;
+                                }
+                                else
+                                {
+                                    LOG("skiping marking, Side attribute is mandatory in marking with no outline");
+                                    isValidMarking = false;
+                                    break;
+                                }
                             }
-                            Marking::RoadSide side  = side_str == "left" ? Marking::RoadSide::LEFT : Marking::RoadSide::RIGHT;  // deafult right side
                             double            width = atof(marking_node.attribute("width").value());
                             double            z_offset    = atof(marking_node.attribute("zOffset").value());
                             double            spaceLength = atof(marking_node.attribute("spaceLength").value());
                             double            lineLength  = atof(marking_node.attribute("lineLength").value());
                             double            startOffset = atof(marking_node.attribute("startOffset").value());
                             double            stopOffset  = atof(marking_node.attribute("stopOffset").value());
-
                             marking = Marking(r->GetId(), color, width, z_offset, spaceLength, lineLength, startOffset, stopOffset, side);
                         }
                         if (obj->GetNumberOfOutlines() > 0)  // check corner reference id only when outline is present
@@ -6217,26 +6231,25 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                             for (pugi::xml_node cornerReference_node = marking_node.child("cornerReference"); cornerReference_node;
                                  cornerReference_node                = cornerReference_node.next_sibling())
                             {
-                                int id = -1;  // defualt value
                                 // check if id is present
                                 if (const auto& val = cornerReference_node.attribute("id"); !val.empty())
                                 {
-                                    id = atoi(val.value());
+                                    int id = atoi(val.value());
+                                    // check if id is present in any of the outline
+                                    if (obj->CheckCornerReferenceId(id))
+                                    {
+                                        marking.AddCornerReferenceIds(id);
+                                    }
+                                    else
+                                    {
+                                        LOG("Skiping marking, CornerReference id %d not found in any of outline in object %d", id, obj->GetId());
+                                        isValidMarking = false;
+                                        break;
+                                    }
                                 }
                                 else
                                 {
                                     LOG("Skiping marking, CornerReference id is mandatory");
-                                    isValidMarking = false;
-                                    break;
-                                }
-                                // check if id is present in any of the outline
-                                if (obj->CheckCornerReferenceId(id))
-                                {
-                                    marking.AddCornerReferenceIds(id);
-                                }
-                                else
-                                {
-                                    LOG("Skiping marking, CornerReference id %d not found in any of outline in object %d", id, obj->GetId());
                                     isValidMarking = false;
                                     break;
                                 }

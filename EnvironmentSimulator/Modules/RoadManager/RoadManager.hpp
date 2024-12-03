@@ -2635,6 +2635,7 @@ namespace roadmanager
         double                     pitch_   = 0.0;
         double                     roll_    = 0.0;
         double                     road_id_;
+        int numberOfOriginalOutline_ = -1;
         double lengthOfCompoundOutlines_ = std::nan("");
         double widthOfCompoundOutlines_ = std::nan("");
         double HeightOfCompoundOutlines_ = std::nan("");

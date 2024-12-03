@@ -2854,10 +2854,10 @@ TEST(TestOsiReporter, MarkingTest)
 
     EXPECT_EQ(osi_gt.road_marking(4).base().base_polygon_size(), 24);
 
-    EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(8).x(), 57.0);
+    EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(8).x(), 53.0);
     EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(8).y(), -0.75);
 
-    EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(23).x(), 57.0);
+    EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(23).x(), 53.0);
     EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(23).y(), 2.75);
 
     EXPECT_EQ(osi_gt.road_marking(5).base().base_polygon_size(), 28);
@@ -3027,10 +3027,10 @@ TEST(TestOsiReporter, MarkingTest)
 
     EXPECT_EQ(osi_gt.road_marking(4).base().base_polygon_size(), 24);
 
-    EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(8).x(), 57.0);
+    EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(8).x(), 53.0);
     EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(8).y(), -0.75);
 
-    EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(23).x(), 57.0);
+    EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(23).x(), 53.0);
     EXPECT_DOUBLE_EQ(osi_gt.road_marking(4).base().base_polygon(23).y(), 2.75);
 
     EXPECT_EQ(osi_gt.road_marking(5).base().base_polygon_size(), 28);
@@ -3478,6 +3478,7 @@ TEST(TestOsiReporter, CrestCurveRoadObjectTest)
 
 TEST(TestOsiReporter, StationaryObjectTest)
 {
+    //without viewer
     std::string scenario_file = "../EnvironmentSimulator/Unittest/xosc/test_stationary_objects.xosc";
     const char* Scenario_file = scenario_file.c_str();
     int         i_init        = SE_Init(Scenario_file, 0, 0, 0, 0);
@@ -3584,6 +3585,7 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().position().y(), 5.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().position().z(), 0.0);
 
+    //without viewer
     const char* args[] = {"--osc",
                           "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_objects.xosc",
                           "--window",
@@ -3612,7 +3614,7 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().width(), 1.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().height(), 1.0);
 #else
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().length(), 0.0);  // with viewer no BB
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().length(), 0.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().width(), 0.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().height(), 0.0);
 #endif  // _USE_OSG
@@ -3643,7 +3645,7 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(4).y(), 1.25);
 #endif  // _USE_OSG
 
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().length(), 4.0);  // same object from repeat
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().length(), 4.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().width(), 2.5);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().height(), 2.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().position().x(), 85.0);
