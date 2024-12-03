@@ -1716,7 +1716,6 @@ namespace roadmanager
         virtual double     GetZ()                                       = 0;
         virtual bool       IsPosCalculated()                               = 0;
         virtual bool       IsPosLocalCalculated()                          = 0;
-        virtual void       SetOriginalCornerId()                        = 0;
         virtual void       SetCornerId(int cornerId)                    = 0;
 
         virtual ~OutlineCorner()
@@ -1776,10 +1775,6 @@ namespace roadmanager
         bool IsPosLocalCalculated() override
         {
             return !(std::isnan(xPosLocal_) && std::isnan(yPosLocal_) && std::isnan(zPosLocal_));
-        }
-        void SetOriginalCornerId() override
-        {
-            originalCornerId_ = cornerId_;  // Set original corner id, useful when resolving corner id conflicts in markings
         }
         void SetCornerId(int cornerId) override
         {
@@ -1853,10 +1848,6 @@ namespace roadmanager
         {
             return !(std::isnan(xPosLocal_) && std::isnan(yPosLocal_) && std::isnan(zPosLocal_));
         }
-        void SetOriginalCornerId() override
-        {
-            originalCornerId_ = cornerId_;  // Set original corner id, useful when resolving corner id conflicts in markings
-        }
         void SetCornerId(int cornerId) override
         {
             cornerId_ = cornerId;
@@ -1918,6 +1909,10 @@ namespace roadmanager
         {
             corner_.push_back(outlineCorner);
         }
+        size_t GetNumberOfCorners() const
+        {
+            return corner_.size();
+        }
 
         AreaType GetAreaType()
         {
@@ -1932,9 +1927,6 @@ namespace roadmanager
             double h;
         };
 
-        bool      IsAllCornerIdUnique();
-        // Resolve provided outline corner reference ids to internal index. Make id Start from 0 to n-1, Store the user provided corner id in originalCornerId
-        void ResolveOutlineCornerReferenceIds();
         // get reference to the corners for given corner reference id.
         void GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const;
     };

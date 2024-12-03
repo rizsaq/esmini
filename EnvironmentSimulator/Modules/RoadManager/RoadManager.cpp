@@ -53,6 +53,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 
 #include "RoadManager.hpp"
 #include "odrSpiral.h"
@@ -2474,7 +2475,8 @@ OutlineCornerRoad::OutlineCornerRoad(id_t   roadId,
       cornerId_(cornerId),
       xPos_(x),
       yPos_(y),
-      zPos_(z)
+      zPos_(z),
+      originalCornerId_(cornerId)
 {
 }
 
@@ -2520,27 +2522,6 @@ void OutlineCornerRoad::GetPosLocal(double& x, double& y, double& z)
     // printf("corner road getposlocal x: %f, y: %f, z: %f\n", x, y, z);
 }
 
-bool Outline::IsAllCornerIdUnique()
-{
-    for (size_t i = 0; i < corner_.size(); i++)
-    {
-        if (i + 1 < corner_.size())
-        {
-            for (size_t j = i + 1; j < corner_.size(); j++)
-            {
-                if (corner_[i]->GetCornerId() != -1 && corner_[j]->GetCornerId() != -1) // Ignore -1 corner ids, no conre ids provided.
-                {
-                    if (corner_[i]->GetCornerId() == corner_[j]->GetCornerId())
-                    {
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-    return true;
-}
-
 void Outline::GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const
 {
     CornerIdManager cornerIdManager(corner_);
@@ -2556,17 +2537,6 @@ void Outline::GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::v
                 break;
             }
         }
-    }
-}
-
-void Outline::ResolveOutlineCornerReferenceIds()
-{
-    int currentId = 0;
-    for (auto& corner : corner_)
-    {
-        corner->SetOriginalCornerId();
-        corner->SetCornerId(currentId);
-        currentId++;
     }
 }
 
@@ -2612,7 +2582,8 @@ OutlineCornerLocal::OutlineCornerLocal(id_t   roadId,
       cornerId_(cornerId),
       xPos_(x),
       yPos_(y),
-      zPos_(z)
+      zPos_(z),
+      originalCornerId_(cornerId)
 {
 }
 
@@ -3983,11 +3954,10 @@ int RMObject::CalculateUniqueOutlines(Repeat& repeat)
                                                                          GetHOffset(),
                                                                          localCorner->GetOriginalCornerId()));
                     }
-
+                    corner->SetCornerId(outline.GetNumberOfCorners());
                     outline.AddCorner(corner);
                 }
                 k += 1;
-                outline.ResolveOutlineCornerReferenceIds();
                 outlineCopies.emplace_back(std::move(outline));
             }
             repeat.AddUniqueOutline(std::move(outlineCopies));
@@ -6129,7 +6099,6 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                     int id = 0;
                     for (pugi::xml_node outline_node = outlines_node.child("outline"); outline_node; outline_node = outline_node.next_sibling())
                     {
-                        // int               id = atoi(outline_node.attribute("id").value());
                         Outline::AreaType areaType =
                             !strcmp(outline_node.attribute("closed").value(), "true") ? Outline::AreaType::CLOSED : Outline::AreaType::OPEN;
                         Outline outline(id, Outline::FillType::FILL_TYPE_UNDEFINED, areaType);
@@ -6138,6 +6107,7 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                         bool foundLocalCorner = false;
                         bool foundRoadcorner  = false;
                         bool isValidOutline   = true;
+                        std::unordered_set<int> cornerIds;
                         for (pugi::xml_node corner_node = outline_node.first_child(); corner_node; corner_node = corner_node.next_sibling())
                         {
                             OutlineCorner* corner   = 0;
@@ -6179,24 +6149,29 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                                                                                  heading,
                                                                                  cornerId));
                             }
+                            // check if all corner ids are unique and same type of corners are present
                             if(foundLocalCorner && foundRoadcorner)
                             {
                                 LOG("skiping outline, Mixed corners found in outline id %d", outline.id_);
                                 isValidOutline = false;
                                 break;
                             }
+                            if( cornerId != -1 && cornerIds.find(cornerId) != cornerIds.end())
+                            {
+                                LOG("skiping outline, Corner id %d is not unique in outline id %d", cornerId, outline.id_);
+                                isValidOutline = false;
+                                break;
+                            }
+                            else
+                            {
+                                cornerIds.insert(cornerId);
+                            }
+                            corner->SetCornerId(outline.GetNumberOfCorners()); // set interanl corners reference ids as index
                             outline.AddCorner(corner);
                         }
-                        if (outline.IsAllCornerIdUnique() && isValidOutline) // check if all corner ids are unique and same type of corners are present
+                        if (isValidOutline)
                         {
-                            outline
-                                .ResolveOutlineCornerReferenceIds();  // resolve corner reference ids, sort corners reference ids always start from 0
                             obj->AddOutline(std::move(outline));
-                        }
-                        else
-                        {
-                            LOG("skiping outline, Outline corner ids is not unique or mixed corners found in outline id %d", outline.id_);
-                            break;
                         }
                     }
                 }
@@ -6223,6 +6198,7 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                             if (obj->GetNumberOfOutlines() == 0 && side_str.compare("left") != 0 && side_str.compare("right") != 0)
                             {
                                 LOG("skiping marking, Side attribute is mandatory in marking with no outline");
+                                isValidMarking = false;
                                 break;
                             }
                             Marking::RoadSide side  = side_str == "left" ? Marking::RoadSide::LEFT : Marking::RoadSide::RIGHT;  // deafult right side
