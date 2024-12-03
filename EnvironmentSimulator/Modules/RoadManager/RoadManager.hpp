@@ -1933,7 +1933,6 @@ namespace roadmanager
         };
 
         bool      IsAllCornerIdUnique();
-        bool      IsAllSameCorners();
         // Resolve provided outline corner reference ids to internal index. Make id Start from 0 to n-1, Store the user provided corner id in originalCornerId
         void ResolveOutlineCornerReferenceIds();
         // get reference to the corners for given corner reference id.

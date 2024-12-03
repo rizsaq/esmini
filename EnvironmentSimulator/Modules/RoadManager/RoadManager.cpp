@@ -2541,29 +2541,6 @@ bool Outline::IsAllCornerIdUnique()
     return true;
 }
 
-bool roadmanager::Outline::IsAllSameCorners()
-{
-    bool foundLocalCorner = false;
-    bool foundRoadcorner  = false;
-    for (const auto& corner : corner_)
-    {
-        if (corner->GetCornerType() == OutlineCorner::CornerType::LOCAL_CORNER)
-        {
-            foundLocalCorner = true;
-        }
-        else
-        {
-            foundRoadcorner = true;
-        }
-
-        if (foundLocalCorner && foundRoadcorner)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void Outline::GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const
 {
     CornerIdManager cornerIdManager(corner_);
@@ -6158,6 +6135,9 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                         Outline outline(id, Outline::FillType::FILL_TYPE_UNDEFINED, areaType);
                         id++;  // increment id for each outline, internal outline id
 
+                        bool foundLocalCorner = false;
+                        bool foundRoadcorner  = false;
+                        bool isValidOutline   = true;
                         for (pugi::xml_node corner_node = outline_node.first_child(); corner_node; corner_node = corner_node.next_sibling())
                         {
                             OutlineCorner* corner   = 0;
@@ -6165,6 +6145,7 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
 
                             if (!strcmp(corner_node.name(), "cornerRoad"))
                             {
+                                foundRoadcorner = true;
                                 double sc      = atof(corner_node.attribute("s").value());
                                 double tc      = atof(corner_node.attribute("t").value());
                                 double dz      = atof(corner_node.attribute("dz").value());
@@ -6178,6 +6159,7 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                             }
                             else if (!strcmp(corner_node.name(), "cornerLocal"))
                             {
+                                foundLocalCorner = true;
                                 double u       = atof(corner_node.attribute("u").value());
                                 double v       = atof(corner_node.attribute("v").value());
                                 double zLocal  = atof(corner_node.attribute("z").value());
@@ -6197,9 +6179,15 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                                                                                  heading,
                                                                                  cornerId));
                             }
+                            if(foundLocalCorner && foundRoadcorner)
+                            {
+                                LOG("skiping outline, Mixed corners found in outline id %d", outline.id_);
+                                isValidOutline = false;
+                                break;
+                            }
                             outline.AddCorner(corner);
                         }
-                        if (outline.IsAllCornerIdUnique() && outline.IsAllSameCorners())
+                        if (outline.IsAllCornerIdUnique() && isValidOutline) // check if all corner ids are unique and same type of corners are present
                         {
                             outline
                                 .ResolveOutlineCornerReferenceIds();  // resolve corner reference ids, sort corners reference ids always start from 0
