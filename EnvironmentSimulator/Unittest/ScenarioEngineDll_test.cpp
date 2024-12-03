@@ -3491,88 +3491,98 @@ TEST(TestOsiReporter, StationaryObjectTest)
     const char*       gt = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt, sv_size);
 
-    EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 17);
+    EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 16);
     const auto id0 = osi_gt.stationary_object(0).id().value();
     EXPECT_EQ(id0, 1);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().position().x(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().position().y(), 4.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().position().z(), 0.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().length(), 0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().width(), 0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().height(), 0.0);
 
     const auto id1 = osi_gt.stationary_object(1).id().value();
     EXPECT_EQ(id1, 2);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(1).base().position().x(), 10.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(1).base().position().y(), 8.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(1).base().position().z(), 0.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(1).base().dimension().length(), 4.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(1).base().dimension().width(), 4.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(1).base().dimension().height(), 2.0);
 
-    const auto id2 = osi_gt.stationary_object(2).id().value();
-    EXPECT_EQ(id2, 3);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().length(), 0.0);
+    const auto id3 = osi_gt.stationary_object(2).id().value();
+    EXPECT_EQ(id3, 3);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().position().x(), 20.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().position().y(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().position().z(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().length(), 0.0); // check this is correct TODo
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().width(), 0.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().height(), 0.0);
 
-    const auto id3 = osi_gt.stationary_object(3).id().value();
-    EXPECT_EQ(id3, 4);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().length(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().width(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().height(), 0.0);
+    const auto id4 = osi_gt.stationary_object(3).id().value();
+    EXPECT_EQ(id4, 4);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().position().x(), 25.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().position().y(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().position().z(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().length(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().width(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().height(), 3.0);
 
-    const auto id4 = osi_gt.stationary_object(4).id().value();
-    EXPECT_EQ(id4, 5);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().length(), 2.0);
+    const auto id5 = osi_gt.stationary_object(4).id().value();
+    EXPECT_EQ(id5, 5);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().position().x(), 30.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().position().y(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().position().z(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().length(), 0.0); // check this is correct TODo
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().width(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().height(), 3.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().height(), 6.0);
 
-    const auto id5 = osi_gt.stationary_object(5).id().value();
-    EXPECT_EQ(id5, 6);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().dimension().length(), 4.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().dimension().width(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().dimension().height(), 6.0);
+    const auto id6 = osi_gt.stationary_object(5).id().value();
+    EXPECT_EQ(id6, 6);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().position().x(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().position().y(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().position().z(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon_size(), 8.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(0).x(), 35.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(0).y(), 3.75);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(4).x(), 65.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(4).y(), 6.25);
 
-    const auto id6 = osi_gt.stationary_object(6).id().value();
-    EXPECT_EQ(id6, 7);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().position().x(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().position().y(), 0.0);
+    const auto id7 = osi_gt.stationary_object(6).id().value();
+    EXPECT_EQ(id7, 7);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().dimension().length(), 4.0);  // same object from repeat
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().dimension().width(), 2.5);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().dimension().height(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().position().x(), 75.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().position().y(), 5.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().position().z(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon_size(), 8.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(0).x(), 35.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(0).y(), 3.75);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(4).x(), 65.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(4).y(), 6.25);
 
-    const auto id7 = osi_gt.stationary_object(7).id().value();
-    EXPECT_EQ(id7, 8);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(7).base().dimension().length(), 4.0);  // same object from repeat
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(7).base().dimension().width(), 2.5);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(7).base().dimension().height(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(7).base().position().x(), 75.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(7).base().position().y(), 5.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(7).base().position().z(), 0.0);
+    const auto id8 = osi_gt.stationary_object(8).id().value();
+    EXPECT_EQ(id8, 7);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().length(), 4.0);  // same object from repeat
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().width(), 2.5);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().height(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().position().x(), 85.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().position().y(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().position().z(), 0.0);
 
-    const auto id8 = osi_gt.stationary_object(9).id().value();
-    EXPECT_EQ(id8, 8);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().dimension().length(), 4.0);  // same object from repeat
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().dimension().width(), 2.5);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().dimension().height(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().position().x(), 85.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().position().y(), 5.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().position().z(), 0.0);
+    const auto id9 = osi_gt.stationary_object(11).id().value();
+    EXPECT_EQ(id9, 7);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(11).base().dimension().length(), 4.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(11).base().dimension().width(), 2.5);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(11).base().dimension().height(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(11).base().position().x(), 100.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(11).base().position().y(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(11).base().position().z(), 0.0);
 
-    const auto id9 = osi_gt.stationary_object(9).id().value();
-    EXPECT_EQ(id9, 8);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().dimension().length(), 4.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().dimension().width(), 2.5);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().dimension().height(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().position().x(), 100.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().position().y(), 5.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().position().z(), 0.0);
-
-    const auto id10 = osi_gt.stationary_object(10).id().value();
-    EXPECT_EQ(id10, 8);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().dimension().length(), 4.0);  // same object from another repeat
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().dimension().width(), 2.5);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().dimension().height(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().position().x(), 205.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().position().y(), 5.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().position().z(), 0.0);
+    const auto id10 = osi_gt.stationary_object(13).id().value();
+    EXPECT_EQ(id10, 7);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().dimension().length(), 4.0);  // same object from another repeat
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().dimension().width(), 2.5);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().dimension().height(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().position().x(), 205.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().position().y(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().position().z(), 0.0);
 
     const char* args[] = {"--osc",
                           "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_objects.xosc",
@@ -3590,7 +3600,7 @@ TEST(TestOsiReporter, StationaryObjectTest)
     const char* gt1 = SE_GetOSIGroundTruth(&sv_size);
     osi_gt.ParseFromArray(gt1, sv_size);
 
-    EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 17);
+    EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 16);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().length(), 0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().width(), 0);
 
@@ -3606,56 +3616,53 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().width(), 0.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().height(), 0.0);
 #endif  // _USE_OSG
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().length(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().width(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().height(), 0.0);
 
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().length(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().length(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().width(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().height(), 3.0);
+
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().length(), 1.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().width(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().height(), 3.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().height(), 6.0);
 
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().dimension().length(), 4.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().dimension().width(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().dimension().height(), 6.0);
-
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().position().x(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().position().y(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().position().z(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().position().x(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().position().y(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().position().z(), 0.0);
 #ifdef _USE_OSG
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon_size(), 16.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon_size(), 16.0);
 #else
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon_size(), 8.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon_size(), 8.0);
 #endif  // _USE_OSG
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(0).x(), 35.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(0).y(), 3.75);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(0).x(), 35.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(0).y(), 3.75);
 #ifdef _USE_OSG
-    EXPECT_NEAR(osi_gt.stationary_object(6).base().base_polygon(4).x(), 52.142, 1e-3);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(4).y(), 3.75);
+    EXPECT_NEAR(osi_gt.stationary_object(5).base().base_polygon(4).x(), 52.142, 1e-3);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(4).y(), 3.75);
 #else
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(4).x(), 45.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(6).base().base_polygon(4).y(), 1.25);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(4).x(), 45.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(4).y(), 1.25);
 #endif  // _USE_OSG
 
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().dimension().length(), 4.0);  // same object from repeat
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().length(), 4.0);  // same object from repeat
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().width(), 2.5);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().dimension().height(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().position().x(), 85.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().position().y(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(8).base().position().z(), 0.0);
+
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().dimension().length(), 4.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().dimension().width(), 2.5);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().dimension().height(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().position().x(), 85.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().position().x(), 90.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().position().y(), 5.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(9).base().position().z(), 0.0);
 
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().dimension().length(), 4.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().dimension().width(), 2.5);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().dimension().height(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().position().x(), 100.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().position().y(), 5.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(12).base().position().z(), 0.0);
-
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().dimension().length(), 4.0);  // same object from another repeat
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().dimension().width(), 2.5);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().dimension().height(), 2.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().position().x(), 205.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().position().y(), 5.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(14).base().position().z(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(10).base().dimension().length(), 4.0);  // same object from another repeat
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(10).base().dimension().width(), 2.5);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(10).base().dimension().height(), 2.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(10).base().position().x(), 95.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(10).base().position().y(), 5.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(10).base().position().z(), 0.0);
 }
 
 TEST(TestOsiReporter, OutlineInSharpCurve)
