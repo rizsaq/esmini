@@ -3585,7 +3585,7 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().position().y(), 5.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(13).base().position().z(), 0.0);
 
-    //without viewer
+    //with viewer
     const char* args[] = {"--osc",
                           "../../../EnvironmentSimulator/Unittest/xosc/test_stationary_objects.xosc",
                           "--window",
@@ -3622,8 +3622,11 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().length(), 2.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().width(), 2.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(3).base().dimension().height(), 3.0);
-
+#ifdef _USE_OSG
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().length(), 1.0);
+#else
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().length(), 0.0);
+#endif  // _USE_OSG
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().width(), 2.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().height(), 6.0);
 

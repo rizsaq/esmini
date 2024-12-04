@@ -3596,23 +3596,19 @@ bool roadmanager::RMObject::CheckCornerReferenceId(int id)
     return false;
 }
 
-const double roadmanager::RMObject::GetCompoundOutlinesBB(double& length, double& width, double& height, double& z)
+void roadmanager::RMObject::GetCompoundOutlinesBB(double& length, double& width, double& height, double& z)
 
 {
-    if (std::isnan(lengthOfCompoundOutlines_))
-    {
-        // get all as point from outlines
-        std::vector<std::vector<Outline::point>> points = GetPosFromOutlines();
-        // Now all local points are availbel, find the bb from the corner
-        GetBoundingBoxFromCorners(points, length, width, height, z);
-        // printf("length, width, height, zoffset are %f, %f, %f, %f\n", lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
-    }
-    return lengthOfCompoundOutlines_;
+    // get all as point from outlines
+    std::vector<std::vector<Outline::point>> points = GetPosFromOutlines();
+    // Now all local points are availbel, find the bb from the corner
+    GetBoundingBoxFromCorners(points, length, width, height, z);
+    // printf("length, width, height, zoffset are %f, %f, %f, %f\n", lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
 }
 
 const double roadmanager::RMObject::GetCompoundOutlinesLength()
 {
-    if (std::isnan(widthOfCompoundOutlines_))
+    if (std::isnan(lengthOfCompoundOutlines_))
     {
         GetCompoundOutlinesBB(lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
     }
@@ -3623,7 +3619,7 @@ const double roadmanager::RMObject::GetCompoundOutlinesWidth()
 {
     if (std::isnan(widthOfCompoundOutlines_))
     {
-GetCompoundOutlinesBB(lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
+        GetCompoundOutlinesBB(lengthOfCompoundOutlines_, widthOfCompoundOutlines_, HeightOfCompoundOutlines_, ZoffsetOfCompoundOutlines_);
     }
     return widthOfCompoundOutlines_;
 }
