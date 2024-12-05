@@ -3719,7 +3719,7 @@ int roadmanager::RMObject::GetNumberOfUniqueOutlinesZeroDistance(Repeat& repeat)
 
 const std::vector<RepeatTransformationInfoDimension>& RMObject::GetRepeatTransformationInfoDimensions(Repeat& repeat)
 {
-    if (repeat.transformationInfoDimensions_.size() == 0)
+    if (repeat.transformationInfoDimensions_.empty())
     {  // repeat dimensions already availble
         CreateRepeatDimensions(repeat);
     }
@@ -3732,80 +3732,36 @@ int RMObject::CalculateUniqueOutlineZeroDistance(Repeat& rep)
     {
         return 0;
     }
-    // if (rep.GetDistance() < SMALL_NUMBER)
-    // {
-    //     Outline      outline(GetId(), Outline::FillType::FILL_TYPE_UNDEFINED, Outline::AreaType::CLOSED, Outline::OutlineType::ZERO_DISTANCE);
-    //     const double max_segment_length = 10.0;
-
-    //     // find smallest value of length and rlength, but between SMALL_NUMBER and max_segment_length
-    //     double segment_length = std::min({max_segment_length, GetLength().Get(), rep.GetLength()});
-    //     segment_length = segment_length < SMALL_NUMBER ? max_segment_length : segment_length;
-    //     unsigned int n_segments = static_cast<int>((MAX(1.0, rep.GetLength() / segment_length)));
-
-    //     // Create outline polygon, visiting corners counter clockwise
-    //     for (unsigned int i = 0; i < 2; i++)
-    //     {
-    //         for (unsigned int j = 0; j < n_segments + 1; j++)
-    //         {
-    //             double       factor  = static_cast<double>((i == 0 ? j : (n_segments - j))) / n_segments;
-    //             const double min_dim = 0.05;
-    //             double w_local = std::max(GetRepeatedObjWidthWithFactor(rep, factor), min_dim);
-    //             // printf("old length is %f\n", rep.GetS() + factor * rep.GetLength());
-    //             // printf("old length rep %f\n", factor * rep.GetLength());
-    //             // printf("new length is %f\n", rep.GetS() + GetRepeatedObjLengthWithFactor(rep, factor));
-    //             // printf("new length rep %f\n", GetRepeatedObjLengthWithFactor(rep, factor));
-    //             OutlineCorner* corner  = (OutlineCorner*)(new OutlineCornerRoad(
-    //                 GetRoadId(),
-    //                 rep.GetS() + factor * rep.GetLength(), // todo have to include start and end length, Use GetRepeatedObjLengthWithFactor
-    //                 rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
-    //                 rep.GetZOffsetWithFactor(factor),
-    //                 std::max(GetRepeatedObjHeightWithFactor(rep, factor), min_dim),
-    //                 GetS(),
-    //                 GetT(),
-    //                 GetHOffset(),
-    //                 j + (i * n_segments)));
-
-    //             outline.AddCorner(corner);
-    //         }
-    //     }
-    //     AddOutline(std::move(outline));
-    // }
     if (rep.GetDistance() < SMALL_NUMBER)
     {
-        const double max_segment_length = 10.0;
         Outline      outline(GetId(), Outline::FillType::FILL_TYPE_UNDEFINED, Outline::AreaType::CLOSED, Outline::OutlineType::ZERO_DISTANCE);
-        const double min_dim = 0.05;
+        const double max_segment_length = 10.0;
+
+        // find smallest value of length and rlength, but between SMALL_NUMBER and max_segment_length
         double segment_length = std::min({max_segment_length, GetLength().Get(), rep.GetLength()});
         segment_length = segment_length < SMALL_NUMBER ? max_segment_length : segment_length;
         unsigned int n_segments = static_cast<int>((MAX(1.0, rep.GetLength() / segment_length)));
-        double last_factor = 0.0;
+
+        // Create outline polygon, visiting corners counter clockwise
         for (unsigned int i = 0; i < 2; i++)
         {
-            double cur_s = 0.0;
-            while (cur_s <= rep.GetLength())
+            for (unsigned int j = 0; j < n_segments + 1; j++)
             {
-                double       factor  = cur_s / rep.GetLength();
-                if (i == 1) {
-                    factor = last_factor - factor;
-                }
-                // printf("factor is %f\n", factor);
+                double       factor  = static_cast<double>((i == 0 ? j : (n_segments - j))) / n_segments;
+                const double min_dim = 0.05;
                 double w_local = std::max(GetRepeatedObjWidthWithFactor(rep, factor), min_dim);
                 OutlineCorner* corner  = (OutlineCorner*)(new OutlineCornerRoad(
                     GetRoadId(),
-                    rep.GetS() + factor * rep.GetLength(), // todo have to include start and end length, Use GetRepeatedObjLengthWithFactor
+                    rep.GetS() + factor * rep.GetLength(),
                     rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
                     rep.GetZOffsetWithFactor(factor),
                     std::max(GetRepeatedObjHeightWithFactor(rep, factor), min_dim),
                     GetS(),
                     GetT(),
                     GetHOffset(),
-                    i));
+                    j + (i * n_segments)));
+
                 outline.AddCorner(corner);
-                cur_s += segment_length;
-                // printf("cur_s is %f\n", cur_s);
-                if (i == 0) {
-                    last_factor = factor;
-                }
             }
         }
         AddOutline(std::move(outline));
@@ -3873,32 +3829,6 @@ int RMObject::CreateRepeatDimensions(Repeat& rep)
     }
 
     return 1;
-}
-
-bool RMObject::IsMixedCorners()
-{
-    bool foundLocalCorner = false;
-    bool foundRoadcorner  = false;
-    for (auto& outlineOriginal : GetOutlines())
-    {
-        for (const auto& corner : outlineOriginal.corner_)
-        {
-            if (corner->GetCornerType() == OutlineCorner::CornerType::LOCAL_CORNER)
-            {
-                foundLocalCorner = true;
-            }
-            else
-            {
-                foundRoadcorner = true;
-            }
-
-            if (foundLocalCorner && foundRoadcorner)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 std::vector<std::vector<Outline>>& RMObject::GetUniqueOutlines(Repeat& repeat)
@@ -4092,7 +4022,7 @@ std::vector<std::vector<Outline::point>> RMObject::GetPosFromOutlines()
         for (const auto& corner : outlineOriginal.corner_)
         {
             Outline::point point;
-            corner->GetPos(point.x, point.y, point.z);
+            corner->GetPosLocal(point.x, point.y, point.z);
             point.h = corner->GetHeight();
             points.emplace_back(std::move(point));
         }
@@ -4124,27 +4054,6 @@ RMObject::Orientation RMObject::ParseOrientation(pugi::xml_node node, int road_i
         }
     }
     return orientation;
-}
-
-void RMObject::TransformToLocal(std::vector<std::vector<Outline::point>>& localPoints)
-{
-    // find the minimum x value
-    double minX = localPoints[0][0].x;
-    for (const auto& Points : localPoints)
-    {
-        for (const auto& Point : Points)
-        {
-            minX = std::min(minX, Point.x);  // Update minX with the smaller value
-        }
-    }
-    // reduce the x with minX to tranform into local
-    for (auto& Points : localPoints)
-    {
-        for (auto& Point : Points)
-        {
-            Point.x = Point.x - minX;
-        }
-    }
 }
 
 // Priority 1.repeat lenght, 2. outline length 3.Object length

@@ -3301,7 +3301,7 @@ TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
     EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(0).x(), 20.000, 1e-3);
     EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(0).y(), -14.5, 1e-3);
 
-    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(3).x(), 27, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(3).x(), 30, 1e-3);
     EXPECT_NEAR(osi_gt.stationary_object(0).base().base_polygon(3).y(), -10.5, 1e-3);
 
     EXPECT_NEAR(osi_gt.road_marking(0).base().base_polygon(0).x(), 20.050, 1e-3);
@@ -3309,9 +3309,9 @@ TEST(TestOsiReporter, StationaryObjectWithRepeatTest)
     EXPECT_NEAR(osi_gt.road_marking(0).base().base_polygon(3).x(), 20.050, 1e-3);
     EXPECT_NEAR(osi_gt.road_marking(0).base().base_polygon(3).y(), -10.500, 1e-3);
 
-    EXPECT_NEAR(osi_gt.road_marking(5).base().base_polygon(0).x(), 26.949, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(5).base().base_polygon(0).x(), 29.949, 1e-3);
     EXPECT_DOUBLE_EQ(osi_gt.road_marking(5).base().base_polygon(0).y(), -14.5);
-    EXPECT_NEAR(osi_gt.road_marking(5).base().base_polygon(3).x(), 26.949, 1e-3);
+    EXPECT_NEAR(osi_gt.road_marking(5).base().base_polygon(3).x(), 29.949, 1e-3);
     EXPECT_NEAR(osi_gt.road_marking(5).base().base_polygon(3).y(), -10.500, 1e-3);
 
     EXPECT_EQ(osi_gt.stationary_object(1).base().position().x(), 40);
@@ -3641,7 +3641,7 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(0).x(), 35.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(0).y(), 3.75);
 #ifdef _USE_OSG
-    EXPECT_NEAR(osi_gt.stationary_object(5).base().base_polygon(4).x(), 51.000, 1e-3);
+    EXPECT_NEAR(osi_gt.stationary_object(5).base().base_polygon(4).x(), 52.142, 1e-3);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(4).y(), 3.75);
 #else
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(5).base().base_polygon(4).x(), 45.0);

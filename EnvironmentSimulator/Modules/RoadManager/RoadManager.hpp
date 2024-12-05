@@ -2405,16 +2405,6 @@ namespace roadmanager
 
         RMObject::Orientation ParseOrientation(pugi::xml_node node, int id);
 
-        void SetObjectPos(double x, double y, double z, double h, double p, double r)
-        {
-            x_ = x;
-            y_ = y;
-            z_ = z;
-            h_ = h;
-            p_ = p;
-            r_ = r;
-        }
-
         std::string GetName() const
         {
             return name_;
@@ -2553,11 +2543,6 @@ namespace roadmanager
         {
             return road_id_;
         }
-        // Get the difference between object reference T and repeat reference T
-        double GetDifferenceOfRepeatAndObjectT(Repeat &repeat)
-        {
-            return repeat.GetTStart() - GetT();
-        }
         // Get or create transformation info for repeat which shall be used to create more models e.g non outline repeat object
         const std::vector<RepeatTransformationInfoDimension> &GetRepeatTransformationInfoDimensions(Repeat &repeat);
         // Get or create transformation info for repeat which shall be used to create more models e.g repeat with all outline as local corner
@@ -2583,8 +2568,6 @@ namespace roadmanager
         // check whether all corners in all outlines are local, In which each all outlines shall have same shape. Hence e.g. shallow copies is
         // possible
         bool IsAllCornersLocal();
-        // check whether all outlines not have same corner type
-        bool IsMixedCorners();
 
         // Get length from repeat given factor. Priority 1.repeat start - end length, 2.Object length, 3.Zero
         double GetRepeatedObjLengthWithFactor(Repeat &rep, double factor);
@@ -2594,7 +2577,6 @@ namespace roadmanager
         double GetRepeatedObjZOffsetWithFactor(Repeat &rep, double factor);
         // Get height from repeat given factor. Priority 1.repeat start - end height, 2.Object height, 3.Zero
         double GetRepeatedObjHeightWithFactor(Repeat &rep, double factor);
-        void   TransformToLocal(std::vector<std::vector<Outline::point>> &localPoints);
 
         // Get or create markings with filled points for the given object. This points shall be used to draw markings
         std::vector<Marking> GetMarkingsWithPoints();
