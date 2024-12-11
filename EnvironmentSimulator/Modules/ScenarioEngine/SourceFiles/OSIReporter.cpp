@@ -637,22 +637,6 @@ void AddOSIStationaryObjectAtPosition(roadmanager::RMObject *object)
     UpdateOSIStationaryObjectODRPosition(object->GetX(), object->GetY(), object->GetZ() + object->GetZOffset());
 }
 
-void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline, const RepeatTransformationInfoScale &repeatScale)
-{
-    // printf("from osi reporter\n");
-    double height = 0;
-    for (const auto &corner : outline.corner_)
-    {
-        double x, y, z;
-        static_cast<roadmanager::OutlineCornerLocal*>(corner)->GetPos(repeatScale, x, y, z);
-        osi3::Vector2d *vec = obj_osi_internal.sobj->mutable_base()->add_base_polygon();
-        vec->set_x(x);
-        vec->set_y(y);
-        height += (corner->GetHeight() * repeatScale.scale_z) / static_cast<double>(outline.corner_.size());
-    }
-    obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_height(height);
-}
-
 void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline)
 {
     // printf("from osi reporter\n");
@@ -669,82 +653,41 @@ void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline)
     obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_height(height);
 }
 
-int OSIReporter::UpdateOSIStationaryObjectODR(roadmanager::RMObject *object)
+int OSIReporter::CreateOSIStationaryObjectODR(roadmanager::RMObject *object)
 {
-    // printf("from reporter\n");
-    if (object->GetNumberOfRepeats() == 0)
+    if (object->GetNumberOfOutlines() > 0)
     {
-        if (object->GetNumberOfOutlines() > 0)
+        for (const auto &outline : object->GetOutlines())
         {
-            for (const auto &outline : object->GetOutlines())
-            {
-                AddOSIStationaryObject(object);  // each outline is separate object
-                AddPolygonToOSIStationaryObject(outline);
-            }
-        }
-        else
-        {
-            AddOSIStationaryObjectAtPosition(object);
-            UpdateOSIStationaryObjectDimensionAndOrientation(object);
+            AddOSIStationaryObject(object);  // each outline is separate object
+            AddPolygonToOSIStationaryObject(outline);
         }
     }
     else
     {
-        if (object->GetNumberOfOutlines() == 0)
+        AddOSIStationaryObjectAtPosition(object);
+        UpdateOSIStationaryObjectDimensionAndOrientation(object);
+    }
+    return 0;
+}
+
+int OSIReporter::UpdateOSIStationaryObjectODR(roadmanager::RMObject *object)
+{
+    bool isRepeat = false;
+    for (auto& repeat : object->GetRepeats())
+    {
+        std::vector<roadmanager::RMObject*> repeatedObjs = object->GetRepeatedObjects(repeat);
+        // for (const auto& repeatedObj : repeatedObjs);
+        for (size_t j = 0; j < repeatedObjs.size(); j++)
         {
-            for (auto &repeat : object->GetRepeats())
-            {
-                // if (IsEqualDouble(repeat.GetDistance(), 0.0) && repeat.transformationInfoDimensions_.size() == 0)  // repeat with zero distance and no model found in viewer
-                if (IsEqualDouble(repeat.GetDistance(), 0.0)) // repeat with zero distance, todo check above line is correct
-                {
-                    for (const auto &outline : object->GetUniqueOutlinesZeroDistance(repeat))
-                    {
-                        AddOSIStationaryObject(object); // check if this is correct, it not actually a outline
-                        AddPolygonToOSIStationaryObject(outline);
-                    }
-                }
-                else
-                {
-                    for (const auto &repeatDim : object->GetRepeatTransformationInfoDimensions(repeat))
-                    {
-                        AddOSIStationaryObject(object);
-                        UpdateOSIStationaryObjectODRPosition(repeatDim.x, repeatDim.y, repeatDim.z);
-                        UpdateOSIStationaryObjectDimensionAndOrientationFromRepeat(repeatDim);
-                    }
-                }
-            }
+            roadmanager::RMObject* repeatedObj = repeatedObjs[j];
+            CreateOSIStationaryObjectODR(repeatedObj);
+            isRepeat = true;
         }
-        else
-        {
-            if (object->IsAllCornersLocal())  // handle repeat with outline
-            {
-                for (auto &repeat : object->GetRepeats())
-                {
-                    for (const auto &repeatScale : object->GetRepeatLocalOutlineTransformationInfo(repeat))
-                    {
-                        for (const auto &outline : object->GetOutlines())
-                        {
-                            AddOSIStationaryObject(object);
-                            AddPolygonToOSIStationaryObject(outline, repeatScale);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for (auto &repeat : object->GetRepeats())
-                {
-                    for (const auto &outlineCopies : object->GetUniqueOutlines(repeat))
-                    {
-                        for (const auto &outline : outlineCopies)
-                        {
-                            AddOSIStationaryObject(object);
-                            AddPolygonToOSIStationaryObject(outline);
-                        }
-                    }
-                }
-            }
-        }
+    }
+    if (!isRepeat)
+    {
+        CreateOSIStationaryObjectODR(object);
     }
 
     for (auto& marking : object->GetMarkingsWithPoints())  // marking
