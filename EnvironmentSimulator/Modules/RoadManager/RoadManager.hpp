@@ -1905,7 +1905,7 @@ namespace roadmanager
         // Move constructor
         Outline(Outline &&other);
 
-        Outline(Outline &other);
+        // Outline(Outline &other);
 
         void AddCorner(OutlineCorner *outlineCorner)
         {
@@ -2025,7 +2025,7 @@ namespace roadmanager
         std::string restrictions_;
     };
 
-    class RMobject; // forward declaration
+    class RMObject; // forward declaration
 
     class Repeat
     {
@@ -2200,10 +2200,16 @@ namespace roadmanager
         // calculate and return segment height of repeat for given factor
         double GetHeightWithFactor(double factor) const;
 
+        typedef enum
+        {
+            ONE_OBJECT,
+            MULTIPLE_OBJECTS
+        } ZeroDistanceRepeatStrategy;
+
         // repeat distructor
         // ~Repeat();
-        std::vector<RMobject *> objects_;
-
+        std::vector<RMObject *>      objects_;
+        ZeroDistanceRepeatStrategy zeroDistanceRepeatStrategy_ = ZeroDistanceRepeatStrategy::ONE_OBJECT;
 
     };
 
@@ -2274,8 +2280,8 @@ namespace roadmanager
               side_(side)
         {
         }
-        const RoadSide GetSide() const;
-        const RoadMarkColor GetColor() const;
+        RoadSide GetSide() const;
+        RoadMarkColor GetColor() const;
         void GetPos(double s, double t, double dz, double &x, double &y, double &z);
         const std::vector<int>& GetCornerReferenceIds() const;
         void AddCornerReferenceIds(const int cornerReferenceIds);
@@ -2289,7 +2295,7 @@ namespace roadmanager
 
         ~Marking() = default;
 
-        std::vector<MarkingSegment> MarkingSegments_;
+        std::vector<MarkingSegment> MarkingSegments_; // todo can be private member variable
     private:
         RoadMarkColor color_ = RoadMarkColor::WHITE;
         double        width_, z_offset_, spaceLength_, lineLength_, startOffset_, stopOffset_;
@@ -2552,7 +2558,7 @@ namespace roadmanager
         // create and fill markings points in itself for the given object.
         void CreateMarkingsPoints(Marking &marking);
         // create and fill markings points in itself
-        void FillPointsFromObject(Marking &marking);
+        void GenerateMarkingsFromObject(Marking &marking);
         // Resolve markings for the given object. This shall be used to draw markings
         void ResolveMarkings();
 
@@ -2575,7 +2581,7 @@ namespace roadmanager
             modelFound_ = true;
         }
 
-        std::vector<RMObject*> GetRepeatedObjects(Repeat& repeat);
+        std::vector<RMObject*> GetRepeatedObjects(Repeat& repeat, roadmanager::Repeat::ZeroDistanceRepeatStrategy requesterStrategy);
         Outline GetZeroDistanceOutline(Repeat& repeat);
 
 
@@ -2604,6 +2610,7 @@ namespace roadmanager
         double HeightOfCompoundOutlines_ = std::nan("");
         double ZoffsetOfCompoundOutlines_ = std::nan("");
         bool modelFound_ = false;   // flag to check whether model is found or not
+        bool isMarkingGenerated_ = false;
 
         std::vector<Outline> outlines_;
         std::vector<Repeat>  repeats_;

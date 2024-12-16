@@ -593,7 +593,7 @@ namespace viewer
         // Get bounding box from the given 3D model node
         const osg::BoundingBox GetBoundingBox(osg::Node* node);
         // Update model from given original object and repeated object eg. Set position, scale, rotation
-        void UpdateModel(roadmanager::RMObject* repeatedObject, double scale_x, double scale_y, double scale_z, osg::ref_ptr<osg::PositionAttitudeTransform> clone);
+        void UpdateModel(roadmanager::RMObject* repeatedObject, double scale_x, double scale_y, double scale_z, osg::ref_ptr<osg::PositionAttitudeTransform> clone, bool isShallowCopy = false);
         // Add model to the given graphics group
         void AddModel(roadmanager::RMObject* object, osg::ref_ptr<osg::PositionAttitudeTransform> tx, osg::ref_ptr<osg::Group> objGroup);
         // validate and throw warning only if viewer default value used
@@ -611,7 +611,8 @@ namespace viewer
         // create one outline model
         void CreateOutlineModel(const roadmanager::Outline& outline,
                                 osg::Vec4                   color,
-                                osg::ref_ptr<osg::Geode>    geode);
+                                osg::ref_ptr<osg::Geode>    geode,
+                                bool isShallowCopy = false);
         // change viewer object as wireframe for better marking view
         void ChangeModelAsWireFrame(osg::ref_ptr<osg::Group> objGroup);
         // create marking for the object

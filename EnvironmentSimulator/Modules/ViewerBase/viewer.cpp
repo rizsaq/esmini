@@ -2816,7 +2816,8 @@ osg::Vec4 GetObjectColor(roadmanager::RMObject::ObjectType type)
 
 void Viewer::CreateOutlineModel(const roadmanager::Outline& outline,
                                 osg::Vec4                   color,
-                                osg::ref_ptr<osg::Geode>    geode)
+                                osg::ref_ptr<osg::Geode>    geode,
+                                bool                       isShallowCopy)
 {
     roadmanager::Outline::AreaType areaType = outline.areaType_;
     bool                           roof     = areaType == roadmanager::Outline::AreaType::CLOSED ? true : false;
@@ -2830,11 +2831,35 @@ void Viewer::CreateOutlineModel(const roadmanager::Outline& outline,
     {
         double                      x, y, z_bottom;
         roadmanager::OutlineCorner* corner = outline.corner_[i];
-        corner->GetPos(x, y, z_bottom);
-        double z_top = z_bottom + corner->GetHeight();
-        (*vertices_sides)[i * 2 + 0].set(static_cast<float>(x - origin_[0]), static_cast<float>(y - origin_[1]), static_cast<float>(z_top));
-        (*vertices_sides)[i * 2 + 1].set(static_cast<float>(x - origin_[0]), static_cast<float>(y - origin_[1]), static_cast<float>(z_bottom));
-        (*vertices_top)[i].set(static_cast<float>(x - origin_[0]), static_cast<float>(y - origin_[1]), static_cast<float>(z_top));
+
+        // corner->GetPosLocal(x, y, z_bottom);
+        // if (corner->GetCornerType() == roadmanager::OutlineCorner::CornerType::ROAD_CORNER)
+        // {
+        //     corner->GetPos(x, y, z_bottom);
+        // }
+        // else
+        // {
+        //     corner->GetPosLocal(x, y, z_bottom);
+        // }
+        double z_top = 0.0;
+        // printf("x: %f, y: %f, z_bottom: %f, z_top %f\n", x, y, z_bottom, z_top);
+
+        if(isShallowCopy)
+        {
+            corner->GetPosLocal(x, y, z_bottom);
+            z_top = z_bottom + corner->GetHeight();
+            (*vertices_sides)[i * 2 + 0].set(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z_top));
+            (*vertices_sides)[i * 2 + 1].set(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z_bottom));
+            (*vertices_top)[i].set(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z_top));
+        }
+        else
+        {
+            corner->GetPos(x, y, z_bottom);
+            z_top = z_bottom + corner->GetHeight();
+            (*vertices_sides)[i * 2 + 0].set(static_cast<float>(x - origin_[0]), static_cast<float>(y - origin_[1]), static_cast<float>(z_top));
+            (*vertices_sides)[i * 2 + 1].set(static_cast<float>(x - origin_[0]), static_cast<float>(y - origin_[1]), static_cast<float>(z_bottom));
+            (*vertices_top)[i].set(static_cast<float>(x - origin_[0]), static_cast<float>(y - origin_[1]), static_cast<float>(z_top));
+        }
     }
 
     // Close geometry
@@ -3086,13 +3111,23 @@ osg::ref_ptr<osg::ShapeDrawable> Viewer::GetBoxShapeModel(roadmanager::RMObject*
 }
 
 // create object from given object and repeat dimension
-void Viewer::UpdateModel(roadmanager::RMObject* object, double scale_x, double scale_y, double scale_z, osg::ref_ptr<osg::PositionAttitudeTransform> clone)
+void Viewer::UpdateModel(roadmanager::RMObject* object, double scale_x, double scale_y, double scale_z, osg::ref_ptr<osg::PositionAttitudeTransform> clone, bool isShallowCopy)
 {
     double   orientation  = object->GetOrientation() == roadmanager::Signal::Orientation::NEGATIVE ? M_PI : 0.0;
     clone->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
     clone->setScale(osg::Vec3d(scale_x, scale_y, scale_z));
+    // printf("object->GetX(): %f, object->GetY(): %f\n", object->GetX(), object->GetY());
+    // printf("origin_[0]: %f, origin_[1]: %f\n", origin_[0], origin_[1]);
+    // if(isShallowCopy)
+    // {
+    //     clone->setPosition(osg::Vec3d(object->GetX(), object->GetY(), object->GetZ() + object->GetZOffset()));
+    // }
+    // else
+    // {
+    //     clone->setPosition(osg::Vec3d(object->GetX() - origin_[0], object->GetY() - origin_[1], object->GetZ() + object->GetZOffset()));
+    // }
     clone->setPosition(osg::Vec3d(object->GetX() - origin_[0], object->GetY() - origin_[1], object->GetZ() + object->GetZOffset()));
-
+    // clone->setPosition(osg::Vec3d(object->GetX(), object->GetY(), object->GetZ() + object->GetZOffset()));
     // First align to road orientation
     osg::Quat quatRoad(osg::Quat(object->GetR() , osg::X_AXIS, object->GetP(), osg::Y_AXIS, object->GetH(), osg::Z_AXIS)); // tobe check r, p, h are combination of pos and object .
     // Specified local rotation
@@ -3130,11 +3165,11 @@ bool viewer::Viewer::CreateRepeats(roadmanager::RMObject*                       
     osg::Vec4          color = GetObjectColor(object->GetType());
     for (auto& repeat : object->GetRepeats())
     {
-        std::vector<roadmanager::RMObject*> repeatedObjs = object->GetRepeatedObjects(repeat);
-        // for (auto& repeatedObj : repeatedObjs);
-        for (size_t j = 0; j < repeatedObjs.size(); j++)
+        // std::vector<roadmanager::RMObject*> repeatedObjs = object->GetRepeatedObjects(repeat);
+        for (auto& repeatedObj : object->GetRepeatedObjects(repeat, roadmanager::Repeat::ZeroDistanceRepeatStrategy::MULTIPLE_OBJECTS))
+        // for (size_t j = 0; j < repeatedObjs.size(); j++)
         {
-            roadmanager::RMObject* repeatedObj = repeatedObjs[j];
+            // roadmanager::RMObject* repeatedObj = repeatedObjs[j];
             if (tx != nullptr)
             {
                 if(repeatedObj->GetNumberOfOutlines() > 0)
@@ -3165,8 +3200,8 @@ bool viewer::Viewer::CreateRepeats(roadmanager::RMObject*                       
                         outline.GetScale(scale_x, scale_y, scale_z);
                         osg::ref_ptr<osg::PositionAttitudeTransform> xform = new osg::PositionAttitudeTransform();
                         xform->addChild(OutlineGroup->getChild(i));
-                        UpdateModel(repeatedObj, scale_x, scale_y, scale_z, xform);
-                        AddModel(object, xform, objGroup);
+                        UpdateModel(repeatedObj, scale_x, scale_y, scale_z, xform, true);
+                        AddModel(repeatedObj, xform, objGroup);
                     }
                     else
                     {
@@ -3216,7 +3251,7 @@ int Viewer::CreateRoadSignsAndObjects(roadmanager::OpenDrive* od)
             {
                 for (auto& outline : object->GetOutlines())
                 {
-                    CreateOutlineModel(outline, color, geode);  // create outline model
+                    CreateOutlineModel(outline, color, geode, object->GetNumberOfRepeats() > 0);  // create outline model
                     OutlineGroup->addChild(geode);
                 }
                 LOG("Created outline geometry for object %s.\n if it looks strange, e.g.faces too dark or light color \n check that corners are defined counter-clockwise (as OpenGL default).", object->GetName().c_str());

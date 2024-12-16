@@ -196,31 +196,6 @@ struct Point3D : public Point2D
     double z = 0.0;
 };
 
-struct RepeatTransformationInfo
-{
-    double x;
-    double y;
-    double z;
-    double roll;
-    double pitch;
-    double heading;
-    double hOffset;
-};
-
-struct RepeatTransformationInfoDimension : public RepeatTransformationInfo
-{
-    double length;
-    double width;
-    double height;
-};
-
-struct RepeatTransformationInfoScale : public RepeatTransformationInfo
-{
-    double scale_x = 1;
-    double scale_y = 1;
-    double scale_z = 1;
-};
-
 class SE_Vector
 {
 public:
@@ -359,6 +334,11 @@ bool FileExists(const char* fileName);
         Concatenate a directory path and a file path
 */
 std::string CombineDirectoryPathAndFilepath(std::string dir_path, std::string file_path);
+
+/**
+        Retrun zero if value is NaN otherwise return value
+ */
+double      GetValueOrZero(double value);
 
 /**
         Retrieve the angle of a vector
