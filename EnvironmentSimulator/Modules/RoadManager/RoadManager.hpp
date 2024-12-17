@@ -1711,7 +1711,6 @@ namespace roadmanager
         virtual int        GetCornerId()                                = 0;
         virtual int        GetOriginalCornerId()                        = 0;
         virtual CornerType GetCornerType()                              = 0;
-        virtual double     GetZ()                                       = 0;
         virtual bool       IsPosCalculated()                               = 0;
         virtual bool       IsPosLocalCalculated()                          = 0;
         virtual void       SetCornerId(int cornerId)                    = 0;
@@ -1753,18 +1752,6 @@ namespace roadmanager
         CornerType GetCornerType() override
         {
             return type_;
-        }
-        double GetS()
-        {
-            return s_;
-        }
-        double GetT()
-        {
-            return t_;
-        }
-        double GetZ() override
-        {
-            return dz_;
         }
         bool IsPosCalculated() override
         {
@@ -1824,18 +1811,6 @@ namespace roadmanager
         CornerType GetCornerType() override
         {
             return type_;
-        }
-        double GetU()
-        {
-            return u_;
-        }
-        double GetV()
-        {
-            return v_;
-        }
-        double GetZ() override
-        {
-            return zLocal_;
         }
         bool IsPosCalculated() override
         {
@@ -2030,24 +2005,6 @@ namespace roadmanager
     class Repeat
     {
     public:
-        double s_;
-        double length_;
-        double distance_;
-        double tStart_;
-        double tEnd_;
-        double heightStart_;
-        double heightEnd_;
-        double zOffsetStart_;
-        double zOffsetEnd_;
-        double widthStart_;
-        double widthEnd_;
-        double lengthStart_;
-        double lengthEnd_;
-        double radiusStart_;
-        double radiusEnd_;
-        double roadLength_;
-        double x_, y_, z_;
-
         Repeat(double s,
                double length,
                double distance,
@@ -2190,11 +2147,26 @@ namespace roadmanager
             MULTIPLE_OBJECTS
         } ZeroDistanceRepeatStrategy;
 
-        // repeat distructor
-        // ~Repeat();
+        ~Repeat();
         std::vector<RMObject *>      objects_;
         ZeroDistanceRepeatStrategy zeroDistanceRepeatStrategy_ = ZeroDistanceRepeatStrategy::ONE_OBJECT;
-
+        private:
+            double s_;
+            double length_;
+            double distance_;
+            double tStart_;
+            double tEnd_;
+            double heightStart_;
+            double heightEnd_;
+            double zOffsetStart_;
+            double zOffsetEnd_;
+            double widthStart_;
+            double widthEnd_;
+            double lengthStart_;
+            double lengthEnd_;
+            double radiusStart_;
+            double radiusEnd_;
+            double roadLength_;
     };
 
     class MarkingSegment
@@ -2293,7 +2265,7 @@ namespace roadmanager
     public:
         MarkingGenerator(Marking& marking) : marking_(marking) {}
         // set start and end points for the given corner type along calculating the alpha, beta other parameters
-        void setStartAndEndPoints(Point2D& start, Point2D& end);
+        void CalculateDetailsBasedOnAngle(Point2D& start, Point2D& end);
         // Generate marking segment for the given outlines. e.g for non repeat outline object and store it in marking object
         void GenerateMarkingSegmentFromOutlines(const std::vector<Outline> &outlines);
         // generate marking segment in markingSegment for the given start and end points
@@ -2521,11 +2493,9 @@ namespace roadmanager
 
         // Get all points for all the outlines in road coordinate. Each vector for one outline
         std::vector<std::vector<Outline::point>> GetPosFromOutlines();
-
         // check whether all corners in all outlines are local, In which each all outlines shall have same shape. Hence e.g. shallow copies is
         // possible
         bool IsAllCornersLocal();
-
         // Get length from repeat given factor. Priority 1.repeat start - end length, 2.Object length, 3.nan
         double GetRepeatedObjLengthWithFactor(const Repeat& rep, double factor);
         // Get width from repeat given factor. Priority 1.repeat start - end width, 2.Object width, 3.nan
@@ -2534,7 +2504,6 @@ namespace roadmanager
         double GetRepeatedObjZOffsetWithFactor(const Repeat &rep, double factor);
         // Get height from repeat given factor. Priority 1.repeat start - end height, 2.Object height, 3.nan
         double GetRepeatedObjHeightWithFactor(const Repeat &rep, double factor);
-
         // Get or create markings with filled points for the given object. This points shall be used to draw markings
         std::vector<Marking> GetMarkingsWithPoints();
         // create and fill markings points in itself for the given object.
@@ -2543,11 +2512,9 @@ namespace roadmanager
         void GenerateMarkingsFromObject(Marking &marking);
         // Resolve markings for the given object. This shall be used to draw markings
         void ResolveMarkings();
-
         void ResolveTwoLinesWithWidth(std::vector<std::vector<Point3D>>& line1, std::vector<std::vector<Point3D>>& line2);
         // check weather given id is present in corner reference ids in atleast one outline
         bool CheckCornerReferenceId(int id);
-
         // get the bb of outlines(compound bb of all corners) for the given object
         void GetCompoundOutlinesBB(double& length, double& width, double& height, double& z);
         // get the Length of outlines(compound width of all corners) for the given object
@@ -2565,7 +2532,6 @@ namespace roadmanager
 
         std::vector<RMObject*> GetRepeatedObjects(Repeat& repeat, roadmanager::Repeat::ZeroDistanceRepeatStrategy requesterStrategy);
         Outline GetZeroDistanceOutline(Repeat& repeat);
-
 
     private:
         //private functions

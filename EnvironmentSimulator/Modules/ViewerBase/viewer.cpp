@@ -50,7 +50,6 @@
 #define ORTHO_FOV                          1.0
 #define DEFAULT_LENGTH_FOR_CONTINUOUS_OBJS 10.0
 
-constexpr double DEFAULT_MIN_DIM = 0.01;
 
 float color_green[3]      = {0.2f, 0.6f, 0.3f};
 float color_gray[3]       = {0.7f, 0.7f, 0.7f};
@@ -2831,19 +2830,7 @@ void Viewer::CreateOutlineModel(const roadmanager::Outline& outline,
     {
         double                      x, y, z_bottom;
         roadmanager::OutlineCorner* corner = outline.corner_[i];
-
-        // corner->GetPosLocal(x, y, z_bottom);
-        // if (corner->GetCornerType() == roadmanager::OutlineCorner::CornerType::ROAD_CORNER)
-        // {
-        //     corner->GetPos(x, y, z_bottom);
-        // }
-        // else
-        // {
-        //     corner->GetPosLocal(x, y, z_bottom);
-        // }
         double z_top = 0.0;
-        // printf("x: %f, y: %f, z_bottom: %f, z_top %f\n", x, y, z_bottom, z_top);
-
         if(isShallowCopy)
         {
             corner->GetPosLocal(x, y, z_bottom);
@@ -3116,18 +3103,7 @@ void Viewer::UpdateModel(roadmanager::RMObject* object, double scale_x, double s
     double   orientation  = object->GetOrientation() == roadmanager::Signal::Orientation::NEGATIVE ? M_PI : 0.0;
     clone->getOrCreateStateSet()->setMode(GL_NORMALIZE, osg::StateAttribute::ON);
     clone->setScale(osg::Vec3d(scale_x, scale_y, scale_z));
-    // printf("object->GetX(): %f, object->GetY(): %f\n", object->GetX(), object->GetY());
-    // printf("origin_[0]: %f, origin_[1]: %f\n", origin_[0], origin_[1]);
-    // if(isShallowCopy)
-    // {
-    //     clone->setPosition(osg::Vec3d(object->GetX(), object->GetY(), object->GetZ() + object->GetZOffset()));
-    // }
-    // else
-    // {
-    //     clone->setPosition(osg::Vec3d(object->GetX() - origin_[0], object->GetY() - origin_[1], object->GetZ() + object->GetZOffset()));
-    // }
     clone->setPosition(osg::Vec3d(object->GetX() - origin_[0], object->GetY() - origin_[1], object->GetZ() + object->GetZOffset()));
-    // clone->setPosition(osg::Vec3d(object->GetX(), object->GetY(), object->GetZ() + object->GetZOffset()));
     // First align to road orientation
     osg::Quat quatRoad(osg::Quat(object->GetR() , osg::X_AXIS, object->GetP(), osg::Y_AXIS, object->GetH(), osg::Z_AXIS)); // tobe check r, p, h are combination of pos and object .
     // Specified local rotation
@@ -3165,11 +3141,8 @@ bool viewer::Viewer::CreateRepeats(roadmanager::RMObject*                       
     osg::Vec4          color = GetObjectColor(object->GetType());
     for (auto& repeat : object->GetRepeats())
     {
-        // std::vector<roadmanager::RMObject*> repeatedObjs = object->GetRepeatedObjects(repeat);
         for (auto& repeatedObj : object->GetRepeatedObjects(repeat, roadmanager::Repeat::ZeroDistanceRepeatStrategy::MULTIPLE_OBJECTS))
-        // for (size_t j = 0; j < repeatedObjs.size(); j++)
         {
-            // roadmanager::RMObject* repeatedObj = repeatedObjs[j];
             if (tx != nullptr)
             {
                 if(repeatedObj->GetNumberOfOutlines() > 0)

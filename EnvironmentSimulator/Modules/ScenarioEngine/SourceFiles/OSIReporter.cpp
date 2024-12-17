@@ -586,12 +586,21 @@ int UpdateOSIStationaryObjectODRType(roadmanager::RMObject::ObjectType type, std
     return 0;
 }
 
+double GetReporterDimension(const double val)
+{
+    if(!std::isnan(val))
+    {
+        return val;
+    }
+    return DEFAULT_MIN_DIM;
+}
+
 void UpdateOSIStationaryObjectDimensionAndOrientation(roadmanager::RMObject *object)
 {
     // Set OSI Stationary Object Bounding box
-    obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_height(object->GetHeight().Get());
-    obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_width(object->GetWidth().Get());
-    obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_length(object->GetLength().Get());
+    obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_height(GetReporterDimension(object->GetHeight().GetRawValue()));
+    obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_width(GetReporterDimension(object->GetWidth().GetRawValue()));
+    obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_length(GetReporterDimension(object->GetLength().GetRawValue()));
     // only bounding box
 
     // Set OSI Stationary Object Orientation

@@ -334,7 +334,7 @@ TEST(GetOSIRoadLaneTest, lane_no_obj)
     SE_UpdateOSIGroundTruth();
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 132393);  // initial OSI size, including static content
+    EXPECT_EQ(fileStatus.st_size, 146685);  // initial OSI size, including static content
 
     int road_lane_size;
 
@@ -347,13 +347,13 @@ TEST(GetOSIRoadLaneTest, lane_no_obj)
     SE_UpdateOSIGroundTruth();
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 133686);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 147978);  // slight growth due to only dynamic updates
 
     SE_StepDT(0.001f);  // Step for write another frame to osi file
     SE_UpdateOSIGroundTruth();
     SE_FlushOSIFile();
     ASSERT_EQ(stat("gt.osi", &fileStatus), 0);
-    EXPECT_EQ(fileStatus.st_size, 134980);  // slight growth due to only dynamic updates
+    EXPECT_EQ(fileStatus.st_size, 149272);  // slight growth due to only dynamic updates
 
     SE_DisableOSIFile();
     SE_Close();
@@ -3498,9 +3498,9 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().position().x(), 5.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().position().y(), 4.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().position().z(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().length(), 0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().width(), 0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().height(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().length(), DEFAULT_MIN_DIM);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().width(), DEFAULT_MIN_DIM);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().height(), DEFAULT_MIN_DIM);
 
     const auto id1 = osi_gt.stationary_object(1).id().value();
     EXPECT_EQ(id1, 2);
@@ -3516,9 +3516,9 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().position().x(), 20.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().position().y(), 5.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().position().z(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().length(), 0.0); // check this is correct TODo
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().width(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().height(), 0.0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().length(), DEFAULT_MIN_DIM);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().width(), DEFAULT_MIN_DIM);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(2).base().dimension().height(), DEFAULT_MIN_DIM);
 
     const auto id4 = osi_gt.stationary_object(3).id().value();
     EXPECT_EQ(id4, 4);
@@ -3534,7 +3534,7 @@ TEST(TestOsiReporter, StationaryObjectTest)
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().position().x(), 30.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().position().y(), 5.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().position().z(), 0.0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().length(), 0.0); // check this is correct TODo
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().length(), DEFAULT_MIN_DIM);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().width(), 2.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(4).base().dimension().height(), 6.0);
 
@@ -3603,8 +3603,8 @@ TEST(TestOsiReporter, StationaryObjectTest)
     osi_gt.ParseFromArray(gt1, sv_size);
 
     EXPECT_EQ(osi_gt.mutable_stationary_object()->size(), 16);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().length(), 0);
-    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().width(), 0);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().length(), DEFAULT_MIN_DIM);
+    EXPECT_DOUBLE_EQ(osi_gt.stationary_object(0).base().dimension().width(), DEFAULT_MIN_DIM);
 
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(1).base().dimension().length(), 4.0);
     EXPECT_DOUBLE_EQ(osi_gt.stationary_object(1).base().dimension().width(), 4.0);
