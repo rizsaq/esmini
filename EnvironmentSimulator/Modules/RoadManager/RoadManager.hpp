@@ -1944,7 +1944,7 @@ namespace roadmanager
         };
 
         // get reference to the corners for given corner reference id.
-        void GetCornersByIdx(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const;
+        void GetCornersByIds(const std::vector<int>& cornerReferenceIds, std::vector<OutlineCorner*>& cornerReferences) const;
     };
 
     class CornerIdManager
@@ -2161,22 +2161,6 @@ namespace roadmanager
         {
             return radiusEnd_;
         }
-        // return length start if set else return zero
-        double GetLengthStartResolved() const;
-        // return length end if set else return zero
-        double GetLengthEndResolved() const;
-        // return width start if set else return zero
-        double GetWidthStartResolved() const;
-        // return width end if set else return zero
-        double GetWidthEndResolved() const;
-        // return z offset start if set else return zero
-        double GetZOffsetStartResolved() const;
-        // return z offset end if set else return zero
-        double GetZOffsetEndResolved() const;
-        // return Height start if set else return zero
-        double GetHeightStartResolved() const;
-        // return Height end if set else return zero
-        double GetHeightEndResolved() const;
         // calculate and return total length of repeat
         double GetTotalLength() const;
         // calculate and return heading offset of repeat
@@ -2309,15 +2293,13 @@ namespace roadmanager
     public:
         MarkingGenerator(Marking& marking) : marking_(marking) {}
         // set start and end points for the given corner type along calculating the alpha, beta other parameters
-        void setStartAndEndPoints(Point2D& start, Point2D& end, OutlineCorner::CornerType cornerType);
+        void setStartAndEndPoints(Point2D& start, Point2D& end);
         // Generate marking segment for the given outlines. e.g for non repeat outline object and store it in marking object
         void GenerateMarkingSegmentFromOutlines(const std::vector<Outline> &outlines);
         // generate marking segment in markingSegment for the given start and end points
-        void GenerateMarkingSegment(Point2D start, Point2D end, OutlineCorner::CornerType cornerType, MarkingSegment& markingSegment);
+        void GenerateMarkingSegment(Point2D start, Point2D end, MarkingSegment& markingSegment);
         // get resolved points in 3D
         Point3D GetPoint3D(const Point2D& point);
-        // get points in local coordinates
-        void transformPoint(Point2D& point, OutlineCorner::CornerType cornerType);
         // get points in the center aligned to the start and end points
         void getCenterAlignedPoint(Point2D& point, double alpha, Marking::RoadSide side);
         ~MarkingGenerator() = default;
