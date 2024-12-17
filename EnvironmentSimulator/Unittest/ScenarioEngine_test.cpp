@@ -648,14 +648,14 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     RMObject* obj = road->GetRoadObject(0);
     // first object
     Outline& outline = obj->GetOutline(0);
-    ASSERT_EQ(outline.corner_[0]->GetCornerId(), 0);
-    ASSERT_EQ(outline.corner_[0]->GetOriginalCornerId(), 10);
-    ASSERT_EQ(outline.corner_[1]->GetCornerId(), 1);
-    ASSERT_EQ(outline.corner_[1]->GetOriginalCornerId(), 30);
-    ASSERT_EQ(outline.corner_[2]->GetCornerId(), 2);
-    ASSERT_EQ(outline.corner_[2]->GetOriginalCornerId(), 12);
-    ASSERT_EQ(outline.corner_[3]->GetCornerId(), 3);
-    ASSERT_EQ(outline.corner_[3]->GetOriginalCornerId(), 1);
+    ASSERT_EQ(outline.GetCornerByIndex(0)->GetCornerId(), 0);
+    ASSERT_EQ(outline.GetCornerByIndex(0)->GetOriginalCornerId(), 10);
+    ASSERT_EQ(outline.GetCornerByIndex(1)->GetCornerId(), 1);
+    ASSERT_EQ(outline.GetCornerByIndex(1)->GetOriginalCornerId(), 30);
+    ASSERT_EQ(outline.GetCornerByIndex(2)->GetCornerId(), 2);
+    ASSERT_EQ(outline.GetCornerByIndex(2)->GetOriginalCornerId(), 12);
+    ASSERT_EQ(outline.GetCornerByIndex(3)->GetCornerId(), 3);
+    ASSERT_EQ(outline.GetCornerByIndex(3)->GetOriginalCornerId(), 1);
 
     Marking& marking = obj->GetMarkings()[0];
     ASSERT_EQ(marking.GetCornerReferenceIdsSize(), 2);
@@ -675,14 +675,14 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     // second object
     RMObject* obj1 = road->GetRoadObject(1);
     Outline& outline1 = obj1->GetOutline(0);
-    ASSERT_EQ(outline1.corner_[0]->GetCornerId(), 0);
-    ASSERT_EQ(outline1.corner_[0]->GetOriginalCornerId(), 0);
-    ASSERT_EQ(outline1.corner_[1]->GetCornerId(), 1);
-    ASSERT_EQ(outline1.corner_[1]->GetOriginalCornerId(), 1);
-    ASSERT_EQ(outline1.corner_[2]->GetCornerId(), 2);
-    ASSERT_EQ(outline1.corner_[2]->GetOriginalCornerId(), 2);
-    ASSERT_EQ(outline1.corner_[3]->GetCornerId(), 3);
-    ASSERT_EQ(outline1.corner_[3]->GetOriginalCornerId(), 3);
+    ASSERT_EQ(outline1.GetCornerByIndex(0)->GetCornerId(), 0);
+    ASSERT_EQ(outline1.GetCornerByIndex(0)->GetOriginalCornerId(), 0);
+    ASSERT_EQ(outline1.GetCornerByIndex(1)->GetCornerId(), 1);
+    ASSERT_EQ(outline1.GetCornerByIndex(1)->GetOriginalCornerId(), 1);
+    ASSERT_EQ(outline1.GetCornerByIndex(2)->GetCornerId(), 2);
+    ASSERT_EQ(outline1.GetCornerByIndex(2)->GetOriginalCornerId(), 2);
+    ASSERT_EQ(outline1.GetCornerByIndex(3)->GetCornerId(), 3);
+    ASSERT_EQ(outline1.GetCornerByIndex(3)->GetOriginalCornerId(), 3);
 
     Marking& marking1 = obj1->GetMarkings()[0];
     ASSERT_EQ(marking1.GetCornerReferenceIdsSize(), 2);
@@ -721,24 +721,24 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     ASSERT_EQ(obj4->GetMarkings().size(), 1);
 
     Outline& outline00 = obj4->GetOutline(0);
-    ASSERT_EQ(outline00.corner_[0]->GetCornerId(), 0);
-    ASSERT_EQ(outline00.corner_[0]->GetOriginalCornerId(), 0);
-    ASSERT_EQ(outline00.corner_[1]->GetCornerId(), 1);
-    ASSERT_EQ(outline00.corner_[1]->GetOriginalCornerId(), 1);
-    ASSERT_EQ(outline00.corner_[2]->GetCornerId(), 2);
-    ASSERT_EQ(outline00.corner_[2]->GetOriginalCornerId(), 2);
-    ASSERT_EQ(outline00.corner_[3]->GetCornerId(), 3);
-    ASSERT_EQ(outline00.corner_[3]->GetOriginalCornerId(), 3);
+    ASSERT_EQ(outline00.GetCornerByIndex(0)->GetCornerId(), 0);
+    ASSERT_EQ(outline00.GetCornerByIndex(0)->GetOriginalCornerId(), 0);
+    ASSERT_EQ(outline00.GetCornerByIndex(1)->GetCornerId(), 1);
+    ASSERT_EQ(outline00.GetCornerByIndex(1)->GetOriginalCornerId(), 1);
+    ASSERT_EQ(outline00.GetCornerByIndex(2)->GetCornerId(), 2);
+    ASSERT_EQ(outline00.GetCornerByIndex(2)->GetOriginalCornerId(), 2);
+    ASSERT_EQ(outline00.GetCornerByIndex(3)->GetCornerId(), 3);
+    ASSERT_EQ(outline00.GetCornerByIndex(3)->GetOriginalCornerId(), 3);
 
     Outline& outline01 = obj4->GetOutline(1);
-    ASSERT_EQ(outline01.corner_[0]->GetCornerId(), 0);
-    ASSERT_EQ(outline01.corner_[0]->GetOriginalCornerId(), 0);
-    ASSERT_EQ(outline01.corner_[1]->GetCornerId(), 1);
-    ASSERT_EQ(outline01.corner_[1]->GetOriginalCornerId(), 1);
-    ASSERT_EQ(outline01.corner_[2]->GetCornerId(), 2);
-    ASSERT_EQ(outline01.corner_[2]->GetOriginalCornerId(), 2);
-    ASSERT_EQ(outline01.corner_[3]->GetCornerId(), 3);
-    ASSERT_EQ(outline01.corner_[3]->GetOriginalCornerId(), 3);
+    ASSERT_EQ(outline01.GetCornerByIndex(0)->GetCornerId(), 0);
+    ASSERT_EQ(outline01.GetCornerByIndex(0)->GetOriginalCornerId(), 0);
+    ASSERT_EQ(outline01.GetCornerByIndex(1)->GetCornerId(), 1);
+    ASSERT_EQ(outline01.GetCornerByIndex(1)->GetOriginalCornerId(), 1);
+    ASSERT_EQ(outline01.GetCornerByIndex(2)->GetCornerId(), 2);
+    ASSERT_EQ(outline01.GetCornerByIndex(2)->GetOriginalCornerId(), 2);
+    ASSERT_EQ(outline01.GetCornerByIndex(3)->GetCornerId(), 3);
+    ASSERT_EQ(outline01.GetCornerByIndex(3)->GetOriginalCornerId(), 3);
 
     Marking& marking01 = obj4->GetMarkings()[0];
     ASSERT_EQ(marking01.GetCornerReferenceIds().size(), 2);
@@ -767,24 +767,24 @@ TEST(CornerReferenceTest, checkMarkingAndOutlineDetails)
     ASSERT_EQ(obj5->GetMarkings().size(), 1);
 
     Outline& outline10 = obj5->GetOutline(0);
-    ASSERT_EQ(outline10.corner_[0]->GetCornerId(), 0);
-    ASSERT_EQ(outline10.corner_[0]->GetOriginalCornerId(), 0);
-    ASSERT_EQ(outline10.corner_[1]->GetCornerId(), 1);
-    ASSERT_EQ(outline10.corner_[1]->GetOriginalCornerId(), 1);
-    ASSERT_EQ(outline10.corner_[2]->GetCornerId(), 2);
-    ASSERT_EQ(outline10.corner_[2]->GetOriginalCornerId(), 2);
-    ASSERT_EQ(outline10.corner_[3]->GetCornerId(), 3);
-    ASSERT_EQ(outline10.corner_[3]->GetOriginalCornerId(), 3);
+    ASSERT_EQ(outline10.GetCornerByIndex(0)->GetCornerId(), 0);
+    ASSERT_EQ(outline10.GetCornerByIndex(0)->GetOriginalCornerId(), 0);
+    ASSERT_EQ(outline10.GetCornerByIndex(1)->GetCornerId(), 1);
+    ASSERT_EQ(outline10.GetCornerByIndex(1)->GetOriginalCornerId(), 1);
+    ASSERT_EQ(outline10.GetCornerByIndex(2)->GetCornerId(), 2);
+    ASSERT_EQ(outline10.GetCornerByIndex(2)->GetOriginalCornerId(), 2);
+    ASSERT_EQ(outline10.GetCornerByIndex(3)->GetCornerId(), 3);
+    ASSERT_EQ(outline10.GetCornerByIndex(3)->GetOriginalCornerId(), 3);
 
     Outline& outline11 = obj5->GetOutline(1);
-    ASSERT_EQ(outline11.corner_[0]->GetCornerId(), 0);
-    ASSERT_EQ(outline11.corner_[0]->GetOriginalCornerId(), 4);
-    ASSERT_EQ(outline11.corner_[1]->GetCornerId(), 1);
-    ASSERT_EQ(outline11.corner_[1]->GetOriginalCornerId(), 5);
-    ASSERT_EQ(outline11.corner_[2]->GetCornerId(), 2);
-    ASSERT_EQ(outline11.corner_[2]->GetOriginalCornerId(), 6);
-    ASSERT_EQ(outline11.corner_[3]->GetCornerId(), 3);
-    ASSERT_EQ(outline11.corner_[3]->GetOriginalCornerId(), 7);
+    ASSERT_EQ(outline11.GetCornerByIndex(0)->GetCornerId(), 0);
+    ASSERT_EQ(outline11.GetCornerByIndex(0)->GetOriginalCornerId(), 4);
+    ASSERT_EQ(outline11.GetCornerByIndex(1)->GetCornerId(), 1);
+    ASSERT_EQ(outline11.GetCornerByIndex(1)->GetOriginalCornerId(), 5);
+    ASSERT_EQ(outline11.GetCornerByIndex(2)->GetCornerId(), 2);
+    ASSERT_EQ(outline11.GetCornerByIndex(2)->GetOriginalCornerId(), 6);
+    ASSERT_EQ(outline11.GetCornerByIndex(3)->GetCornerId(), 3);
+    ASSERT_EQ(outline11.GetCornerByIndex(3)->GetOriginalCornerId(), 7);
 
     Marking& marking11 = obj5->GetMarkings()[0];
     ASSERT_EQ(marking11.GetCornerReferenceIdsSize(), 2);

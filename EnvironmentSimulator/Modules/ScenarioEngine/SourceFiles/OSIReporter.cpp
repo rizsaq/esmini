@@ -639,7 +639,7 @@ void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline)
 {
     // printf("from osi reporter\n");
     double height = 0;
-    for (const auto &corner : outline.corner_)
+    for (const auto &corner : outline.GetCorners())
     {
         double x, y, z;
         corner->GetPos(x, y, z);
@@ -647,7 +647,7 @@ void AddPolygonToOSIStationaryObject(const roadmanager::Outline &outline)
         osi3::Vector2d *vec = obj_osi_internal.sobj->mutable_base()->add_base_polygon();
         vec->set_x(x);
         vec->set_y(y);
-        height += corner->GetHeight() / static_cast<double>(outline.corner_.size());
+        height += corner->GetHeight() / static_cast<double>(outline.GetNumberOfCorners());
     }
     obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_height(height);
 }
@@ -691,7 +691,7 @@ int OSIReporter::UpdateOSIStationaryObjectODR(roadmanager::RMObject *object)
 
     for (auto& marking : object->GetMarkingsWithPoints())  // marking
     {
-        for (auto& segment : marking.MarkingSegments_)  // marking points
+        for (auto& segment : marking.GetMarkingSegments())  // marking points
         {
             UpdateOSIStationaryObjectODRMarking(segment.GetAllPoints());
         }

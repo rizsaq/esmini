@@ -2749,7 +2749,7 @@ int Viewer::DrawMarking(roadmanager::RMObject* object)
 {
     for (auto& marking : object->GetMarkingsWithPoints())  // marking
     {
-        for (auto& segment : marking.MarkingSegments_)  // marking points
+        for (auto& segment : marking.GetMarkingSegments())  // marking points
         {
             for (auto& points : segment.GetAllPoints())  // marking point
             {
@@ -2818,18 +2818,17 @@ void Viewer::CreateOutlineModel(const roadmanager::Outline& outline,
                                 osg::ref_ptr<osg::Geode>    geode,
                                 bool                       isShallowCopy)
 {
-    roadmanager::Outline::AreaType areaType = outline.areaType_;
-    bool                           roof     = areaType == roadmanager::Outline::AreaType::CLOSED ? true : false;
+    bool roof     = outline.GetAreaType() == roadmanager::Outline::AreaType::CLOSED ? true : false;
 
     // nrPoints will be corners + 1 if the outline should be closed, reusing first corner as last
-    uint64_t                     nrPoints       = roof ? outline.corner_.size() + 1 : outline.corner_.size();
+    uint64_t                     nrPoints       = roof ? outline.GetNumberOfCorners() + 1 : outline.GetNumberOfCorners();
     osg::ref_ptr<osg::Vec3Array> vertices_sides = new osg::Vec3Array(nrPoints * 2);  // one set at bottom and one at top
     osg::ref_ptr<osg::Vec3Array> vertices_top   = new osg::Vec3Array(nrPoints);      // one set at bottom and one at top
     // printf("from viewer\n");
-    for (size_t i = 0; i < outline.corner_.size(); i++)
+    for (size_t i = 0; i < outline.GetNumberOfCorners(); i++)
     {
         double                      x, y, z_bottom;
-        roadmanager::OutlineCorner* corner = outline.corner_[i];
+        roadmanager::OutlineCorner* corner = outline.GetCornerByIndex(i);
         double z_top = 0.0;
         if(isShallowCopy)
         {
