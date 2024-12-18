@@ -1994,7 +1994,7 @@ namespace roadmanager
         // calculate and return segment height of repeat for given factor
         double GetHeightWithFactor(double factor) const;
         void AddRepeatedObject(RMObject *object);
-        std::vector<RMObject *> GetRepeatedObjects() const;
+        std::vector<RMObject *> GetRepeatObjects() const;
         void ClearRepeatedObjects();
 
         ~Repeat();
@@ -2233,48 +2233,18 @@ namespace roadmanager
         void SetRoadId(double val);
         // Get the road id which this object belong
         double GetRoadId() const;
-        // Get all points for all the outlines in road coordinate. Each vector for one outline
-        std::vector<std::vector<point4d>> GetPosFromOutlines();
         // check whether all corners in all outlines are local, In which each all outlines shall have same shape. Hence e.g. shallow copies is
         // possible
         bool IsAllCornersLocal();
-        // Get length from repeat given factor. Priority 1.repeat start - end length, 2.Object length, 3.nan
-        double GetRepeatedObjLengthWithFactor(const Repeat& rep, double factor);
-        // Get width from repeat given factor. Priority 1.repeat start - end width, 2.Object width, 3.nan
-        double GetRepeatedObjWidthWithFactor(const Repeat& rep, double factor);
-        // Get z offset from repeat start and end z offset for given factor
-        double GetRepeatedObjZOffsetWithFactor(const Repeat& rep, double factor);
-        // Get height from repeat given factor. Priority 1.repeat start - end height, 2.Object height, 3.nan
-        double GetRepeatedObjHeightWithFactor(const Repeat& rep, double factor);
         // Get or create markings with filled points for the given object. This points shall be used to draw markings
         std::vector<Marking> GetMarkingsWithPoints();
-        // create and fill markings points in itself for the given object.
-        void CreateMarkingsPoints(Marking& marking);
-        // create and fill markings points in itself
-        void GenerateMarkingsFromObject(Marking& marking);
-        // Resolve markings for the given object. This shall be used to draw markings
-        void ResolveMarkings();
-        void ResolveTwoLinesWithWidth(std::vector<std::vector<Point3D>>& line1, std::vector<std::vector<Point3D>>& line2);
         // check weather given id is present in corner reference ids in atleast one outline
         bool CheckCornerReferenceId(int id);
-        // get the bb of outlines(compound bb of all corners) for the given object
-        void GetCompoundOutlinesBB(double& length, double& width, double& height, double& z);
-        // get the Length of outlines(compound width of all corners) for the given object
-        const double GetCompoundOutlinesLength();
-        // get the width of outlines(compound width of all corners) for the given object
-        const double GetCompoundOutlinesWidth();
-        // get the height of outlines(compound height of all corners) for the given object
-        const double GetCompoundOutlinesHeight();
-        // get the z offset of outlines(compound z offset of all corners) for the given object
-        const double GetCompoundOutlinesZoffset();
         void SetModelFound();
         std::vector<RMObject*> GetRepeatedObjects(Repeat& repeat, roadmanager::Repeat::ZeroDistanceRepeatStrategy requesterStrategy);
-        Outline GetZeroDistanceOutline(Repeat& repeat);
+        Outline GetZeroDistanceOutline(Repeat& repeat, Position& pos);
 
     private:
-        //private functions
-        RMObject* CreateObjectFromRepeat(const Repeat& repeat, double cur_s, double factor, roadmanager::Position& pos); //todo shall be const function
-        std::vector<Outline> CreateOutlinesFromRepeat(const Repeat& repeat, double cur_s, double factor);
         // private data members
         std::string                name_;
         ObjectType                 type_ = ObjectType::NONE;
@@ -2297,6 +2267,37 @@ namespace roadmanager
         double ZoffsetOfCompoundOutlines_ = std::nan("");
         bool modelFound_ = false;   // flag to check whether model is found or not
         bool isMarkingGenerated_ = false;
+        //private functions
+        // create new object for given repeat, current s, factor and position
+        RMObject* CreateObjectFromRepeat(const Repeat& repeat, double cur_s, double factor, roadmanager::Position& pos);
+        // create new outline for given repeat, current s and factor
+        std::vector<Outline> CreateOutlinesFromRepeat(const Repeat& repeat, double cur_s, double factor);
+        // get the bb of outlines(compound bb of all corners) for the given object
+        void GetCompoundOutlinesBB(double& length, double& width, double& height, double& z);
+        // create and fill markings points in itself for the given object.
+        void CreateMarkingsPoints(Marking& marking);
+        // create and fill markings points in itself
+        void GenerateMarkingsFromObject(Marking& marking);
+        // loop all markings and resolve markings like merge two markings. This shall be used to draw markings
+        void ResolveMarkings();
+        // Resolve two lines with width. like merge two lines.
+        void ResolveTwoLinesWithWidth(std::vector<std::vector<Point3D>>& line1, std::vector<std::vector<Point3D>>& line2);
+        // Get length from repeat given factor. Priority 1.repeat start - end length, 2.Object length, 3.nan
+        double GetRepeatedObjLengthWithFactor(const Repeat& rep, double factor);
+        // Get width from repeat given factor. Priority 1.repeat start - end width, 2.Object width, 3.nan
+        double GetRepeatedObjWidthWithFactor(const Repeat& rep, double factor);
+        // Get z offset from repeat start and end z offset for given factor
+        double GetRepeatedObjZOffsetWithFactor(const Repeat& rep, double factor);
+        // Get height from repeat given factor. Priority 1.repeat start - end height, 2.Object height, 3.nan
+        double GetRepeatedObjHeightWithFactor(const Repeat& rep, double factor);
+        // get the Length of outlines(compound width of all corners) for the given object
+        const double GetCompoundOutlinesLength();
+        // get the width of outlines(compound width of all corners) for the given object
+        const double GetCompoundOutlinesWidth();
+        // get the height of outlines(compound height of all corners) for the given object
+        const double GetCompoundOutlinesHeight();
+        // get the z offset of outlines(compound z offset of all corners) for the given object
+        const double GetCompoundOutlinesZoffset();
 
         std::vector<Outline> outlines_;
         std::vector<Repeat>  repeats_;

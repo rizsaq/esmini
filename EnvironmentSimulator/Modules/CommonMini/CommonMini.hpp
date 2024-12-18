@@ -197,11 +197,6 @@ struct Point3D : public Point2D
     double z = 0.0;
 };
 
-struct point4d : public Point3D
-{
-    double h = 0.0;
-};
-
 class SE_Vector
 {
 public:

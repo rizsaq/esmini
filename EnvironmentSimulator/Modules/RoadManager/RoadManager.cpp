@@ -3129,7 +3129,7 @@ void roadmanager::Repeat::AddRepeatedObject(RMObject* object)
     repeatedObjects_.push_back(object);
 }
 
-std::vector<RMObject*> roadmanager::Repeat::GetRepeatedObjects() const
+std::vector<RMObject*> roadmanager::Repeat::GetRepeatObjects() const
 {
     return repeatedObjects_;
 }
@@ -3467,41 +3467,6 @@ void MarkingGenerator::GenerateMarkingSegmentFromOutlines(const std::vector<Outl
     }
 }
 
-void GetBoundingBoxFromCorners(const std::vector<std::vector<point4d>>& cornerPointsVector,
-                               double&                                         length,
-                               double&                                         width,
-                               double&                                         height,
-                               double&                                         z)
-{
-    // Find max, min x and y,z and height
-    // Initialize with first element's x value for clarity
-    double minX = cornerPointsVector[0][0].x;
-    double maxX = cornerPointsVector[0][0].x;
-    double minY = cornerPointsVector[0][0].y;
-    double maxY = cornerPointsVector[0][0].y;
-    double minZ = cornerPointsVector[0][0].z;
-    double maxZ = cornerPointsVector[0][0].z;
-
-    for (const auto& cornerPoints : cornerPointsVector)
-    {
-        for (const auto& cornerPoint : cornerPoints)
-        {
-            minX = std::min(minX, cornerPoint.x);  // Update minX with the smaller value
-            minY = std::min(minY, cornerPoint.y);
-            minZ = std::min(minZ, cornerPoint.z);
-            maxX = std::max(maxX, cornerPoint.x);  // Update maxX with the larger value
-            maxY = std::max(maxY, cornerPoint.y);
-            maxZ = std::max(maxZ, cornerPoint.z + cornerPoint.h);
-        }
-    }
-
-    // find local bb from corner points
-    length = maxX - minX;
-    width  = maxY - minY;
-    height = maxZ - minZ;
-    z      = minZ;
-}
-
 void RMObject::GenerateMarkingsFromObject(Marking& marking)
 {
     MarkingGenerator markingGenerator(marking);
@@ -3625,10 +3590,45 @@ bool roadmanager::RMObject::CheckCornerReferenceId(int id)
 void roadmanager::RMObject::GetCompoundOutlinesBB(double& length, double& width, double& height, double& z)
 
 {
-    // get all as point from outlines
-    std::vector<std::vector<point4d>> points = GetPosFromOutlines();
-    // Now all local points are availbel, find the bb from the corner
-    GetBoundingBoxFromCorners(points, length, width, height, z);
+    if(GetNumberOfOutlines() == 0 || GetOutline(0).GetNumberOfCorners() == 0)
+    {
+        length = 0.0;
+        width  = 0.0;
+        height = 0.0;
+        z      = 0.0;
+        return;
+    }
+    // Find max, min x and y,z and height
+    // Initialize with first element's x value for clarity
+    double x, y, zTemp, heightTemp;
+    GetOutline(0).GetCornerByIndex(0)->GetPosLocal(x, y, z);
+    double minX = x;
+    double maxX = x;
+    double minY = y;
+    double maxY = y;
+    double minZ = zTemp;
+    double maxZ = zTemp;
+
+    for (auto& outlineOriginal : GetOutlines())
+    {
+        for (const auto& corner : outlineOriginal.GetCorners())
+        {
+            corner->GetPosLocal(x, y, zTemp);
+            heightTemp = corner->GetHeight();
+            minX = std::min(minX, x);  // Update minX with the smaller value
+            minY = std::min(minY, y);
+            minZ = std::min(minZ, zTemp);
+            maxX = std::max(maxX, x);  // Update maxX with the larger value
+            maxY = std::max(maxY, y);
+            maxZ = std::max(maxZ, zTemp + heightTemp);
+        }
+    }
+
+    // find local bb from corner points
+    length = maxX - minX;
+    width  = maxY - minY;
+    height = maxZ - minZ;
+    z      = minZ;
 }
 
 const double roadmanager::RMObject::GetCompoundOutlinesLength()
@@ -3669,9 +3669,9 @@ const double roadmanager::RMObject::GetCompoundOutlinesZoffset()
 
 std::vector<roadmanager::RMObject*> roadmanager::RMObject::GetRepeatedObjects(Repeat& repeat, Repeat::ZeroDistanceRepeatStrategy requesterStrategy)
 {
-    if(!repeat.GetRepeatedObjects().empty() && requesterStrategy == repeat.zeroDistanceRepeatStrategy_)
+    if(!repeat.GetRepeatObjects().empty() && requesterStrategy == repeat.zeroDistanceRepeatStrategy_)
     {
-        return repeat.GetRepeatedObjects();
+        return repeat.GetRepeatObjects();
     }
     else
     {
@@ -3688,11 +3688,6 @@ std::vector<roadmanager::RMObject*> roadmanager::RMObject::GetRepeatedObjects(Re
         {
             double factor        = cur_s / repeatLength;
             double lengthOfRepeatedObject = GetValueOrZero(GetRepeatedObjLengthWithFactor(repeat, factor));
-            if (IsEqualDouble(lengthOfRepeatedObject, 0.0))
-            {
-                LOG_ONCE("Default object Length %.2f used, Since no length found from repeat and object ",  10.0); // todo maybe print once
-                lengthOfRepeatedObject = 10.0;
-            }
             RMObject* obj = CreateObjectFromRepeat(repeat, cur_s, factor, pos);
             if(GetNumberOfOutlines() == 0)
             {
@@ -3710,7 +3705,7 @@ std::vector<roadmanager::RMObject*> roadmanager::RMObject::GetRepeatedObjects(Re
                     }
                     else
                     {
-                        obj->AddOutline(GetZeroDistanceOutline(repeat));
+                        obj->AddOutline(GetZeroDistanceOutline(repeat, pos));
                         repeat.AddRepeatedObject(obj);
                         repeat.zeroDistanceRepeatStrategy_ = Repeat::ZeroDistanceRepeatStrategy::ONE_OBJECT;
                         break;
@@ -3743,17 +3738,20 @@ std::vector<roadmanager::RMObject*> roadmanager::RMObject::GetRepeatedObjects(Re
             repeat.AddRepeatedObject(obj);
         }
     }
-    return repeat.GetRepeatedObjects();
+    return repeat.GetRepeatObjects();
 }
 
-Outline roadmanager::RMObject::GetZeroDistanceOutline(Repeat& rep)
+Outline roadmanager::RMObject::GetZeroDistanceOutline(Repeat& rep, Position& pos)
 {
     Outline      outline(GetId(), Outline::FillType::FILL_TYPE_UNDEFINED, Outline::AreaType::CLOSED, Outline::OutlineType::ZERO_DISTANCE);
     const double max_segment_length = 10.0;
 
-    // find smallest value of length and rlength, but between SMALL_NUMBER and max_segment_length
-    double segment_length = std::min({max_segment_length, GetLength().Get(), rep.GetLength()});
-    segment_length = segment_length < SMALL_NUMBER ? max_segment_length : segment_length;
+    double segment_length = GetValueOrZero(GetRepeatedObjLengthWithFactor(rep, 1)); // get length for factor 1
+    if (IsEqualDouble(segment_length, 0.0))
+    {
+        LOG_ONCE("Default object Length %.2f used, Since no length found from repeat and object ",  max_segment_length);
+        segment_length = max_segment_length;
+    }
     unsigned int n_segments = static_cast<int>((MAX(1.0, rep.GetLength() / segment_length)));
 
     // Create outline polygon, visiting corners counter clockwise
@@ -3770,9 +3768,9 @@ Outline roadmanager::RMObject::GetZeroDistanceOutline(Repeat& rep)
                 rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
                 rep.GetZOffsetWithFactor(factor),
                 std::max(GetValueOrZero(GetRepeatedObjHeightWithFactor(rep, factor)), min_dim),
-                GetS(),
-                GetT(),
-                GetHOffset(),
+                pos.GetX(),
+                pos.GetY(),
+                pos.GetH(),
                 j + (i * n_segments)));
 
             outline.AddCorner(corner);
@@ -3958,25 +3956,6 @@ bool RMObject::IsAllCornersLocal()
         }
     }
     return true;
-}
-
-std::vector<std::vector<point4d>> RMObject::GetPosFromOutlines()
-{
-    std::vector<std::vector<point4d>> pointsList;  // store one entry for each outline
-    for (auto& outlineOriginal : GetOutlines())
-    {
-        std::vector<point4d> points;  // store corners of one outline
-        points.reserve(outlineOriginal.GetNumberOfCorners());
-        for (const auto& corner : outlineOriginal.GetCorners())
-        {
-            point4d point;
-            corner->GetPosLocal(point.x, point.y, point.z);
-            point.h = corner->GetHeight();
-            points.emplace_back(std::move(point));
-        }
-        pointsList.emplace_back(std::move(points));
-    }
-    return pointsList;
 }
 
 RMObject::Orientation RMObject::ParseOrientation(pugi::xml_node node, int road_id)
