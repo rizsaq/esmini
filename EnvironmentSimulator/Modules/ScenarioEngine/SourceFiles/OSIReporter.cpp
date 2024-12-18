@@ -623,7 +623,8 @@ void AddOSIStationaryObject(roadmanager::RMObject *object, bool isRepeat = false
     // Create OSI Stationary Object
     obj_osi_internal.sobj = obj_osi_internal.gt->add_stationary_object();
     // Set OSI Stationary Object Mutable ID
-    obj_osi_internal.sobj->mutable_id()->set_value(static_cast<unsigned int>(object->GetId()));
+    int sobj_size = obj_osi_internal.gt->mutable_stationary_object()->size();
+    obj_osi_internal.sobj->mutable_id()->set_value(static_cast<unsigned int>(sobj_size - 1));
     // Set OSI Stationary Object Type and Classification
     UpdateOSIStationaryObjectODRType(object->GetType(), object->GetParkingSpace().GetRestrictions(), isRepeat);
 }
