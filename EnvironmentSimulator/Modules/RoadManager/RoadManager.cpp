@@ -2775,7 +2775,7 @@ std::vector<int> roadmanager::CornerIdManager::fillConsecutiveIds(const std::vec
         do
         {
             consecutive_cornerReferenceIds.push_back(id);
-            if (++id == corners_.size())
+            if (++id == static_cast<int>(corners_.size()))
             {
                 id = 0;
             }
@@ -3115,7 +3115,7 @@ void roadmanager::Marking::AddCornerReferenceIds(const int cornerReferenceIds)
 
 int Marking::GetCornerReferenceIdsSize() const
 {
-    return cornerReferenceIds_.size();
+    return static_cast<int>(cornerReferenceIds_.size());
 }
 
 double roadmanager::Marking::GetStartOffset()
@@ -3183,7 +3183,7 @@ MarkingSegment& roadmanager::Marking::GetMarkingSegmentByIdx(size_t i)
     return MarkingSegments_.at(i);
 }
 
-int MarkingSegment::GetNumberOfPoints() const
+size_t MarkingSegment::GetNumberOfPoints() const
 {
     return allPoints_.size();
 }
@@ -3339,7 +3339,7 @@ void MarkingGenerator::GenerateMarkingSegmentFromOutlines(const std::vector<Outl
             {
                 segment = MarkingSegment(outline.GetCornerByIndex(k)->GetCornerId(),
                                          outline.GetCornerByIndex(outline.GetNumberOfCorners() - k - 1)->GetCornerId(),
-                                         k);  // k says it id different segment
+                                         static_cast<int>(k));  // k says it id different segment
                 static_cast<roadmanager::OutlineCornerRoad*>(outline.GetCornerByIndex(k))->GetPos(start.x, start.y, z1);  // 1st corner
                 static_cast<roadmanager::OutlineCornerRoad*>(outline.GetCornerByIndex(outline.GetNumberOfCorners() - k - 1))
                     ->GetPos(end.x, end.y, z2);  // last corner
@@ -3656,14 +3656,14 @@ Outline roadmanager::RMObject::GetZeroDistanceOutline(Repeat& rep, Position& pos
             double         w_local = std::max(GetValueOrZero(GetRepeatedObjWidthWithFactor(rep, factor)), min_dim);
             OutlineCorner* corner =
                 static_cast<OutlineCorner*>(new OutlineCornerRoad(GetObjRoadId(),
-                                                       rep.GetS() + factor * rep.GetLength(),
-                                                       rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
-                                                       rep.GetZOffsetWithFactor(factor),
-                                                       std::max(GetValueOrZero(GetRepeatedObjHeightWithFactor(rep, factor)), min_dim),
-                                                       pos.GetX(),
-                                                       pos.GetY(),
-                                                       GetHOffset(),
-                                                       j + (i * n_segments)));
+                                                                  rep.GetS() + factor * rep.GetLength(),
+                                                                  rep.GetTWithFactor(factor) + (i == 0 ? -w_local / 2.0 : w_local / 2.0),
+                                                                  rep.GetZOffsetWithFactor(factor),
+                                                                  std::max(GetValueOrZero(GetRepeatedObjHeightWithFactor(rep, factor)), min_dim),
+                                                                  pos.GetX(),
+                                                                  pos.GetY(),
+                                                                  GetHOffset(),
+                                                                  static_cast<int>(j + (i * n_segments))));
 
             outline.AddCorner(corner);
         }
@@ -3755,29 +3755,29 @@ std::vector<Outline> roadmanager::RMObject::CreateOutlinesFromRepeat(const Repea
             if (corner_original->GetCornerType() == OutlineCorner::CornerType::ROAD_CORNER)
             {
                 corner = static_cast<OutlineCorner*>(new OutlineCornerRoad(GetObjRoadId(),
-                                                                start_s,
-                                                                start_t,
-                                                                start_z,
-                                                                start_h,
-                                                                pos.GetX(),
-                                                                pos.GetY(),
-                                                                GetHOffset(),
-                                                                corner_original->GetOriginalCornerId()));
+                                                                           start_s,
+                                                                           start_t,
+                                                                           start_z,
+                                                                           start_h,
+                                                                           pos.GetX(),
+                                                                           pos.GetY(),
+                                                                           GetHOffset(),
+                                                                           corner_original->GetOriginalCornerId()));
             }
             else
             {
                 OutlineCornerLocal* localCorner = static_cast<OutlineCornerLocal*>(corner_original);
                 corner                          = static_cast<OutlineCorner*>(new OutlineCornerLocal(GetObjRoadId(),
-                                                                 repeat.GetS() + cur_s,
-                                                                 repeat.GetTWithFactor(factor),
-                                                                 u * scale_u,
-                                                                 v * scale_v,
-                                                                 z * scale_z,
-                                                                 localCorner->GetHeight() * scale_h,
-                                                                 GetHOffset(),
-                                                                 localCorner->GetOriginalCornerId()));
+                                                                            repeat.GetS() + cur_s,
+                                                                            repeat.GetTWithFactor(factor),
+                                                                            u * scale_u,
+                                                                            v * scale_v,
+                                                                            z * scale_z,
+                                                                            localCorner->GetHeight() * scale_h,
+                                                                            GetHOffset(),
+                                                                            localCorner->GetOriginalCornerId()));
             }
-            corner->SetCornerId(outline.GetNumberOfCorners());
+            corner->SetCornerId(static_cast<int>(outline.GetNumberOfCorners()));
             outline.AddCorner(corner);
         }
         outline.SetScale(scale_u, scale_v, scale_z);
@@ -3851,7 +3851,7 @@ bool RMObject::IsAllCornersLocal()
     return true;
 }
 
-RMObject::Orientation RMObject::ParseOrientation(pugi::xml_node node, int road_id)
+RMObject::Orientation RMObject::ParseOrientation(pugi::xml_node node, id_t road_id)
 {
     RMObject::Orientation orientation = RMObject::Orientation::NONE;
     if (const auto& val = node.attribute("orientation"); !val.empty())
@@ -6151,15 +6151,8 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                                     cornerId = atoi(val.value());
                                 }
 
-                                corner = static_cast<OutlineCorner*>(new OutlineCornerLocal(r->GetId(),
-                                                                                 obj->GetS(),
-                                                                                 obj->GetT(),
-                                                                                 u,
-                                                                                 v,
-                                                                                 zLocal,
-                                                                                 heightc,
-                                                                                 heading,
-                                                                                 cornerId));
+                                corner = static_cast<OutlineCorner*>(
+                                    new OutlineCornerLocal(r->GetId(), obj->GetS(), obj->GetT(), u, v, zLocal, heightc, heading, cornerId));
                             }
                             // check if all corner ids are unique and same type of corners are present
                             if (foundLocalCorner && foundRoadcorner)
@@ -6186,7 +6179,7 @@ bool OpenDrive::LoadOpenDriveFile(const char* filename, bool replace)
                             {
                                 cornerIds.insert(cornerId);
                             }
-                            corner->SetCornerId(outline.GetNumberOfCorners());  // set interanl corners reference ids as index
+                            corner->SetCornerId(static_cast<int>(outline.GetNumberOfCorners()));  // set interanl corners reference ids as index
                             outline.AddCorner(corner);
                         }
                         if (isValidOutline)
