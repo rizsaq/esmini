@@ -88,16 +88,27 @@ osg::ref_ptr<osg::Texture2D> RoadGeom::ReadTexture(std::string filename)
 
 void RoadGeom::AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array> vertices, osg::ref_ptr<osg::DrawElementsUInt> indices, roadmanager::RoadMarkColor color)
 {
-    osg::ref_ptr<osg::Vec4Array> color_array = new osg::Vec4Array;
-    color_array->push_back(viewer::ODR2OSGColor(color));
-
     // Finally create and add geometry
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
     geom->setUseDisplayList(true);
     geom->setVertexArray(vertices.get());
     geom->addPrimitiveSet(indices.get());
+
+    osg::ref_ptr<osg::Vec4Array> color_array = new osg::Vec4Array;
     geom->setColorArray(color_array.get());
+
+#if 0  // per quad (whole marking)
+    color_array->push_back(viewer::ODR2OSGColor(color));
     geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+#else  // per vertex (each corner of marking), just for testing
+    color_array->push_back(osg::Vec4(1.0, 1.0, 0.0, 0.0f));
+    color_array->push_back(osg::Vec4(1.0, 1.0, 0.0, 0.0f));
+    color_array->push_back(osg::Vec4(1.0, 1.0, 0.0, 1.0f));
+    color_array->push_back(osg::Vec4(1.0, 1.0, 0.0, 1.0f));
+    geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
+    geom->getOrCreateStateSet()->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+    geom->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+#endif
 
     // Use PolygonOffset feature to avoid z-fighting with road surface
     geom->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(-POLYGON_OFFSET_ROADMARKS, -SIGN(POLYGON_OFFSET_ROADMARKS)));
