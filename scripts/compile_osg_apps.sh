@@ -19,10 +19,10 @@
 #   To run the applications some paths need to be set accordingly (check exact version numbers):
 #     Windows powershell:
 #       move osg $env:userprofile
-#       $env:path="$env:path;$env:userprofile/osg/bin;$env:userprofile/osg/bin/osgPlugins-3.7.0;$env:userprofile/osg/3rdParty_bin;$env:userprofile/osg/lib"
+#       $env:path="$env:path;$env:userprofile/osg/bin;$env:userprofile/osg/bin/osgPlugins-3.6.5;$env:userprofile/osg/3rdParty_bin;$env:userprofile/osg/lib"
 #     Windows cmd:
 #       move osg %userprofile%
-#       set path=%path%;%userprofile%/osg/bin;%userprofile%/osg/bin/osgPlugins-3.7.0;%userprofile%/osg/3rdParty_bin;%userprofile%/osg/lib
+#       set path=%path%;%userprofile%/osg/bin;%userprofile%/osg/bin/osgPlugins-3.6.5;%userprofile%/osg/3rdParty_bin;%userprofile%/osg/lib
 #     Linux:
 #       mv osg ~/
 #       export LD_LIBRARY_PATH="$HOME/osg/lib:$LD_LIBRARY_PATH"
@@ -37,18 +37,22 @@
 #     (possibly you need to change the path to your esmini root folder)
 
 # settings
-OSG_VERSION=4faa0766360ec8608d1d404ee72cae6620703fd4 # fix for Visual Studio 2022, based on 3.7.0
+
+OSG_REPO=https://github.com/esmini/OpenSceneGraph_for_esmini
+# Branch or tag, e.g. OpenSceneGraph_for_esmini or OpenSceneGraph-3.6.5.
+OSG_VERSION=OpenSceneGraph_for_esmini
 osg_root_dir=$(pwd)
 thirdparty=""
-build_examples=false  # set to true in order to build all examples (takes some time)
+# Option to build examples. Set to true in order to build all examples (takes some time).
+build_examples=false
 z_exe_win="$PROGRAMFILES/7-Zip/7z"
 install_folder="$osg_root_dir/osg"
-parallel_make_flag="-j"  # set to "" for cmake versions < 3.12
+# Parallel compile. Set specific number, e.g. "-j 4" or just "-j" for compiler default. Set to "" for cmake versions < 3.12.
+parallel_make_flag="-j4"
 
 # actions
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 
-    # [ ! -d fbxsdk ] && mkdir fbxsdk
     if [ ! -d fbxsdk ]; then
         if [ ! -f fbx202001_fbxsdk_linux.tar.gz ];then
             curl -k --user-agent  "Mozilla/5.0" -L "https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-0-1/fbx202001_fbxsdk_linux.tar.gz" -o fbx202001_fbxsdk_linux.tar.gz
@@ -61,9 +65,9 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     sudo apt install libtiff-dev
     sudo apt install libjpeg-dev
 
-    fbx_include="../../fbxsdk/include"
-    fbx_lib_release="../../fbxsdk/lib/gcc/x64/release/libfbxsdk.a"
-    fbx_lib_debug="../../fbxsdk/lib/gcc/x64/debug/libfbxsdk.a"
+    fbx_include="$osg_root_dir"/fbxsdk/include
+    fbx_lib_release="$osg_root_dir"/fbxsdk/lib/gcc/x64/release/libfbxsdk.a
+    fbx_lib_debug="$osg_root_dir"/fbxsdk/lib/gcc/x64/debug/libfbxsdk.a
     fbx_xml_lib=libxml2.so
     fbx_zlib_lib=libz.so
 
@@ -113,10 +117,9 @@ fi
 
 # OSG source
 if [ ! -d OpenSceneGraph ]; then
-    # use fork with a fix for Visual Studio 2022
-    git clone https://github.com/eknabevcc/OpenSceneGraph --branch osg_for_esmini
+    # use fork including some fixes
+    git clone $OSG_REPO --branch $OSG_VERSION --depth 1 OpenSceneGraph
     cd OpenSceneGraph
-    git checkout "$OSG_VERSION"
 else
     # osg seems already checked out, use it
     cd OpenSceneGraph
