@@ -79,7 +79,7 @@ void OSISensorDetection::SensorUpdate(osi3::SensorView* sv)
                 point.second->Hide();
             }
             // If the point was detected before, we show it again
-            else if (found && !point.second->showing_)
+            else if (!point.second->showing_)
             {
                 point.second->Show();
             }
@@ -106,7 +106,7 @@ void OSISensorDetection::SensorUpdate(osi3::SensorView* sv)
                 car.second->Hide();
             }
             // If the moving object was detected before, we show it again
-            else if (found && !car.second->showing_)
+            else if (!car.second->showing_)
             {
                 car.second->Show();
             }
@@ -114,9 +114,9 @@ void OSISensorDetection::SensorUpdate(osi3::SensorView* sv)
         }
 
         // Lets check if it is needed to create new points and moving objects visuals
-        double z_offset = 0.10;
         if (sv->has_global_ground_truth())
         {
+            double z_offset = 0.10;
             for (int i = 0; i < sv->global_ground_truth().moving_object_size(); i++)
             {
                 // Get moving object position and dimension

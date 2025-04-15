@@ -213,7 +213,7 @@ std::string CombineDirectoryPathAndFilepath(std::string dir_path, std::string fi
 {
     std::string path = file_path;
 
-    if (file_path[0] != '/' || file_path[0] != '\\' || file_path[1] != ':')
+    if (!file_path.empty() && file_path[0] != '/' && file_path[0] != '\\' && file_path[1] != ':')
     {
         // Relative path. Make sure it starts with ".." or "./"
         if (path[0] != '.')
@@ -865,16 +865,6 @@ bool IsDirectoryName(const std::string& string)
 
 std::string FileNameExtOf(const std::string& fname)
 {
-    size_t start_pos = fname.find_last_of("\\/");
-    if (start_pos != std::string::npos)
-    {
-        start_pos++;
-    }
-    else
-    {
-        start_pos = 0;
-    }
-
     size_t end_pos = fname.find_last_of(".");
     if (end_pos != std::string::npos)
     {
@@ -995,9 +985,9 @@ void NormalizeVec2D(double x, double y, double& xn, double& yn)
 
 void OffsetVec2D(double x0, double y0, double x1, double y1, double offset, double& xo0, double& yo0, double& xo1, double& yo1)
 {
-    double angle_line     = atan2(y1 - y0, x1 - x0);
-    double angle_offset   = angle_line + (offset < 0 ? M_PI_2 : -M_PI_2);  // perpendicular to line
-    double line_offset[2] = {fabs(offset) * cos(angle_offset), fabs(offset) * sin(angle_offset)};
+    double       angle_line     = atan2(y1 - y0, x1 - x0);
+    double       angle_offset   = angle_line + (offset < 0 ? M_PI_2 : -M_PI_2);  // perpendicular to line
+    const double line_offset[2] = {fabs(offset) * cos(angle_offset), fabs(offset) * sin(angle_offset)};
 
     xo0 = x0 + line_offset[0];
     yo0 = y0 + line_offset[1];
@@ -1043,9 +1033,9 @@ void R0R12EulerAngles(double h0, double p0, double r0, double h1, double p1, dou
     double sy = sin(p0);
     double sz = sin(r0);
 
-    double R0[3][3] = {{cx * cy, cx * sy * sz - sx * cz, sx * sz + cx * sy * cz},
-                       {sx * cy, cx * cz + sx * sy * sz, sx * sy * cz - cx * sz},
-                       {-sy, cy * sz, cy * cz}};
+    const double R0[3][3] = {{cx * cy, cx * sy * sz - sx * cz, sx * sz + cx * sy * cz},
+                             {sx * cy, cx * cz + sx * sy * sz, sx * sy * cz - cx * sz},
+                             {-sy, cy * sz, cy * cz}};
 
     cx = cos(h1);
     cy = cos(p1);
@@ -1054,9 +1044,9 @@ void R0R12EulerAngles(double h0, double p0, double r0, double h1, double p1, dou
     sy = sin(p1);
     sz = sin(r1);
 
-    double R1[3][3] = {{cx * cy, cx * sy * sz - sx * cz, sx * sz + cx * sy * cz},
-                       {sx * cy, cx * cz + sx * sy * sz, sx * sy * cz - cx * sz},
-                       {-sy, cy * sz, cy * cz}};
+    const double R1[3][3] = {{cx * cy, cx * sy * sz - sx * cz, sx * sz + cx * sy * cz},
+                             {sx * cy, cx * cz + sx * sy * sz, sx * sy * cz - cx * sz},
+                             {-sy, cy * sz, cy * cz}};
 
     // Multiply
     double R2[3][3] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
@@ -1167,9 +1157,9 @@ void CalcRelAnglesFromRoadAndAbsAngles(double  h_road,
     sy = sin(p_abs);
     sz = sin(r_abs);
 
-    double R1[3][3] = {{cx * cy, cx * sy * sz - sx * cz, sx * sz + cx * sy * cz},
-                       {sx * cy, cx * cz + sx * sy * sz, sx * sy * cz - cx * sz},
-                       {-sy, cy * sz, cy * cz}};
+    const double R1[3][3] = {{cx * cy, cx * sy * sz - sx * cz, sx * sz + cx * sy * cz},
+                             {sx * cy, cx * cz + sx * sy * sz, sx * sy * cz - cx * sz},
+                             {-sy, cy * sz, cy * cz}};
 
     // Multiply
     double R2[3][3] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
@@ -1382,7 +1372,7 @@ Logger::~Logger()
     callback_ = 0;
 }
 
-bool Logger::IsCallbackSet()
+bool Logger::IsCallbackSet() const
 {
     return callback_ != 0;
 }
@@ -1904,7 +1894,7 @@ void SE_Options::PrintUsage()
     printf("\n");
 }
 
-void SE_Options::PrintUnknownArgs(std::string message)
+void SE_Options::PrintUnknownArgs(std::string message) const
 {
     printf("\n%s\n", message.c_str());
     for (const auto& arg : unknown_args_)
@@ -2060,7 +2050,7 @@ const std::unordered_map<std::string, SE_Option>& SE_Options::GetAllOptions() co
     return option_;
 }
 
-std::string SE_Options::GetSetOptionsAsStr()
+std::string SE_Options::GetSetOptionsAsStr() const
 {
     std::string strAllSetOptions;
     for (const auto& pair : GetAllOptions())
@@ -2162,9 +2152,9 @@ int SE_Options::ParseArgs(int argc, const char* const argv[])
 
 void SE_Options::ApplyDefaultValues()
 {
-    for (auto& [key, opt] : option_)
+    for (auto& option : option_)
     {
-        [[maybe_unused]] const auto& unused_key = key;
+        auto& opt = option.second;
         if (opt.arg_value_.empty() && !opt.default_value_.empty())
         {
             if ((!opt.autoApply_ && opt.set_) || (opt.autoApply_ && !opt.set_))
@@ -2195,7 +2185,7 @@ bool SE_Options::IsInOriginalArgs(std::string opt)
     return false;
 }
 
-bool SE_Options::HasUnknownArgs()
+bool SE_Options::HasUnknownArgs() const
 {
     return !unknown_args_.empty();
 }
@@ -2203,16 +2193,15 @@ bool SE_Options::HasUnknownArgs()
 void SE_Options::Reset()
 {
     optionOrder_.clear();
-    for (auto& [key, option] : option_)
+
+    for (auto& option : option_)
     {
-        [[maybe_unused]] const auto& unused_key = key;
-        if (!option.persistent_)
+        if (!option.second.persistent_)
         {
-            option.arg_value_.clear();
-            option.set_ = false;
+            option.second.set_ = false;
+            option.second.arg_value_.clear();
         }
     }
-
     originalArgs_.clear();
 }
 
@@ -2270,7 +2259,7 @@ int SE_WritePPM(const char* filename, int width, int height, const unsigned char
                 {
                     // write one line at a time, starting from bottom
                     const unsigned char* ptr      = &data[pixelSize * ((height - i - 1) * width + j)];
-                    unsigned char        bytes[3] = {(ptr[2]), ptr[1], ptr[0]};
+                    const unsigned char  bytes[3] = {(ptr[2]), ptr[1], ptr[0]};
                     fwrite(bytes, 3, 1, file);
                 }
             }
@@ -2280,7 +2269,7 @@ int SE_WritePPM(const char* filename, int width, int height, const unsigned char
             for (int i = 0; i < width * height; i++)
             {
                 const unsigned char* ptr      = &data[i * pixelSize];
-                unsigned char        bytes[3] = {(ptr[2]), ptr[1], ptr[0]};
+                const unsigned char  bytes[3] = {(ptr[2]), ptr[1], ptr[0]};
                 fwrite(bytes, 3, 1, file);
             }
         }
@@ -2313,7 +2302,7 @@ int SE_WriteTGA(const char* filename, int width, int height, const unsigned char
     }
 
     /* Write TGA Header */
-    uint8_t header[18] = {
+    const uint8_t header[18] = {
         0,
         0,
         2,  // uncompressed RGB
@@ -2341,7 +2330,7 @@ int SE_WriteTGA(const char* filename, int width, int height, const unsigned char
         for (int i = 0; i < width * height; i++)
         {
             const unsigned char* ptr      = &data[i * pixelSize];
-            unsigned char        bytes[3] = {(ptr[2]), ptr[1], ptr[0]};
+            const unsigned char  bytes[3] = {(ptr[2]), ptr[1], ptr[0]};
             fwrite(bytes, 3, 1, file);
         }
     }
@@ -2358,12 +2347,11 @@ int SE_WriteTGA(const char* filename, int width, int height, const unsigned char
 int SE_ReadCSVFile(const char* filename, std::vector<std::vector<std::string>>& content, int skip_lines)
 {
     // Cred: https://java2blog.com/read-csv-file-in-cpp/
-    std::vector<std::string> row;
-    std::string              line, word;
 
     std::fstream file(filename, std::ios::in);
     if (file.is_open())
     {
+        std::string line;
         for (int i = 0; i < skip_lines; i++)
         {
             if (!getline(file, line))
@@ -2372,6 +2360,8 @@ int SE_ReadCSVFile(const char* filename, std::vector<std::vector<std::string>>& 
                 return -1;
             }
         }
+        std::vector<std::string> row;
+        std::string              word;
         while (getline(file, line))
         {
             row.clear();
