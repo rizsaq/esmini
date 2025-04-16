@@ -86,7 +86,10 @@ osg::ref_ptr<osg::Texture2D> RoadGeom::ReadTexture(std::string filename)
     return tex;
 }
 
-void RoadGeom::AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array> vertices, osg::ref_ptr<osg::DrawElementsUInt> indices, roadmanager::RoadMarkColor color)
+void RoadGeom::AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array>        vertices,
+                               osg::ref_ptr<osg::DrawElementsUInt> indices,
+                               roadmanager::RoadMarkColor          color,
+                               double                              fade)
 {
     osg::ref_ptr<osg::Material>  materialRoadmark_ = new osg::Material;
     osg::ref_ptr<osg::Vec4Array> color_array       = new osg::Vec4Array;
@@ -94,7 +97,7 @@ void RoadGeom::AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array> vertices, osg::ref_p
 
     materialRoadmark_->setDiffuse(osg::Material::FRONT_AND_BACK, color_array->at(0));
     materialRoadmark_->setAmbient(osg::Material::FRONT_AND_BACK, color_array->at(0));
-    materialRoadmark_->setAlpha(osg::Material::FRONT_AND_BACK, 0.2);
+    materialRoadmark_->setAlpha(osg::Material::FRONT_AND_BACK, 1.0 - fade);
 
     // Finally create and add geometry
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
@@ -319,7 +322,7 @@ int RoadGeom::AddRoadMarks(roadmanager::Lane* lane, osg::Group* parent)
                         if (osi_points[q].endpoint)
                         {
                             // create and add OSG geometry for the line sequence
-                            AddRoadMarkGeom(vertices, indices, lane_roadmarktypeline->GetColor());
+                            AddRoadMarkGeom(vertices, indices, lane_roadmarktypeline->GetColor(), lane_roadmark->GetFade());
                             startpoint = q + 1;
                         }
                     }
