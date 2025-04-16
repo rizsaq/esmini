@@ -88,16 +88,21 @@ osg::ref_ptr<osg::Texture2D> RoadGeom::ReadTexture(std::string filename)
 
 void RoadGeom::AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array> vertices, osg::ref_ptr<osg::DrawElementsUInt> indices, roadmanager::RoadMarkColor color)
 {
-    osg::ref_ptr<osg::Vec4Array> color_array = new osg::Vec4Array;
+    osg::ref_ptr<osg::Material>  materialRoadmark_ = new osg::Material;
+    osg::ref_ptr<osg::Vec4Array> color_array       = new osg::Vec4Array;
     color_array->push_back(viewer::ODR2OSGColor(color));
+
+    materialRoadmark_->setDiffuse(osg::Material::FRONT_AND_BACK, color_array->at(0));
+    materialRoadmark_->setAmbient(osg::Material::FRONT_AND_BACK, color_array->at(0));
+    materialRoadmark_->setAlpha(osg::Material::FRONT_AND_BACK, 0.2);
 
     // Finally create and add geometry
     osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
     geom->setUseDisplayList(true);
     geom->setVertexArray(vertices.get());
     geom->addPrimitiveSet(indices.get());
-    geom->setColorArray(color_array.get());
-    geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+    geom->getOrCreateStateSet()->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+    geom->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
 
     // Use PolygonOffset feature to avoid z-fighting with road surface
     geom->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(-POLYGON_OFFSET_ROADMARKS, -SIGN(POLYGON_OFFSET_ROADMARKS)));
@@ -105,6 +110,7 @@ void RoadGeom::AddRoadMarkGeom(osg::ref_ptr<osg::Vec3Array> vertices, osg::ref_p
 
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
     geode->addDrawable(geom);
+    geode->getOrCreateStateSet()->setAttributeAndModes(materialRoadmark_.get());
     rm_group_->addChild(geode);
 }
 
