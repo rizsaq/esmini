@@ -2511,6 +2511,7 @@ extern "C"
         if (handleSimpleVehicle)
         {
             delete ((vehicle::Vehicle *)handleSimpleVehicle);
+            // cppcheck-suppress uselessAssignmentPtrArg
             handleSimpleVehicle = 0;
         }
     }
