@@ -10297,7 +10297,7 @@ void Position::CopyRoute(const Position& position)
 {
     if (route_ != nullptr && position.route_ != nullptr)
     {
-        LOG_WARN("Warning: Overriding route in position object");
+        LOG_WARN("Warning: Overriding route in position object.");
     }
 
     if (position.route_ != nullptr)
