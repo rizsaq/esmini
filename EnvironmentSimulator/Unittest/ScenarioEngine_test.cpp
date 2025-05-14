@@ -3880,7 +3880,6 @@ TEST(LaneChange, TestLaneChangeEdgeCase)
         se->step(0.1);
         se->prepareGroundTruth(0.0);
     }
-    state = &gw->objectState_[0]->state_;
     EXPECT_NEAR(state->pos.GetX(), 121.604, 1E-3);
     EXPECT_NEAR(state->pos.GetY(), 4.992, 1E-3);
     EXPECT_NEAR(state->pos.GetZ(), 0.000, 1E-3);
@@ -3893,7 +3892,6 @@ TEST(LaneChange, TestLaneChangeEdgeCase)
         se->step(0.1);
         se->prepareGroundTruth(0.0);
     }
-    state = &gw->objectState_[0]->state_;
     EXPECT_NEAR(state->pos.GetX(), 121.802, 1E-3);
     EXPECT_NEAR(state->pos.GetY(), 3.987, 1E-3);
     EXPECT_NEAR(state->pos.GetZ(), 0.000, 1E-3);
@@ -3906,7 +3904,6 @@ TEST(LaneChange, TestLaneChangeEdgeCase)
         se->step(0.1);
         se->prepareGroundTruth(0.0);
     }
-    state = &gw->objectState_[0]->state_;
     EXPECT_NEAR(state->pos.GetX(), 121.802, 1E-3);
     EXPECT_NEAR(state->pos.GetY(), 3.987, 1E-3);
     EXPECT_NEAR(state->pos.GetZ(), 0.000, 1E-3);
@@ -3919,7 +3916,6 @@ TEST(LaneChange, TestLaneChangeEdgeCase)
         se->step(0.1);
         se->prepareGroundTruth(0.0);
     }
-    state = &gw->objectState_[0]->state_;
     EXPECT_NEAR(state->pos.GetX(), 123.581, 1E-3);
     EXPECT_NEAR(state->pos.GetY(), 1.751, 1E-3);
     EXPECT_NEAR(state->pos.GetZ(), 0.000, 1E-3);
@@ -3932,7 +3928,6 @@ TEST(LaneChange, TestLaneChangeEdgeCase)
         se->step(0.1);
         se->prepareGroundTruth(0.0);
     }
-    state = &gw->objectState_[0]->state_;
     EXPECT_NEAR(state->pos.GetX(), 124.400, 1E-3);
     EXPECT_NEAR(state->pos.GetY(), 2.263, 1E-3);
     EXPECT_NEAR(state->pos.GetZ(), 0.000, 1E-3);
@@ -3945,7 +3940,6 @@ TEST(LaneChange, TestLaneChangeEdgeCase)
         se->step(0.1);
         se->prepareGroundTruth(0.0);
     }
-    state = &gw->objectState_[0]->state_;
     EXPECT_NEAR(state->pos.GetX(), 124.424, 1E-3);
     EXPECT_NEAR(state->pos.GetY(), 4.313, 1E-3);
     EXPECT_NEAR(state->pos.GetZ(), 0.000, 1E-3);
@@ -3958,7 +3952,6 @@ TEST(LaneChange, TestLaneChangeEdgeCase)
         se->step(0.1);
         se->prepareGroundTruth(0.0);
     }
-    state = &gw->objectState_[0]->state_;
     EXPECT_NEAR(state->pos.GetX(), 125.203, 1E-3);
     EXPECT_NEAR(state->pos.GetY(), 5.250, 1E-3);
     EXPECT_NEAR(state->pos.GetZ(), 0.000, 1E-3);
