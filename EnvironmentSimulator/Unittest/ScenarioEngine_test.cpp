@@ -1247,7 +1247,7 @@ TEST(ControllerTest, UDPDriverModelTestAsynchronous)
     {
         scenarioengine::Controller::InitArgs args;
         args.name       = "UDPDriverModel Controller";
-        args.type       = ControllerUDPDriver::GetTypeNameStatic();
+        args.type       = CONTROLLER_UDP_DRIVER_TYPE_NAME;
         args.parameters = 0;
         args.gateway    = se->getScenarioGateway();
         args.properties = new OSCProperties();
@@ -1359,7 +1359,7 @@ TEST(ControllerTest, UDPDriverModelTestSynchronous)
     {
         scenarioengine::Controller::InitArgs args;
         args.name       = "UDPDriverModel Controller";
-        args.type       = ControllerUDPDriver::GetTypeNameStatic();
+        args.type       = CONTROLLER_UDP_DRIVER_TYPE_NAME;
         args.parameters = 0;
         args.gateway    = se->getScenarioGateway();
         args.properties = new OSCProperties();
@@ -2130,7 +2130,7 @@ TEST(ControllerTest, ALKS_R157_TestR157RegulationMinDist)
     // Set controller
     scenarioengine::Controller::InitArgs args;
     args.name       = "ALKS_R157SM_Controller";
-    args.type       = ControllerALKS_R157SM::GetTypeNameStatic();
+    args.type       = CONTROLLER_ALKS_R157SM_TYPE_NAME;
     args.parameters = 0;
     args.gateway    = se->getScenarioGateway();
     args.properties = new OSCProperties();
