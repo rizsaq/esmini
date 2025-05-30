@@ -2157,7 +2157,8 @@ RoadMarkInfo Lane::GetRoadMarkInfoByS(id_t track_id, int lane_id, double s) cons
                         // Looping through each roadmarkline under roadmark
                         for (unsigned int n = 0; n < number_of_roadmarklines; n++)
                         {
-                            double                s_roadmarkline        = 0.0, s_end_roadmarkline;
+                            double                s_roadmarkline        = 0.0;
+                            double                s_end_roadmarkline    = 0.0;
                             LaneRoadMarkTypeLine* lane_roadMarkTypeLine = lane_roadMarkType->GetLaneRoadMarkTypeLineByIdx(n);
                             if (lane_roadMarkTypeLine != nullptr)
                             {
