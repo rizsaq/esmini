@@ -2729,7 +2729,7 @@ Add two custom light sources: +
 image::light_second_light.jpg[]
 
 === Convert osgb models for use in Blender
-Here follows an example of how to convert .osgb models into .obj format for use in Blender. obj is easy to use as it has a human readable text format, easy mapping between its material parameters and Blender's and minimal settings when converting back to .osgb. 
+Here follows an example of how to convert .osgb models into .obj format for use in Blender. obj is easy to use as it has a human readable text format, easy mapping between its material parameters and Blender's and minimal settings when converting back to .osgb.
 
 . Open a command prompt in the folder where your model.osgb is
 . Run command: +
@@ -3719,7 +3719,7 @@ Master branch represent the latest released software. It should be in synch with
 
 From esmini v2.30.0 the CI will include formatting checks, in addition to static analysis and tests.
 
-From v2.46.3, esmini utilizes https://pre-commit.com/[pre-commit hooks] for these checks. For details of previous implementation, see older versions of this document, e.g. https://htmlpreview.github.io/?https://raw.githubusercontent.com/esmini/esmini.github.io/refs/tags/v2.46.2/index.html[v2.46.2].
+From v2.48.0, esmini utilizes https://pre-commit.com/[pre-commit hooks] for these checks. For details of previous implementation, see older versions of this document, e.g. https://htmlpreview.github.io/?https://raw.githubusercontent.com/esmini/esmini.github.io/refs/tags/v2.47.0/index.html[v2.47.0].
 
 The code styles are defined by following schemes:
 
