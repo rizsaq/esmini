@@ -35,90 +35,89 @@ Controller* scenarioengine::InstantiateControllerHID(void* args)
 
     return new ControllerHID(initArgs);
 }
-
-int ControllerHID::ParseHIDInputType(const std::string& type_str, HID_INPUT& type, int& sign)
+int ControllerHID::ParseHIDInputType(const std::string& axis, HID_INPUT& axis_type, int& sign)
 {
-    if (type_str.empty())
+    if (axis.empty())
     {
         LOG_ERROR("HID input type is empty");
         return -1;
     }
 
-    std::string label = type_str;
-    if (type_str[0] == '-' || type_str[0] == '+')
+    std::string label = axis;
+    if (axis[0] == '-' || axis[0] == '+')
     {
-        label = type_str.substr(1);  // Remove leading '-' or '+' for extracting the type
+        label = axis.substr(1);  // Remove leading '-' or '+' for extracting the type
     }
-    sign = type_str[0] == '-' ? -1 : 1;
+    sign = axis[0] == '-' ? -1 : 1;
 
     if (label == "AXIS_X")
     {
-        type = HID_INPUT::HID_AXIS_X;
+        axis_type = HID_INPUT::HID_AXIS_X;
     }
     else if (label == "AXIS_Y")
     {
-        type = HID_INPUT::HID_AXIS_Y;
+        axis_type = HID_INPUT::HID_AXIS_Y;
     }
     else if (label == "AXIS_Z")
     {
-        type = HID_INPUT::HID_AXIS_Z;
+        axis_type = HID_INPUT::HID_AXIS_Z;
     }
     else if (label == "AXIS_RX")
     {
-        type = HID_INPUT::HID_AXIS_RX;
+        axis_type = HID_INPUT::HID_AXIS_RX;
     }
     else if (label == "AXIS_RY")
     {
-        type = HID_INPUT::HID_AXIS_RY;
+        axis_type = HID_INPUT::HID_AXIS_RY;
     }
     else if (label == "AXIS_RZ")
     {
-        type = HID_INPUT::HID_AXIS_RZ;
+        axis_type = HID_INPUT::HID_AXIS_RZ;
     }
     else if (label == "BTN_0")
     {
-        type = HID_INPUT::HID_BTN_0;
+        axis_type = HID_INPUT::HID_BTN_0;
     }
     else if (label == "BTN_1")
     {
-        type = HID_INPUT::HID_BTN_1;
+        axis_type = HID_INPUT::HID_BTN_1;
     }
     else if (label == "BTN_2")
     {
-        type = HID_INPUT::HID_BTN_2;
+        axis_type = HID_INPUT::HID_BTN_2;
     }
     else if (label == "BTN_3")
     {
-        type = HID_INPUT::HID_BTN_3;
+        axis_type = HID_INPUT::HID_BTN_3;
     }
     else if (label == "BTN_4")
     {
-        type = HID_INPUT::HID_BTN_4;
+        axis_type = HID_INPUT::HID_BTN_4;
     }
     else if (label == "BTN_5")
     {
-        type = HID_INPUT::HID_BTN_5;
+        axis_type = HID_INPUT::HID_BTN_5;
     }
     else if (label == "BTN_6")
     {
-        type = HID_INPUT::HID_BTN_6;
+        axis_type = HID_INPUT::HID_BTN_6;
     }
     else if (label == "BTN_7")
     {
-        type = HID_INPUT::HID_BTN_7;
+        axis_type = HID_INPUT::HID_BTN_7;
     }
     else if (label == "BTN_8")
     {
-        type = HID_INPUT::HID_BTN_8;
+        axis_type = HID_INPUT::HID_BTN_8;
     }
     else if (label == "BTN_9")
     {
-        type = HID_INPUT::HID_BTN_9;
+        axis_type = HID_INPUT::HID_BTN_9;
     }
     else
     {
-        LOG_ERROR("Invalid input type: {}", type_str);
-        type = HID_INPUT::HID_AXIS_X;
+        LOG_ERROR("Invalid input type: {}", axis);
+        axis_type = HID_INPUT::HID_AXIS_X;
         return -1;
     }
     return 0;
@@ -275,11 +274,9 @@ int ControllerHID::Activate(ControlActivationMode lat_activation_mode,
         vehicle_.SetMaxAcc(object_->GetMaxAcceleration());
         vehicle_.SetMaxDec(object_->GetMaxDeceleration());
         vehicle_.SetSteeringRate(steering_rate_);
+        object_->SetJunctionSelectorStrategy(roadmanager::Junction::JunctionStrategyType::SELECTOR_ANGLE);
+        object_->SetJunctionSelectorAngle(0.0);
     }
-
-    object_->SetJunctionSelectorStrategy(roadmanager::Junction::JunctionStrategyType::SELECTOR_ANGLE);
-    object_->SetJunctionSelectorAngle(0.0);
-
     for (unsigned int i = 0; i < HID_INPUT::HID_NR_OF_INPUTS; i++)
     {
         values_[i] = 0;
@@ -339,7 +336,7 @@ int ControllerHID::ReadHID(double& throttle, double& steering)
         // register buttons, Windows starting from 1
         for (unsigned int i = 0; i < HID_INPUT::HID_NR_OF_INPUTS - HID_INPUT::HID_BTN_0 - 1; i++)
         {
-            values_[HID_INPUT::HID_BTN_0 + i + 1] = joy_info_.dwButtons & (1 << i) ? 1 : 0;
+            values_[HID_INPUT::HID_BTN_0 + i + 1] = (joy_info_.dwButtons & (1 << i)) ? 1 : 0;
         }
 
         if (throttle_input_ == brake_input_)

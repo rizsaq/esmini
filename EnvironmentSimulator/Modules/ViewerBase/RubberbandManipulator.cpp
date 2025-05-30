@@ -53,7 +53,7 @@ RubberbandManipulator::RubberbandManipulator(unsigned int mode, osg::Vec3d origi
     explicitCenter_.Reset();
 }
 
-double osgGA::RubberbandManipulator::GetCameraDistance()
+double osgGA::RubberbandManipulator::GetCameraDistance() const
 {
     return cameraBaseDistance_ + zoom_distance_;
 }
