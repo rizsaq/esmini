@@ -736,8 +736,6 @@ int ScenarioEngine::parseScenario()
 int ScenarioEngine::defaultController(Object* obj, double dt)
 {
     int    retval  = 0;
-    double steplen = obj->speed_ * dt;
-
     if (!obj->CheckDirtyBits(Object::DirtyBit::LONGITUDINAL))  // No action has updated longitudinal dimension
     {
         if (!obj->IsControllerModeOnDomains(ControlOperationMode::MODE_OVERRIDE, static_cast<unsigned int>(ControlDomains::DOMAIN_LONG)))
@@ -745,6 +743,7 @@ int ScenarioEngine::defaultController(Object* obj, double dt)
             Vehicle* tow_vehicle = static_cast<Vehicle*>(obj->TowVehicle());
             if (tow_vehicle == nullptr)
             {
+                double steplen = obj->speed_ * dt;
                 retval = static_cast<int>(obj->MoveAlongS(steplen, true));
                 if (retval == static_cast<int>(roadmanager::Position::ReturnCode::ERROR_GENERIC))
                 {
