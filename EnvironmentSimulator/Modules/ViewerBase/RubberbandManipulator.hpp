@@ -193,7 +193,7 @@ namespace osgGA
         osg::Vec3d     origin_;
         ExplicitCenter explicitCenter_;
 
-        double GetCameraDistance();
+        double GetCameraDistance() const;
 
     protected:
         virtual ~RubberbandManipulator();
