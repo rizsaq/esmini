@@ -2244,11 +2244,11 @@ namespace roadmanager
         @param lane_info reference to LaneInfo object to be filled with lane information
         @return index of the lane section on success, or -1 on failure
         */
-       int GetLaneInfoByS(double    s,
-        idx_t     start_lane_link_idx,
-        int       start_lane_id,
-        LaneInfo &lane_info,
-        int       laneTypeMask = Lane::LaneType::LANE_TYPE_ANY_DRIVING) const;
+        int GetLaneInfoByS(double    s,
+                           idx_t     start_lane_section_idx,
+                           int       start_lane_id,
+                           LaneInfo &lane_info,
+                           int       laneTypeMask = Lane::LaneType::LANE_TYPE_ANY_DRIVING) const;
 
         int             GetConnectingLaneId(RoadLink *road_link, int fromLaneId, id_t connectingRoadId) const;
         double          GetLaneWidthByS(double s, int lane_id) const;
