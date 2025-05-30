@@ -2070,14 +2070,14 @@ OSIPoints& LaneSection::GetRefLineOSIPoints()
 // Offset from closest left road mark to current position
 RoadMarkInfo Lane::GetRoadMarkInfoByS(id_t track_id, int lane_id, double s) const
 {
-    Position*             pos  = new roadmanager::Position();
-    Road*                 road = pos->GetRoadById(track_id);
-    LaneSection*          lsec;
-    Lane*                 lane;
-    LaneRoadMark*         lane_roadMark;
-    LaneRoadMarkType*     lane_roadMarkType;
-    RoadMarkInfo          rm_info = {IDX_UNDEFINED, IDX_UNDEFINED};
-    idx_t                 lsec_idx;
+    Position*         pos  = new roadmanager::Position();
+    Road*             road = pos->GetRoadById(track_id);
+    LaneSection*      lsec;
+    Lane*             lane;
+    LaneRoadMark*     lane_roadMark;
+    LaneRoadMarkType* lane_roadMarkType;
+    RoadMarkInfo      rm_info = {IDX_UNDEFINED, IDX_UNDEFINED};
+    idx_t             lsec_idx;
 
     if (road == nullptr)
     {
@@ -2086,8 +2086,8 @@ RoadMarkInfo Lane::GetRoadMarkInfoByS(id_t track_id, int lane_id, double s) cons
     }
     else
     {
-        double                lsec_end = 0.0;
-        lsec_idx = road->GetLaneSectionIdxByS(s);
+        double lsec_end = 0.0;
+        lsec_idx        = road->GetLaneSectionIdxByS(s);
 
         lsec = road->GetLaneSectionByIdx(lsec_idx);
 
@@ -2097,7 +2097,6 @@ RoadMarkInfo Lane::GetRoadMarkInfoByS(id_t track_id, int lane_id, double s) cons
         }
         else
         {
-
             unsigned int number_of_lsec = road->GetNumberOfLaneSections();
             if (lsec_idx == number_of_lsec - 1)
             {
@@ -2121,8 +2120,8 @@ RoadMarkInfo Lane::GetRoadMarkInfoByS(id_t track_id, int lane_id, double s) cons
             {
                 for (unsigned int m = 0; m < number_of_roadmarks; m++)
                 {
-                    lane_roadMark = lane->GetLaneRoadMarkByIdx(m);
-                    double s_roadmark    = lsec->GetS() + lane_roadMark->GetSOffset();
+                    lane_roadMark     = lane->GetLaneRoadMarkByIdx(m);
+                    double s_roadmark = lsec->GetS() + lane_roadMark->GetSOffset();
                     double s_end_roadmark;
                     if (m == number_of_roadmarks - 1)
                     {
@@ -2137,13 +2136,13 @@ RoadMarkInfo Lane::GetRoadMarkInfoByS(id_t track_id, int lane_id, double s) cons
                     unsigned int number_of_roadmarktypes = lane_roadMark->GetNumberOfRoadMarkTypes();
                     if (number_of_roadmarktypes != 0)
                     {
-                        lane_roadMarkType       = lane_roadMark->GetLaneRoadMarkTypeByIdx(0);
+                        lane_roadMarkType                    = lane_roadMark->GetLaneRoadMarkTypeByIdx(0);
                         unsigned int number_of_roadmarklines = lane_roadMarkType->GetNumberOfRoadMarkTypeLines();
 
                         // Looping through each roadmarkline under roadmark
                         for (unsigned int n = 0; n < number_of_roadmarklines; n++)
                         {
-                            double                s_roadmarkline = 0.0, s_end_roadmarkline;
+                            double                s_roadmarkline        = 0.0, s_end_roadmarkline;
                             LaneRoadMarkTypeLine* lane_roadMarkTypeLine = lane_roadMarkType->GetLaneRoadMarkTypeLineByIdx(n);
                             if (lane_roadMarkTypeLine != nullptr)
                             {
@@ -5619,8 +5618,8 @@ id_t OpenDrive::GetTrackIdByIdx(idx_t idx) const
 bool OpenDrive::IsIndirectlyConnected(id_t road1_id, id_t road2_id, id_t*& connecting_road_id, int*& connecting_lane_id, int lane1_id, int lane2_id)
     const
 {
-    Road*     road1 = GetRoadById(road1_id);
-    Road*     road2 = GetRoadById(road2_id);
+    Road* road1 = GetRoadById(road1_id);
+    Road* road2 = GetRoadById(road2_id);
 
     LinkType link_type[2] = {SUCCESSOR, PREDECESSOR};
 
@@ -9471,7 +9470,7 @@ void Position::SetRoadMarkPos(id_t   track_id,
     Lane* lane = lane_section->GetLaneByIdx(lane_idx_);
     if (lane != nullptr)
     {
-        roadmark_idx_ = roadmark_idx;
+        roadmark_idx_               = roadmark_idx;
         LaneRoadMark* lane_roadmark = lane->GetLaneRoadMarkByIdx(roadmark_idx_);
         if (lane_roadmark == nullptr)
         {
